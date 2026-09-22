@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,10 @@ import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { calculateSolarPosition, calculateSolarEvents } from '../../core/astronomy/astronomy-engine';
+import { TerminatorRibbonComponent } from '../../shared/components/terminator-ribbon/terminator-ribbon';
+import { RadianOverlapTunnelComponent } from '../../shared/components/radian-overlap-tunnel/radian-overlap-tunnel';
+import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
+import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 
 interface WorldCitySkyData {
   location: GeoLocation;
@@ -23,7 +27,14 @@ interface WorldCitySkyData {
 @Component({
   selector: 'app-world-clocks',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    TerminatorRibbonComponent,
+    RadianOverlapTunnelComponent,
+    ShareExportModalComponent,
+    AnalogClockComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './world-clocks.html',
   styleUrl: './world-clocks.css'
@@ -31,16 +42,19 @@ interface WorldCitySkyData {
 export class WorldClocksComponent {
   private locationService = inject(LocationService);
   private timeControlService = inject(TimeControlService);
-  private router = inject(Router);
+  readonly router = inject(Router);
 
   readonly allPresets = this.locationService.allPresets;
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
 
+  readonly showShareModal = signal<boolean>(false);
+  readonly clockStyleMode = signal<'analog' | 'digital'>('analog');
+
   // Computed list of all cities with real-time astronomical and sky states
   readonly citySkies = computed<WorldCitySkyData[]>(() => {
     const date = this.activeDate();
-    return this.allPresets.map(loc => {
+    return this.allPresets.map((loc: any) => {
       const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
       const events = calculateSolarEvents(date, loc.latitude, loc.longitude);
 

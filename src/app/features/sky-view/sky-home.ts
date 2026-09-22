@@ -6,11 +6,12 @@ import { TimeControlService, SimulationSpeed } from '../../core/services/time-co
 import { LocationService } from '../../core/services/location.service';
 import { WeatherService } from '../../core/services/weather.service';
 import { GeoLocation } from '../../core/models/location.model';
+import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 
 @Component({
   selector: 'app-sky-home',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, ShareExportModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
   styleUrl: './sky-home.css'
@@ -35,6 +36,8 @@ export class SkyHomeComponent {
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
   readonly polarAngles = this.celestialService.polarClockAngles;
+
+  readonly showShareModal = signal<boolean>(false);
 
   // Temperature unit toggle
   readonly isFahrenheit = signal<boolean>(false);

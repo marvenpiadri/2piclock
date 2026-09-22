@@ -1,65 +1,118 @@
-<div class="world-clocks-page">
-  <div class="page-header glass-panel">
+<div class="world-clocks-page space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+  <div class="page-header glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-5 rounded-2xl bg-slate-900/80 border border-amber-500/25">
     <div>
-      <h1 class="page-title">Global Planetary Observatory</h1>
-      <p class="page-subtitle">Real-time solar positions, twilight states, and local times across planetary meridians</p>
+      <h1 class="page-title text-xl font-bold text-amber-400 font-mono flex items-center gap-2">
+        <mat-icon class="text-amber-500">public</mat-icon>
+        Global Planetary Observatory & Terminator Grid
+      </h1>
+      <p class="page-subtitle text-xs text-slate-400 mt-1">Real-time solar positions, terminator shadow curves, meeting overlap sweet spots, and planetary meridians</p>
+    </div>
+    <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <button 
+          (click)="clockStyleMode.set('analog')"
+          [class.bg-amber-500]="clockStyleMode() === 'analog'"
+          [class.text-slate-950]="clockStyleMode() === 'analog'"
+          [class.text-slate-400]="clockStyleMode() !== 'analog'"
+          class="px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5">
+          <mat-icon class="text-sm">schedule</mat-icon>
+          Analog
+        </button>
+        <button 
+          (click)="clockStyleMode.set('digital')"
+          [class.bg-amber-500]="clockStyleMode() === 'digital'"
+          [class.text-slate-950]="clockStyleMode() === 'digital'"
+          [class.text-slate-400]="clockStyleMode() !== 'digital'"
+          class="px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5">
+          <mat-icon class="text-sm">pin</mat-icon>
+          Digital
+        </button>
+      </div>
+
+      <button (click)="showShareModal.set(true)" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
+        <mat-icon class="text-sm">camera_alt</mat-icon>
+        Export Infographic Card
+      </button>
+      <button (click)="router.navigate(['/'])" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs rounded-xl flex items-center gap-2 border border-slate-700 transition-colors">
+        <mat-icon class="text-sm">visibility</mat-icon>
+        Sky Simulator
+      </button>
     </div>
   </div>
 
-  <div class="cities-grid">
+  <!-- 1. Dynamic Terminator Line World Ribbon -->
+  <app-terminator-ribbon [activeDate]="activeDate()"></app-terminator-ribbon>
+
+  <!-- 2. Radian Time-Overlap Matrix -->
+  <app-radian-overlap-tunnel [activeDate]="activeDate()"></app-radian-overlap-tunnel>
+
+  <!-- Cities Grid -->
+  <div class="cities-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     @for (city of citySkies(); track city.location.id) {
       <div 
-        class="city-sky-card glass-panel" 
+        class="city-sky-card glass-panel rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-500/40 transition-all duration-300 cursor-pointer bg-slate-900/80 shadow-lg group"
         [class.selected]="selectedLocation().id === city.location.id"
         (click)="selectAndGoToSky(city.location)">
         
         <!-- Mini Sky Header Banner -->
-        <div class="city-sky-header" [style.background]="city.bgGradient">
-          <div class="header-top">
-            <span class="city-flag">{{ city.location.flag }}</span>
-            <span class="city-twilight-badge">{{ city.twilightState }}</span>
+        <div class="city-sky-header p-4 relative overflow-hidden" [style.background]="city.bgGradient">
+          <div class="header-top flex justify-between items-center relative z-10">
+            <span class="city-flag text-2xl shadow-sm">{{ city.location.flag }}</span>
+            <span class="city-twilight-badge font-mono text-[10px] bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-amber-300 border border-amber-500/30">
+              {{ city.twilightState }}
+            </span>
           </div>
-          <div class="city-sun-alt font-mono">
-            <mat-icon>{{ city.isDay ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
+          <div class="city-sun-alt font-mono text-xs text-white/90 mt-3 flex items-center gap-1.5 relative z-10">
+            <mat-icon class="text-amber-400 text-sm">{{ city.isDay ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
             {{ city.sunAltitude >= 0 ? '+' : '' }}{{ city.sunAltitude }}° Elev
           </div>
         </div>
 
         <!-- City Details Body -->
-        <div class="city-card-body">
+        <div class="city-card-body p-4 space-y-3">
           <div class="city-name-row">
-            <div class="city-name">{{ city.location.name }}</div>
-            <div class="city-country">{{ city.location.country }}</div>
+            <div class="city-name font-bold text-white text-base group-hover:text-amber-300 transition-colors">{{ city.location.name }}</div>
+            <div class="city-country text-xs text-slate-400">{{ city.location.country }}</div>
           </div>
 
-          <div class="city-time-display font-mono">
-            {{ city.localTime }}
-          </div>
-          <div class="city-date-sub">
-            {{ city.localDate }}
+          @if (clockStyleMode() === 'analog') {
+            <div class="py-2">
+              <app-analog-clock [timezone]="city.location.timezone" [activeDate]="activeDate()"></app-analog-clock>
+            </div>
+          } @else {
+            <div class="city-time-display font-mono text-2xl font-bold text-amber-400">
+              {{ city.localTime }}
+            </div>
+            <div class="city-date-sub text-xs text-slate-400 font-mono">
+              {{ city.localDate }}
+            </div>
+          }
+
+          <div class="city-solar-events font-mono text-[11px] grid grid-cols-3 gap-1 pt-2 border-t border-slate-800">
+            <div class="event-mini bg-slate-950/60 p-1.5 rounded text-center">
+              <span class="lbl block text-[9px] text-slate-500">Rise</span>
+              <span class="val font-bold text-slate-300">{{ city.sunriseTime }}</span>
+            </div>
+            <div class="event-mini bg-slate-950/60 p-1.5 rounded text-center">
+              <span class="lbl block text-[9px] text-slate-500">Set</span>
+              <span class="val font-bold text-slate-300">{{ city.sunsetTime }}</span>
+            </div>
+            <div class="event-mini bg-slate-950/60 p-1.5 rounded text-center">
+              <span class="lbl block text-[9px] text-slate-500">Azimuth</span>
+              <span class="val font-bold text-amber-400">{{ city.sunAzimuth }}°</span>
+            </div>
           </div>
 
-          <div class="city-solar-events font-mono">
-            <div class="event-mini">
-              <span class="lbl">Rise</span>
-              <span class="val">{{ city.sunriseTime }}</span>
-            </div>
-            <div class="event-mini">
-              <span class="lbl">Set</span>
-              <span class="val">{{ city.sunsetTime }}</span>
-            </div>
-            <div class="event-mini">
-              <span class="lbl">Azimuth</span>
-              <span class="val">{{ city.sunAzimuth }}°</span>
-            </div>
-          </div>
-
-          <button class="view-sky-btn" (click)="$event.stopPropagation(); selectAndGoToSky(city.location)">
+          <button class="view-sky-btn w-full mt-2 py-2 px-3 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 font-mono text-xs flex items-center justify-center gap-2 transition-all" (click)="$event.stopPropagation(); selectAndGoToSky(city.location)">
             <span>Observe Sky</span>
-            <mat-icon>arrow_forward</mat-icon>
+            <mat-icon class="text-sm">arrow_forward</mat-icon>
           </button>
         </div>
       </div>
     }
   </div>
+
+  @if (showShareModal()) {
+    <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal>
+  }
 </div>

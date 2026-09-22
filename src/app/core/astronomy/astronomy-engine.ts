@@ -556,3 +556,268 @@ export function get24HourSolarCurve(
 
   return points;
 }
+
+/**
+ * Calculates the Subsolar point (where the Sun is directly at the zenith)
+ * Latitude = Solar Declination (-23.44° to +23.44°)
+ * Longitude = Greenwich Hour Angle offset (-180° to +180°)
+ */
+export function calculateSubsolarPoint(date: Date): {
+  latitude: number;
+  longitude: number;
+  declinationDeg: number;
+  equationOfTimeMin: number;
+} {
+  const sunPos = calculateSolarPosition(date, 0, 0);
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600 + date.getUTCMilliseconds() / 3600000;
+  
+  // Solar noon at Greenwich occurs at 12:00 UTC - EqOfTime
+  // Subsolar longitude: 0° at Solar Noon, moves 15° west per hour
+  const eotHours = sunPos.equationOfTimeMinutes / 60;
+  let subsolarLng = -((utcHours - 12 + eotHours) * 15);
+  
+  // Normalize to [-180, 180]
+  while (subsolarLng > 180) subsolarLng -= 360;
+  while (subsolarLng < -180) subsolarLng += 360;
+
+  return {
+    latitude: sunPos.declinationDeg,
+    longitude: subsolarLng,
+    declinationDeg: sunPos.declinationDeg,
+    equationOfTimeMin: sunPos.equationOfTimeMinutes
+  };
+}
+
+/**
+ * Calculates Seasonal Solar Trajectories for astrolabe axis comparison
+ */
+export function calculateSeasonalSolsticesCurves(
+  lat: number,
+  lng: number,
+  timezone: string,
+  year: number
+): {
+  summerSolstice: { hour: number; altitude: number }[];
+  winterSolstice: { hour: number; altitude: number }[];
+  equinox: { hour: number; altitude: number }[];
+  maxSummerAlt: number;
+  maxWinterAlt: number;
+  maxEquinoxAlt: number;
+} {
+  // June 21, Dec 21, Mar 20
+  const summerDate = new Date(Date.UTC(year, 5, 21, 12, 0, 0));
+  const winterDate = new Date(Date.UTC(year, 11, 21, 12, 0, 0));
+  const equinoxDate = new Date(Date.UTC(year, 2, 20, 12, 0, 0));
+
+  const summerCurve = get24HourSolarCurve(summerDate, lat, lng, timezone);
+  const winterCurve = get24HourSolarCurve(winterDate, lat, lng, timezone);
+  const equinoxCurve = get24HourSolarCurve(equinoxDate, lat, lng, timezone);
+
+  const maxSummerAlt = Math.max(...summerCurve.map(p => p.altitude));
+  const maxWinterAlt = Math.max(...winterCurve.map(p => p.altitude));
+  const maxEquinoxAlt = Math.max(...equinoxCurve.map(p => p.altitude));
+
+  return {
+    summerSolstice: summerCurve.map(p => ({ hour: p.hour, altitude: p.altitude })),
+    winterSolstice: winterCurve.map(p => ({ hour: p.hour, altitude: p.altitude })),
+    equinox: equinoxCurve.map(p => ({ hour: p.hour, altitude: p.altitude })),
+    maxSummerAlt,
+    maxWinterAlt,
+    maxEquinoxAlt
+  };
+}
+
+export interface CityWorkHourSlot {
+  cityId: string;
+  cityName: string;
+  flag: string;
+  timezone: string;
+  localHour: number;
+  isWorkHour: boolean; // 9:00 to 17:00
+  isGoldenHour: boolean; // 8:00 - 9:00 or 17:00 - 18:00 (mild stretch)
+}
+
+export interface OverlapWindow {
+  startUtcH: number;
+  endUtcH: number;
+  durationHours: number;
+  isFullOverlap: boolean;
+  activeCitiesCount: number;
+  totalCitiesCount: number;
+  cityLocalTimes: Record<string, { start: string; end: string }>;
+}
+
+/**
+ * Calculates multi-city Radian Meeting Sweet Spot overlap matrix
+ */
+export function calculateRadianTimeOverlap(
+  cities: { id: string; name: string; flag: string; timezone: string }[],
+  date: Date,
+  workStart = 9,
+  workEnd = 17
+): {
+  slots24h: { utcHour: number; activeFraction: number; cities: CityWorkHourSlot[] }[];
+  sweetSpotWindows: OverlapWindow[];
+  bestWindow: OverlapWindow | null;
+} {
+  if (cities.length === 0) {
+    return { slots24h: [], sweetSpotWindows: [], bestWindow: null };
+  }
+
+  // Sample every 0.25h (15 min) in UTC
+  const step = 0.25;
+  const totalSteps = 24 / step; // 96 steps
+  const slots: { utcHour: number; activeFraction: number; cities: CityWorkHourSlot[] }[] = [];
+
+  const baseUtc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+
+  for (let i = 0; i < totalSteps; i++) {
+    const utcH = i * step;
+    const sampleDate = new Date(baseUtc.getTime() + utcH * 3600000);
+
+    let activeCount = 0;
+    const citySlots: CityWorkHourSlot[] = [];
+
+    for (const city of cities) {
+      let localHour = 0;
+      try {
+        const timeStr = sampleDate.toLocaleTimeString('en-US', {
+          timeZone: city.timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        const [h, m] = timeStr.split(':').map(Number);
+        localHour = h + m / 60;
+      } catch {
+        localHour = utcH;
+      }
+
+      const isWork = localHour >= workStart && localHour < workEnd;
+      const isGolden = (localHour >= workStart - 1 && localHour < workStart) || (localHour >= workEnd && localHour < workEnd + 1);
+
+      if (isWork) activeCount++;
+
+      citySlots.push({
+        cityId: city.id,
+        cityName: city.name,
+        flag: city.flag,
+        timezone: city.timezone,
+        localHour,
+        isWorkHour: isWork,
+        isGoldenHour: isGolden
+      });
+    }
+
+    slots.push({
+      utcHour: utcH,
+      activeFraction: activeCount / cities.length,
+      cities: citySlots
+    });
+  }
+
+  // Find contiguous sweet spot intervals where activeFraction == 1.0 (or highest fraction)
+  const windows: OverlapWindow[] = [];
+  let inWindow = false;
+  let winStart = 0;
+
+  for (let i = 0; i <= slots.length; i++) {
+    const slot = i < slots.length ? slots[i] : null;
+    const isFull = slot ? slot.activeFraction === 1.0 : false;
+
+    if (isFull && !inWindow) {
+      inWindow = true;
+      winStart = slot!.utcHour;
+    } else if (!isFull && inWindow) {
+      inWindow = false;
+      const endUtcH = slots[i - 1].utcHour + step;
+      const duration = endUtcH - winStart;
+
+      // Calculate local time strings for each city
+      const cityLocalTimes: Record<string, { start: string; end: string }> = {};
+      const winStartDate = new Date(baseUtc.getTime() + winStart * 3600000);
+      const winEndDate = new Date(baseUtc.getTime() + endUtcH * 3600000);
+
+      cities.forEach(c => {
+        try {
+          const s = winStartDate.toLocaleTimeString('en-US', { timeZone: c.timezone, hour: '2-digit', minute: '2-digit', hour12: false });
+          const e = winEndDate.toLocaleTimeString('en-US', { timeZone: c.timezone, hour: '2-digit', minute: '2-digit', hour12: false });
+          cityLocalTimes[c.id] = { start: s, end: e };
+        } catch {
+          cityLocalTimes[c.id] = { start: `${winStart}:00`, end: `${endUtcH}:00` };
+        }
+      });
+
+      windows.push({
+        startUtcH: winStart,
+        endUtcH,
+        durationHours: duration,
+        isFullOverlap: true,
+        activeCitiesCount: cities.length,
+        totalCitiesCount: cities.length,
+        cityLocalTimes
+      });
+    }
+  }
+
+  // If no 100% overlap found, find best partial overlap (e.g. max active fraction >= 0.5)
+  let bestWindow: OverlapWindow | null = null;
+  if (windows.length > 0) {
+    // Pick longest full window
+    bestWindow = windows.reduce((prev, curr) => (curr.durationHours > prev.durationHours ? curr : prev), windows[0]);
+  } else {
+    // Find highest fraction window
+    let maxFrac = 0;
+    slots.forEach(s => {
+      if (s.activeFraction > maxFrac) maxFrac = s.activeFraction;
+    });
+
+    if (maxFrac > 0) {
+      let pInWin = false;
+      let pStart = 0;
+      for (let i = 0; i <= slots.length; i++) {
+        const slot = i < slots.length ? slots[i] : null;
+        const match = slot ? slot.activeFraction === maxFrac : false;
+        if (match && !pInWin) {
+          pInWin = true;
+          pStart = slot!.utcHour;
+        } else if (!match && pInWin) {
+          pInWin = false;
+          const endUtcH = slots[i - 1].utcHour + step;
+          const cityLocalTimes: Record<string, { start: string; end: string }> = {};
+          const winStartDate = new Date(baseUtc.getTime() + pStart * 3600000);
+          const winEndDate = new Date(baseUtc.getTime() + endUtcH * 3600000);
+          cities.forEach(c => {
+            try {
+              cityLocalTimes[c.id] = {
+                start: winStartDate.toLocaleTimeString('en-US', { timeZone: c.timezone, hour: '2-digit', minute: '2-digit', hour12: false }),
+                end: winEndDate.toLocaleTimeString('en-US', { timeZone: c.timezone, hour: '2-digit', minute: '2-digit', hour12: false })
+              };
+            } catch {
+              cityLocalTimes[c.id] = { start: `${pStart}:00`, end: `${endUtcH}:00` };
+            }
+          });
+          const partialWin: OverlapWindow = {
+            startUtcH: pStart,
+            endUtcH,
+            durationHours: endUtcH - pStart,
+            isFullOverlap: false,
+            activeCitiesCount: Math.round(maxFrac * cities.length),
+            totalCitiesCount: cities.length,
+            cityLocalTimes
+          };
+          windows.push(partialWin);
+        }
+      }
+      if (windows.length > 0) {
+        bestWindow = windows.reduce((prev, curr) => (curr.durationHours > prev.durationHours ? curr : prev), windows[0]);
+      }
+    }
+  }
+
+  return {
+    slots24h: slots,
+    sweetSpotWindows: windows,
+    bestWindow
+  };
+}

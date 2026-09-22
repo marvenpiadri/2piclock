@@ -43,6 +43,8 @@ interface PrecipParticle {
   opacity: number;
 }
 
+
+
 @Component({
   selector: 'app-reactive-sky',
   standalone: true,
@@ -199,6 +201,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     }
   }
 
+
+
   private startRenderLoop(): void {
     let lastTime = performance.now();
 
@@ -229,31 +233,92 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     // 1. Draw Multi-Stop Atmospheric Twilight & Sky Gradient
     this.drawSkyGradient(ctx, w, h, sunAlt, sunAz, weather);
 
-    // 2. Draw Stars (modulated by Solar Altitude and Cloud Coverage)
+    // 2. Astrolabe & Equinoctial Coordinate Vector Grid
+    this.drawAstrolabeGrid(ctx, w, h, sunAlt, celestial);
+
+    // 3. Draw Stars (modulated by Solar Altitude and Cloud Coverage)
     this.drawStars(ctx, w, h, sunAlt, celestial.starVisibilityFraction, weather, time);
 
-    // 3. Draw Solar Horizon Flare / Glow
+    // 4. Draw Solar Horizon Flare / Glow
     this.drawSolarGlow(ctx, w, h, sunAlt, sunAz, weather);
 
-    // 4. Draw Moon with Real Lunar Phase Disc and Position Angle
+    // 6. Draw Moon with Real Lunar Phase Disc and Position Angle
     if (moonAlt > -8) {
       this.drawMoon(ctx, w, h, celestial, weather);
     }
 
-    // 5. Draw Sun Disc & Corona
+    // 7. Draw Sun Disc, UV Radiation Pulse & Corona
     if (sunAlt > -8) {
-      this.drawSun(ctx, w, h, sunAlt, sunAz, weather);
+      this.drawSun(ctx, w, h, sunAlt, sunAz, weather, time);
     }
 
-    // 6. Draw Layered Procedural Atmosphere Clouds
+    // 8. Draw Layered Procedural Atmosphere Clouds
     this.drawClouds(ctx, w, h, sunAlt, weather, delta);
 
-    // 7. Draw Weather Precipitation (Rain / Snow / Fog / Thunderstorm)
+    // 9. Draw Weather Precipitation (Rain / Snow / Fog / Thunderstorm)
     this.drawWeatherEffects(ctx, w, h, weather, delta, time);
 
-    // 8. Draw Clean Horizon Line Silhouette
+    // 10. Draw Clean Horizon Line Silhouette
     this.drawHorizon(ctx, w, h, sunAlt, weather);
   }
+
+  /**
+   * Astrolabe Celestial Coordinates & Marine Chronometer Vector Grid
+   */
+  private drawAstrolabeGrid(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    sunAlt: number,
+    celestial: CelestialState
+  ): void {
+    const horizonY = h * 0.82;
+    const isNight = sunAlt < -6;
+    const gridAlpha = isNight ? 0.08 : 0.04;
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(245, 158, 11, ${gridAlpha})`;
+    ctx.lineWidth = 0.75;
+    ctx.setLineDash([3, 5]);
+
+    // Altitude Circles (15°, 30°, 45°, 60°, 75°)
+    const maxZenithY = horizonY * 0.08;
+    const altSteps = [15, 30, 45, 60, 75];
+    for (const alt of altSteps) {
+      const normAlt = alt / 90;
+      const y = horizonY - normAlt * (horizonY - maxZenithY);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    // Azimuth Meridian Arcs (every 45°: N, NE, E, SE, S, SW, W, NW)
+    for (let az = 0; az < 360; az += 45) {
+      const x = this.projectAzimuthToScreenX(az, w);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, horizonY);
+      ctx.stroke();
+    }
+
+    // Seasonal Solar Declination Curve arc
+    const declination = celestial.sun.declinationDeg;
+    // Map declination (-23.44° to +23.44°)
+    const declRatio = (declination + 23.44) / 46.88;
+    const declY = horizonY * 0.35 + (1 - declRatio) * horizonY * 0.3;
+
+    ctx.strokeStyle = `rgba(251, 191, 36, ${(gridAlpha * 2).toFixed(3)})`;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(0, declY);
+    ctx.bezierCurveTo(w * 0.25, declY - 25, w * 0.75, declY - 25, w, declY);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+
 
   /**
    * Continuous physics-based Sky Gradient interpolation based on Solar Altitude & Weather
@@ -466,7 +531,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     h: number,
     sunAlt: number,
     sunAz: number,
-    weather: WeatherData
+    weather: WeatherData,
+    time: number
   ): void {
     const horizonY = h * 0.82;
     const sunPos = this.projectCelestialToScreen(sunAlt, sunAz, w, horizonY);
@@ -506,6 +572,17 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     ctx.beginPath();
     ctx.arc(sunPos.x, sunPos.y, coronaRad, 0, Math.PI * 2);
     ctx.fill();
+
+    // UV Index pulse ring if UV index is high (> 6)
+    if (weather.uvIndex >= 6 && sunAlt > 10) {
+      const uvPulse = (Math.sin(time * 0.004) + 1) * 0.5;
+      const ringRad = sunRadius * (1.8 + uvPulse * 0.8);
+      ctx.strokeStyle = `rgba(245, 158, 11, ${(0.3 + uvPulse * 0.3).toFixed(3)})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(sunPos.x, sunPos.y, ringRad, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
     // Solid Sun Disc
     ctx.beginPath();

@@ -122,7 +122,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       canvas.height = Math.floor(this.height * this.dpr);
 
       if (this.ctx) {
-        this.ctx.scale(this.dpr, this.dpr);
+        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       }
     };
 
@@ -709,7 +709,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       const cloud = this.clouds[i];
 
       if (!this.reducedMotion) {
-        cloud.x += cloud.speed * delta;
+        const windFactor = 0.35 + Math.min(2.5, weather.windSpeedKmh / 12);
+        const windDirection = Math.cos((weather.windDirectionDeg * Math.PI) / 180);
+        cloud.x += cloud.speed * delta * windFactor * (windDirection >= 0 ? 1 : -1);
         if (cloud.x > 1.2) cloud.x = -0.2;
       }
 

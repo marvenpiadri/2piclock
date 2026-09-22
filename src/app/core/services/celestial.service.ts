@@ -44,26 +44,31 @@ export class CelestialService {
   readonly polarClockAngles = computed(() => {
     const state = this.celestialState();
     const date = this.activeDate();
+    const timezone = this.selectedLocation().timezone;
 
-    // Solar angle: 0 rad = Solar Noon (Top), PI rad = Solar Midnight (Bottom)
-    // Or mapped clockwise 0 = 00:00 (Midnight), PI = 12:00 (Noon), 2PI = 24:00
-    const hours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-    const timeAngleRad = (hours / 24) * 2 * Math.PI;
+    // 2π is the local civil-day dial for the selected location.
+    // Astronomy remains instant/UTC based; only this visualization is localized.
+    const localHourFraction = (instant: Date): number => {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(instant);
 
-    // Sunrise & Sunset Angles on 24h dial
+      const get = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
+      return get('hour') + get('minute') / 60 + get('second') / 3600;
+    };
+
+    const timeAngleRad = (localHourFraction(date) / 24) * 2 * Math.PI;
     const events = state.solarEvents;
-    let sunriseAngleRad: number | null = null;
-    let sunsetAngleRad: number | null = null;
-
-    if (events.sunrise) {
-      const h = events.sunrise.getUTCHours() + events.sunrise.getUTCMinutes() / 60 + events.sunrise.getUTCSeconds() / 3600;
-      sunriseAngleRad = (h / 24) * 2 * Math.PI;
-    }
-
-    if (events.sunset) {
-      const h = events.sunset.getUTCHours() + events.sunset.getUTCMinutes() / 60 + events.sunset.getUTCSeconds() / 3600;
-      sunsetAngleRad = (h / 24) * 2 * Math.PI;
-    }
+    const sunriseAngleRad = events.sunrise
+      ? (localHourFraction(events.sunrise) / 24) * 2 * Math.PI
+      : null;
+    const sunsetAngleRad = events.sunset
+      ? (localHourFraction(events.sunset) / 24) * 2 * Math.PI
+      : null;
 
     return {
       timeAngleRad,

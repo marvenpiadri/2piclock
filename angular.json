@@ -3,7 +3,9 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "schematicCollections": ["angular-eslint"]
+    "schematicCollections": [
+      "angular-eslint"
+    ]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -19,34 +21,41 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "assets": [{"glob": "**/*", "input": "public"}],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
             "styles": [
-              "src/styles.css",
-              "src/styles/calculator-system.css",
-              "src/styles/calculator-presets.css",
-              "src/styles/calculator-universal.css",
-              "src/styles/calculator-components.css",
-              "src/styles/calculator-polish.css",
-              "src/styles/calculator-contract.css",
-              "src/styles/calculator-breakdown-polish.css"
+              "src/styles.css"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",
-            "ssr": {"entry": "src/server.ts"}
+            "ssr": {
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
-                {"type": "initial", "maximumWarning": "1MB", "maximumError": "2MB"},
-                {"type": "anyComponentStyle", "maximumWarning": "40kB", "maximumError": "80kB"}
+                {
+                  "type": "initial",
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "40kB",
+                  "maximumError": "80kB"
+                }
               ],
               "outputHashing": "all"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              "externalDependencies": ["@google/genai"]
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
@@ -54,15 +63,26 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
-            "production": {"buildTarget": "app:build:production"},
-            "development": {"buildTarget": "app:build:development"}
+            "production": {
+              "buildTarget": "app:build:production"
+            },
+            "development": {
+              "buildTarget": "app:build:development"
+            }
           },
           "defaultConfiguration": "development"
         },
-        "test": {"builder": "@angular/build:unit-test"},
+        "test": {
+          "builder": "@angular/build:unit-test"
+        },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
-          "options": {"lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]}
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }

@@ -8,6 +8,8 @@ import { LocationService } from './core/services/location.service';
 import { CelestialService } from './core/services/celestial.service';
 import { GeoLocation } from './core/models/location.model';
 import { CountryFlagPipe } from './core/pipes/country-flag.pipe';
+import { GeocodingService } from './core/services/geocoding.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +22,7 @@ import { CountryFlagPipe } from './core/pipes/country-flag.pipe';
 export class App {
   private locationService = inject(LocationService);
   private celestialService = inject(CelestialService);
+  private geocodingService = inject(GeocodingService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly allLocations = this.locationService.allPresets;
@@ -35,6 +38,10 @@ export class App {
 
   // Search filter for city picker
   searchQuery = signal<string>('');
+  readonly remoteLocations = signal<GeoLocation[]>([]);
+  readonly isRemoteSearching = signal(false);
+  private remoteSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private remoteSearchSubscription: Subscription | null = null;
 
   // Custom coordinates input
   customLat = signal<number>(35.6762);
@@ -64,8 +71,27 @@ export class App {
   }
 
   closeMenus(): void {
+    if (this.remoteSearchTimer) clearTimeout(this.remoteSearchTimer);
     this.showLocationDropdown.set(false);
     this.showPrefDropdown.set(false);
+  }
+
+  searchRemoteLocations(): void {
+    if (this.remoteSearchTimer) clearTimeout(this.remoteSearchTimer);
+    const query = this.searchQuery().trim();
+    if (query.length < 2) {
+      this.remoteLocations.set([]);
+      this.isRemoteSearching.set(false);
+      return;
+    }
+    this.remoteSearchTimer = setTimeout(() => {
+      this.remoteSearchSubscription?.unsubscribe();
+      this.isRemoteSearching.set(true);
+      this.remoteSearchSubscription = this.geocodingService.search(query, 6).subscribe(results => {
+        this.remoteLocations.set(results);
+        this.isRemoteSearching.set(false);
+      });
+    }, 300);
   }
 
   selectLocation(loc: GeoLocation): void {

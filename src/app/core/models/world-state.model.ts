@@ -1,6 +1,7 @@
 import { CelestialState } from './celestial.model';
 import { GeoLocation } from './location.model';
 import { WeatherData } from './weather.model';
+import { PlanetaryPosition } from './planetary.model';
 
 export interface WorldState {
   instant: Date;
@@ -12,6 +13,7 @@ export interface WorldState {
   utcOffsetMinutes: number;
   celestial: CelestialState;
   weather: WeatherData;
+  planets: PlanetaryPosition[];
   sunPhase: CelestialState['twilightState'];
   isDaylight: boolean;
   isAstronomicalNight: boolean;

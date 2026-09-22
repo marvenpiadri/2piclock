@@ -1,12 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
 import { LocationService } from './core/services/location.service';
-import { TimeControlService } from './core/services/time-control.service';
-import { WeatherService } from './core/services/weather.service';
 import { CelestialService } from './core/services/celestial.service';
 import { GeoLocation } from './core/models/location.model';
 
@@ -20,10 +18,7 @@ import { GeoLocation } from './core/models/location.model';
 })
 export class App {
   private locationService = inject(LocationService);
-  private timeControlService = inject(TimeControlService);
-  private weatherService = inject(WeatherService);
   private celestialService = inject(CelestialService);
-  private router = inject(Router);
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly allLocations = this.locationService.allPresets;

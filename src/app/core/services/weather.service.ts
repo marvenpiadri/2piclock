@@ -1,4 +1,5 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { WeatherCondition, WeatherData, WeatherOverrideConfig } from '../models/weather.model';
 import { GeoLocation } from '../models/location.model';
@@ -8,6 +9,7 @@ import { GeoLocation } from '../models/location.model';
 })
 export class WeatherService {
   private platformId = inject(PLATFORM_ID);
+  private http = inject(HttpClient);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   readonly rawWeather = signal<WeatherData>(this.getDefaultWeatherData());
@@ -52,50 +54,55 @@ export class WeatherService {
     }
 
     this.isLoading.set(true);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index&timezone=auto`;
+    const params = new HttpParams()
+      .set('latitude', loc.latitude)
+      .set('longitude', loc.longitude)
+      .set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
+      .set('timezone', 'auto');
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        this.isLoading.set(false);
-        if (data && data.current) {
-          const c = data.current;
-          const condition = this.mapWmoCodeToCondition(c.weather_code);
-          const tempC = c.temperature_2m || 20;
-          const tempF = Math.round((tempC * 9 / 5 + 32) * 10) / 10;
-          const feelsC = c.apparent_temperature || tempC;
-          const feelsF = Math.round((feelsC * 9 / 5 + 32) * 10) / 10;
+    this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
+      .subscribe({
+        next: (data) => {
+          this.isLoading.set(false);
+          if (data && data.current) {
+            const c = data.current;
+            const condition = this.mapWmoCodeToCondition(c.weather_code);
+            const tempC = c.temperature_2m || 20;
+            const tempF = Math.round((tempC * 9 / 5 + 32) * 10) / 10;
+            const feelsC = c.apparent_temperature || tempC;
+            const feelsF = Math.round((feelsC * 9 / 5 + 32) * 10) / 10;
 
-          const weather: WeatherData = {
-            condition,
-            conditionLabel: this.formatConditionLabel(condition),
-            temperatureC: Math.round(tempC * 10) / 10,
-            temperatureF: tempF,
-            feelsLikeC: Math.round(feelsC * 10) / 10,
-            feelsLikeF: feelsF,
-            humidityPct: c.relative_humidity_2m || 50,
-            cloudCoverPct: c.cloud_cover !== undefined ? c.cloud_cover : this.getConditionDefaultCloud(condition),
-            precipitationPct: c.precipitation > 0 ? Math.min(100, Math.round(c.precipitation * 20)) : 0,
-            windSpeedKmh: Math.round(c.wind_speed_10m || 10),
-            windDirectionDeg: c.wind_direction_10m ?? 180,
-            windGustKmh: Math.round(c.wind_gusts_10m || c.wind_speed_10m || 10),
-            visibilityKm: Number.isFinite(c.visibility) ? Math.max(0.1, Math.round((c.visibility / 1000) * 10) / 10) : (condition === 'fog' ? 1.5 : (condition === 'heavy_rain' ? 4 : 18)),
-            uvIndex: Number.isFinite(c.uv_index) ? Math.round(c.uv_index * 10) / 10 : 0,
-            pressureHpa: Math.round(c.surface_pressure || 1013),
-            dataSource: 'open-meteo',
-            isSimulated: false,
-            updatedAt: new Date()
-          };
+            const weather: WeatherData = {
+              condition,
+              conditionLabel: this.formatConditionLabel(condition),
+              temperatureC: Math.round(tempC * 10) / 10,
+              temperatureF: tempF,
+              feelsLikeC: Math.round(feelsC * 10) / 10,
+              feelsLikeF: feelsF,
+              humidityPct: c.relative_humidity_2m || 50,
+              cloudCoverPct: c.cloud_cover !== undefined ? c.cloud_cover : this.getConditionDefaultCloud(condition),
+              precipitationPct: c.precipitation > 0 ? Math.min(100, Math.round(c.precipitation * 20)) : 0,
+              windSpeedKmh: Math.round(c.wind_speed_10m || 10),
+              windDirectionDeg: c.wind_direction_10m ?? 180,
+              windGustKmh: Math.round(c.wind_gusts_10m || c.wind_speed_10m || 10),
+              visibilityKm: Number.isFinite(c.visibility) ? Math.max(0.1, Math.round((c.visibility / 1000) * 10) / 10) : (condition === 'fog' ? 1.5 : (condition === 'heavy_rain' ? 4 : 18)),
+              uvIndex: Number.isFinite(c.uv_index) ? Math.round(c.uv_index * 10) / 10 : 0,
+              pressureHpa: Math.round(c.surface_pressure || 1013),
+              dataSource: 'open-meteo',
+              isSimulated: false,
+              updatedAt: new Date()
+            };
 
-          this.rawWeather.set(weather);
-          this.lastFetchedKey = key;
-        } else {
+            this.rawWeather.set(weather);
+            this.lastFetchedKey = key;
+          } else {
+            this.rawWeather.set(this.generateRealisticWeather(loc));
+          }
+        },
+        error: () => {
+          this.isLoading.set(false);
           this.rawWeather.set(this.generateRealisticWeather(loc));
         }
-      })
-      .catch(() => {
-        this.isLoading.set(false);
-        this.rawWeather.set(this.generateRealisticWeather(loc));
       });
   }
 

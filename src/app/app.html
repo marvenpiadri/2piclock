@@ -88,7 +88,7 @@
               }
             </div>
 
-            <!-- GPS Auto-Detect Button -->
+            @if (isRemoteSearching()) {\n              <div class="remote-search-status">Searching global locations…</div>\n            }\n\n            @if (remoteLocations().length > 0) {\n              <div class="remote-results">\n                <div class="remote-results-label">GLOBAL SEARCH</div>\n                @for (loc of remoteLocations(); track loc.id) {\n                  <button type="button" class="dropdown-city-item remote-city-item" (click)="selectLocation(loc)">\n                    <span class="city-flag">{{ loc.countryCode | countryFlag }}</span>\n                    <div class="city-info">\n                      <span class="city-name">{{ loc.name }}</span>\n                      <span class="city-country">{{ loc.country }} · {{ loc.timezone }}</span>\n                    </div>\n                  </button>\n                }\n              </div>\n            }\n\n            <!-- GPS Auto-Detect Button -->
             <button type="button" class="gps-detect-btn" (click)="detectGPS()">
               <mat-icon class="gps-ico">{{ isLocating() ? 'hourglass_empty' : 'my_location' }}</mat-icon>
               <span>{{ isLocating() ? 'Detecting coordinates...' : 'Use Current GPS Location' }}</span>

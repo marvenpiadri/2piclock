@@ -124,4 +124,19 @@ export class LocationService {
   removeFromWatchlist(locId: string): void {
     this.watchlist.update(list => list.filter(l => l.id !== locId));
   }
+
+  getCountryFlag(countryCode: string): string {
+    if (!countryCode || countryCode.length !== 2) {
+      return countryCode === 'GPS' ? '📍' : '🌐';
+    }
+    try {
+      const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+      return String.fromCodePoint(...codePoints);
+    } catch {
+      return '🏳️';
+    }
+  }
 }

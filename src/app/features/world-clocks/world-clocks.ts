@@ -7,9 +7,9 @@ import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { calculateSolarPosition, calculateSolarEvents } from '../../core/astronomy/astronomy-engine';
 import { TerminatorRibbonComponent } from '../../shared/components/terminator-ribbon/terminator-ribbon';
-import { RadianOverlapTunnelComponent } from '../../shared/components/radian-overlap-tunnel/radian-overlap-tunnel';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
+import { CountryFlagPipe } from '../../core/pipes/country-flag.pipe';
 
 interface WorldCitySkyData {
   location: GeoLocation;
@@ -31,9 +31,9 @@ interface WorldCitySkyData {
     CommonModule,
     MatIconModule,
     TerminatorRibbonComponent,
-    RadianOverlapTunnelComponent,
     ShareExportModalComponent,
-    AnalogClockComponent
+    AnalogClockComponent,
+    CountryFlagPipe
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './world-clocks.html',

@@ -66,7 +66,7 @@
           class="location-selector-btn" 
           [class.active]="showLocationDropdown()"
           (click)="toggleLocationDropdown()">
-          <span class="loc-flag">{{ selectedLocation().flag }}</span>
+          <span class="loc-flag">{{ selectedLocation().countryCode | countryFlag }}</span>
           <span class="loc-name">{{ selectedLocation().name }}</span>
           <mat-icon class="arrow-ico">expand_more</mat-icon>
         </button>
@@ -108,7 +108,7 @@
                   class="dropdown-city-item" 
                   [class.selected]="selectedLocation().id === loc.id"
                   (click)="selectLocation(loc)">
-                  <span class="city-flag">{{ loc.flag }}</span>
+                  <span class="city-flag">{{ loc.countryCode | countryFlag }}</span>
                   <div class="city-info">
                     <span class="city-name">{{ loc.name }}</span>
                     <span class="city-country">{{ loc.country }} · {{ loc.timezone }}</span>

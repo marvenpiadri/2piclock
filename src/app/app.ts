@@ -7,12 +7,13 @@ import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-
 import { LocationService } from './core/services/location.service';
 import { CelestialService } from './core/services/celestial.service';
 import { GeoLocation } from './core/models/location.model';
+import { CountryFlagPipe } from './core/pipes/country-flag.pipe';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, MatIconModule, ReactiveSkyComponent],
+  imports: [CommonModule, RouterModule, FormsModule, MatIconModule, ReactiveSkyComponent, CountryFlagPipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

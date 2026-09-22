@@ -61,7 +61,7 @@ export class SeoService {
   }
 
   private updateForUrl(url: string): void {
-    const path = url.split('?')[0].replace(/\\/$/, '') || '/';
+    const path = url.split('?')[0].replace(/\/$/, '') || '/';
 
     const pages: Record<string, SeoMetadata> = {
       '/': {

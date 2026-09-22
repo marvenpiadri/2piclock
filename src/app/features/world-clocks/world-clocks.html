@@ -43,9 +43,6 @@
   <!-- 1. Dynamic Terminator Line World Ribbon -->
   <app-terminator-ribbon [activeDate]="activeDate()"></app-terminator-ribbon>
 
-  <!-- 2. Radian Time-Overlap Matrix -->
-  <app-radian-overlap-tunnel [activeDate]="activeDate()"></app-radian-overlap-tunnel>
-
   <!-- Cities Grid -->
   <div class="cities-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     @for (city of citySkies(); track city.location.id) {
@@ -57,7 +54,7 @@
         <!-- Mini Sky Header Banner -->
         <div class="city-sky-header p-4 relative overflow-hidden" [style.background]="city.bgGradient">
           <div class="header-top flex justify-between items-center relative z-10">
-            <span class="city-flag text-2xl shadow-sm">{{ city.location.flag }}</span>
+            <span class="city-flag text-2xl shadow-sm">{{ city.location.countryCode | countryFlag }}</span>
             <span class="city-twilight-badge font-mono text-[10px] bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-amber-300 border border-amber-500/30">
               {{ city.twilightState }}
             </span>
@@ -77,7 +74,12 @@
 
           @if (clockStyleMode() === 'analog') {
             <div class="py-2">
-              <app-analog-clock [timezone]="city.location.timezone" [activeDate]="activeDate()"></app-analog-clock>
+              <app-analog-clock 
+                [timezone]="city.location.timezone" 
+                [activeDate]="activeDate()"
+                [latitude]="city.location.latitude"
+                [longitude]="city.location.longitude">
+              </app-analog-clock>
             </div>
           } @else {
             <div class="city-time-display font-mono text-2xl font-bold text-amber-400">

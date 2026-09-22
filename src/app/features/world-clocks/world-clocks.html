@@ -1,0 +1,65 @@
+<div class="world-clocks-page">
+  <div class="page-header glass-panel">
+    <div>
+      <h1 class="page-title">Global Planetary Observatory</h1>
+      <p class="page-subtitle">Real-time solar positions, twilight states, and local times across planetary meridians</p>
+    </div>
+  </div>
+
+  <div class="cities-grid">
+    @for (city of citySkies(); track city.location.id) {
+      <div 
+        class="city-sky-card glass-panel" 
+        [class.selected]="selectedLocation().id === city.location.id"
+        (click)="selectAndGoToSky(city.location)">
+        
+        <!-- Mini Sky Header Banner -->
+        <div class="city-sky-header" [style.background]="city.bgGradient">
+          <div class="header-top">
+            <span class="city-flag">{{ city.location.flag }}</span>
+            <span class="city-twilight-badge">{{ city.twilightState }}</span>
+          </div>
+          <div class="city-sun-alt font-mono">
+            <mat-icon>{{ city.isDay ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
+            {{ city.sunAltitude >= 0 ? '+' : '' }}{{ city.sunAltitude }}° Elev
+          </div>
+        </div>
+
+        <!-- City Details Body -->
+        <div class="city-card-body">
+          <div class="city-name-row">
+            <div class="city-name">{{ city.location.name }}</div>
+            <div class="city-country">{{ city.location.country }}</div>
+          </div>
+
+          <div class="city-time-display font-mono">
+            {{ city.localTime }}
+          </div>
+          <div class="city-date-sub">
+            {{ city.localDate }}
+          </div>
+
+          <div class="city-solar-events font-mono">
+            <div class="event-mini">
+              <span class="lbl">Rise</span>
+              <span class="val">{{ city.sunriseTime }}</span>
+            </div>
+            <div class="event-mini">
+              <span class="lbl">Set</span>
+              <span class="val">{{ city.sunsetTime }}</span>
+            </div>
+            <div class="event-mini">
+              <span class="lbl">Azimuth</span>
+              <span class="val">{{ city.sunAzimuth }}°</span>
+            </div>
+          </div>
+
+          <button class="view-sky-btn" (click)="$event.stopPropagation(); selectAndGoToSky(city.location)">
+            <span>Observe Sky</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

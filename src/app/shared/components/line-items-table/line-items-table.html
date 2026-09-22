@@ -1,0 +1,223 @@
+<div class="line-items-container">
+  <!-- Capsule Toggle for lineLayoutMode (§5) -->
+  @if (hasPricing() && !lockLineLayoutMode()) {
+    <div class="layout-toggle-header">
+      <span class="toggle-caption">Line Item Layout Mode:</span>
+      <div class="capsule-toggle" role="tablist" aria-label="Line item layout mode">
+        <button
+          type="button"
+          class="capsule-btn"
+          [class.active]="lineLayoutMode() === 'quantity'"
+          (click)="setMode('quantity')"
+          role="tab"
+          [attr.aria-selected]="lineLayoutMode() === 'quantity'"
+        >
+          <span class="capsule-icon material-icons">inventory_2</span>
+          <span>Quantity & Rate</span>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          [class.active]="lineLayoutMode() === 'hours'"
+          (click)="setMode('hours')"
+          role="tab"
+          [attr.aria-selected]="lineLayoutMode() === 'hours'"
+        >
+          <span class="capsule-icon material-icons">schedule</span>
+          <span>Hours & Hourly Rate</span>
+        </button>
+        <button
+          type="button"
+          class="capsule-btn"
+          [class.active]="lineLayoutMode() === 'flatRate'"
+          (click)="setMode('flatRate')"
+          role="tab"
+          [attr.aria-selected]="lineLayoutMode() === 'flatRate'"
+        >
+          <span class="capsule-icon material-icons">sell</span>
+          <span>Flat Rate (Amount Only)</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Real Table Structure (§15: Tables look like tables, real rules/borders) -->
+  <div class="table-responsive-wrapper">
+    <table class="line-items-table">
+      <thead>
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-desc">Item & Description</th>
+          
+          @if (hasPricing()) {
+            @if (lineLayoutMode() === 'quantity') {
+              <th class="col-qty">Quantity</th>
+              <th class="col-rate">Unit Cost ({{ currencySymbol() }})</th>
+            } @else if (lineLayoutMode() === 'hours') {
+              <th class="col-qty">Hours</th>
+              <th class="col-rate">Hourly Rate ({{ currencySymbol() }})</th>
+            }
+            <th class="col-tax">Tax %</th>
+            <th class="col-disc">Disc %</th>
+            <th class="col-amount">Amount ({{ currencySymbol() }})</th>
+          } @else {
+            <th class="col-qty">Quantity / Pkgs</th>
+            <th class="col-notes">Notes / Marks</th>
+          }
+          
+          <th class="col-actions" aria-label="Row Actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id; let i = $index) {
+          <tr class="item-row">
+            <td class="col-index">
+              <span class="row-number">{{ i + 1 }}</span>
+            </td>
+
+            <td class="col-desc">
+              <div class="desc-cell-stack">
+                <input
+                  type="text"
+                  class="form-input desc-input"
+                  [value]="item.description"
+                  (input)="onItemChange(i, 'description', $any($event.target).value)"
+                  placeholder="Service description or product specification..."
+                  required
+                />
+                
+                @if (products().length > 0) {
+                  <div class="quick-catalog-picker">
+                    <span class="quick-picker-hint">or autofill:</span>
+                    <select class="quick-select" (change)="selectProductForLine(i, $event)">
+                      <option value="">Choose from product catalog...</option>
+                      @for (p of products(); track p.id) {
+                        <option [value]="p.id">{{ p.name }} ({{ currencySymbol() }}{{ p.unitCost }})</option>
+                      }
+                    </select>
+                  </div>
+                }
+              </div>
+            </td>
+
+            @if (hasPricing()) {
+              @if (lineLayoutMode() === 'quantity' || lineLayoutMode() === 'hours') {
+                <td class="col-qty">
+                  <input
+                    type="number"
+                    class="form-input num-input text-center"
+                    [value]="item.quantity"
+                    (input)="onItemChange(i, 'quantity', $any($event.target).value)"
+                    min="0"
+                    step="any"
+                    placeholder="1"
+                  />
+                </td>
+
+                <td class="col-rate">
+                  <div class="input-with-symbol">
+                    <span class="input-prefix">{{ currencySymbol() }}</span>
+                    <input
+                      type="number"
+                      class="form-input num-input text-right with-prefix"
+                      [value]="item.unitCost"
+                      (input)="onItemChange(i, 'unitCost', $any($event.target).value)"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </td>
+              }
+
+              <td class="col-tax">
+                <input
+                  type="number"
+                  class="form-input num-input text-center"
+                  [value]="item.taxRate"
+                  (input)="onItemChange(i, 'taxRate', $any($event.target).value)"
+                  min="0"
+                  max="100"
+                  placeholder="0"
+                />
+              </td>
+
+              <td class="col-disc">
+                <input
+                  type="number"
+                  class="form-input num-input text-center"
+                  [value]="item.discountPercent"
+                  (input)="onItemChange(i, 'discountPercent', $any($event.target).value)"
+                  min="0"
+                  max="100"
+                  placeholder="0"
+                />
+              </td>
+
+              <td class="col-amount">
+                @if (lineLayoutMode() === 'flatRate') {
+                  <div class="input-with-symbol">
+                    <span class="input-prefix">{{ currencySymbol() }}</span>
+                    <input
+                      type="number"
+                      class="form-input num-input text-right with-prefix amount-highlight"
+                      [value]="item.unitCost"
+                      (input)="onItemChange(i, 'unitCost', $any($event.target).value)"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                } @else {
+                  <div class="computed-amount-box">
+                    <span class="amount-val">{{ item.amount | number:'1.2-2' }}</span>
+                  </div>
+                }
+              </td>
+            } @else {
+              <!-- Non-pricing delivery note fields -->
+              <td class="col-qty">
+                <input
+                  type="number"
+                  class="form-input num-input text-center"
+                  [value]="item.quantity"
+                  (input)="onItemChange(i, 'quantity', $any($event.target).value)"
+                  min="1"
+                  placeholder="1"
+                />
+              </td>
+              <td class="col-notes">
+                <input
+                  type="text"
+                  class="form-input"
+                  [value]="item.description ? '' : ''"
+                  placeholder="e.g. 2 Cartons, fragile"
+                />
+              </td>
+            }
+
+            <td class="col-actions">
+              <button
+                type="button"
+                class="btn-row-delete"
+                (click)="removeItem(i)"
+                title="Remove line item"
+                aria-label="Remove item"
+              >
+                <span class="material-icons">delete_outline</span>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Item Row Action -->
+  <div class="table-footer-bar">
+    <button type="button" class="btn-add-line" (click)="addItem()">
+      <span class="material-icons btn-icon">add_circle_outline</span>
+      <span>Add Line Item</span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,127 @@
+<app-calculator-layout
+  title="Hourly & Freelance Billing Rate Calculator"
+  subtitle="Determine your sustainable client billing rates based on take-home income, tax reserves, overheads, and billable capacity."
+  icon="timer"
+  currentToolName="Freelance Rate Strategy Model"
+>
+  <div mainContent class="calculator-main-pane">
+    <div class="aging-presets-bar">
+      <span class="aging-lbl">Career Archetypes:</span>
+      <button type="button" class="aging-btn" (click)="setPreset('senior-dev')">Senior Engineer</button>
+      <button type="button" class="aging-btn" (click)="setPreset('designer')">UI/UX Designer</button>
+      <button type="button" class="aging-btn" (click)="setPreset('consultant')">Strategy Consultant</button>
+      <button type="button" class="aging-btn" (click)="setPreset('agency')">Boutique Agency</button>
+    </div>
+
+    <!-- Controls & Input Card -->
+    <app-fintech-card title="Income Goals & Capacity" icon="tune">
+      <div class="inputs-two-col-grid">
+        <div class="field-group">
+          <label class="input-label">Target Annual Take-Home ($)</label>
+          <div class="input-symbol-wrap prefix">
+            <span class="input-affix">$</span>
+            <input type="number" [ngModel]="targetNetIncome()" (ngModelChange)="targetNetIncome.set($event)" class="fintech-input" />
+          </div>
+          <span class="field-micro-hint">Desired net cash salary in bank</span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Total Tax & SE Rate (%)</label>
+          <div class="input-symbol-wrap suffix">
+            <input type="number" [ngModel]="taxRate()" (ngModelChange)="taxRate.set($event)" class="fintech-input" />
+            <span class="input-affix">%</span>
+          </div>
+          <span class="field-micro-hint">Income tax + Social Security/Medicare</span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Annual Operating Overheads ($)</label>
+          <div class="input-symbol-wrap prefix">
+            <span class="input-affix">$</span>
+            <input type="number" [ngModel]="annualOverheads()" (ngModelChange)="annualOverheads.set($event)" class="fintech-input" />
+          </div>
+          <span class="field-micro-hint">Software, hardware, insurance, CPA</span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Time Off (Weeks / Year)</label>
+          <div class="input-symbol-wrap suffix">
+            <input type="number" [ngModel]="vacationSickWeeks()" (ngModelChange)="vacationSickWeeks.set($event)" class="fintech-input" />
+            <span class="input-affix">weeks</span>
+          </div>
+          <span class="field-micro-hint">Non-working weeks per year</span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Weekly Billable Hours</label>
+          <div class="input-symbol-wrap suffix">
+            <input type="number" [ngModel]="billableHoursPerWeek()" (ngModelChange)="billableHoursPerWeek.set($event)" class="fintech-input" />
+            <span class="input-affix">hrs/wk</span>
+          </div>
+          <span class="field-micro-hint">Real billable work (excl. admin)</span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Business Buffer (%)</label>
+          <div class="input-symbol-wrap suffix">
+            <input type="number" [ngModel]="profitBufferPercent()" (ngModelChange)="profitBufferPercent.set($event)" class="fintech-input" />
+            <span class="input-affix">%</span>
+          </div>
+          <span class="field-micro-hint">Emergency reserve & growth margin</span>
+        </div>
+      </div>
+    </app-fintech-card>
+
+    <!-- Results & Chart Card -->
+    <app-fintech-card title="Billing Rate Recommendations" icon="analytics">
+      <div class="results-hero-strip">
+        <div class="hero-metric-cell main-highlight">
+          <span class="hero-lbl">Minimum Hourly Rate</span>
+          <span class="hero-num text-neon font-mono">${{ hourlyRate() | number:'1.0-0' }}</span>
+          <span class="hero-subtext">Day Rate: ${{ dayRate() | number:'1.0-0' }} / 8-hr</span>
+        </div>
+        <div class="hero-metric-cell fee-highlight">
+          <span class="hero-lbl">Annual Gross Revenue Goal</span>
+          <span class="hero-num text-amber font-mono">${{ totalAnnualRevenueNeeded() | number:'1.0-0' }}</span>
+          <span class="hero-subtext">Monthly: ${{ monthlyTargetGross() | number:'1.0-0' }} / mo</span>
+        </div>
+      </div>
+
+      <div class="results-split-layout">
+        <div class="chart-visual-panel">
+          <h3 class="chart-title">Revenue Allocation Breakdown</h3>
+          <div class="chart-canvas-wrapper">
+            <canvas #breakdownDoughnut id="breakdownDoughnut"></canvas>
+          </div>
+        </div>
+
+        <div class="breakdown-details-panel">
+          <div class="breakdown-list">
+            <div class="breakdown-item">
+              <span class="item-name">Net Salary Take-Home:</span>
+              <span class="item-value font-mono">${{ targetNetIncome() | number:'1.0-0' }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="item-name">Tax Reserve Allocation:</span>
+              <span class="item-value text-crimson font-mono">+${{ (grossPreTaxIncome() - targetNetIncome()) | number:'1.0-0' }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="item-name">Business Overheads:</span>
+              <span class="item-value text-crimson font-mono">+${{ annualOverheads() | number:'1.0-0' }}</span>
+            </div>
+            <div class="breakdown-item divider"></div>
+            <div class="breakdown-item total">
+              <span class="item-name">Required Annual Billing:</span>
+              <span class="item-value text-neon font-mono">${{ totalAnnualRevenueNeeded() | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          
+          <button type="button" class="btn-copy-summary mt-4" (click)="copySummary()">
+            <span class="material-icons">{{ copied() ? 'check_circle' : 'content_copy' }}</span>
+            <span>{{ copied() ? 'Summary Copied!' : 'Copy Breakdown Summary' }}</span>
+          </button>
+        </div>
+      </div>
+    </app-fintech-card>
+  </div>
+</app-calculator-layout>

@@ -1,0 +1,79 @@
+<div class="product-picker-container">
+  <!-- Search & Category Bar -->
+  <div class="picker-top-bar">
+    <div class="search-field-wrap">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search catalog by name or SKU..."
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+      />
+      @if (searchQuery()) {
+        <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">&times;</button>
+      }
+    </div>
+
+    <!-- Categories horizontal pills -->
+    @if (categories().length > 1) {
+      <div class="categories-pill-row">
+        @for (cat of categories(); track cat) {
+          <button
+            type="button"
+            class="cat-pill"
+            [class.active]="selectedCategory() === cat"
+            (click)="selectCategory(cat)"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Products Grid (Tactile tap cards for POS / Quick-pick) -->
+  <div class="products-grid">
+    @for (product of filteredProducts(); track product.id) {
+      <button
+        type="button"
+        class="product-card-btn"
+        (click)="onPickProduct(product)"
+        [title]="product.description || product.name"
+      >
+        <div class="product-media-box">
+          @if (product.imageUrl) {
+            <img
+              [src]="product.imageUrl"
+              [alt]="product.name"
+              class="card-img"
+              referrerpolicy="no-referrer"
+            />
+          } @else {
+            <span class="material-icons card-ico">{{ product.icon || 'inventory_2' }}</span>
+          }
+        </div>
+        <div class="product-info-box">
+          <span class="product-name">{{ product.name }}</span>
+          @if (product.category) {
+            <span class="product-cat-tag">{{ product.category }}</span>
+          }
+          <div class="product-price-tag">
+            <span class="price-val">{{ formatPrice(product.unitCost) }}</span>
+            @if (product.taxRate > 0) {
+              <span class="tax-note">+{{ product.taxRate }}% tax</span>
+            }
+          </div>
+        </div>
+        <div class="product-add-badge">
+          <span class="material-icons add-icon">add</span>
+        </div>
+      </button>
+    } @empty {
+      <div class="empty-products-view">
+        <span class="material-icons empty-icon">search_off</span>
+        <p class="empty-text">No items matching "{{ searchQuery() }}"</p>
+      </div>
+    }
+  </div>
+</div>

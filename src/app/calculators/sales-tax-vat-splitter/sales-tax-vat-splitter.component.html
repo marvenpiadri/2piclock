@@ -1,0 +1,133 @@
+<app-calculator-layout
+  title="Sales Tax & VAT / GST Reverse Splitter"
+  subtitle="Extract pre-tax base prices from gross receipt totals (inclusive) or calculate statutory tax additions (exclusive) instantly."
+  icon="percent"
+  currentToolName="Tax Allocation & Reverse Model"
+>
+  <div mainContent class="calculator-main-pane">
+    <!-- Mode Toggle Switcher -->
+    <div class="calc-mode-switcher">
+      <button
+        type="button"
+        class="mode-switch-btn"
+        [class.active]="taxMode() === 'extract'"
+        (click)="taxMode.set('extract')"
+      >
+        <span class="material-icons">call_split</span>
+        <span>Extract Tax (Inclusive)</span>
+      </button>
+      <button
+        type="button"
+        class="mode-switch-btn"
+        [class.active]="taxMode() === 'add'"
+        (click)="taxMode.set('add')"
+      >
+        <span class="material-icons">add_shopping_cart</span>
+        <span>Add Tax (Exclusive)</span>
+      </button>
+    </div>
+
+    <!-- Controls & Input Card -->
+    <app-fintech-card title="Transaction & Jurisdiction Parameters" icon="receipt_long">
+      <!-- Jurisdictional Presets -->
+      <div class="field-group mb-4">
+        <label class="input-label">Jurisdiction Rate Presets</label>
+        <div class="preset-pill-grid">
+          @for (preset of taxPresets; track preset.country) {
+            <button
+              type="button"
+              class="preset-pill"
+              [class.active]="taxRatePercent() === preset.rate"
+              (click)="setRatePreset(preset.rate)"
+            >
+              <span class="preset-name">{{ preset.country }}</span>
+              <span class="preset-rates">{{ preset.rate }}%</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="inputs-two-col-grid">
+        <div class="field-group">
+          <label class="input-label">
+            {{ taxMode() === 'extract' ? 'Gross Receipt Total ($)' : 'Net Pre-Tax Base Price ($)' }}
+          </label>
+          <div class="input-symbol-wrap prefix">
+            <span class="input-affix">$</span>
+            <input
+              type="number"
+              [ngModel]="inputAmount()"
+              (ngModelChange)="inputAmount.set($event)"
+              class="fintech-input"
+            />
+          </div>
+          <span class="field-micro-hint">
+            {{ taxMode() === 'extract' ? 'Total inclusive of tax' : 'Net cost before taxes' }}
+          </span>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label">Statutory Tax Rate (%)</label>
+          <div class="input-symbol-wrap suffix">
+            <input
+              type="number"
+              [ngModel]="taxRatePercent()"
+              (ngModelChange)="taxRatePercent.set($event)"
+              class="fintech-input"
+            />
+            <span class="input-affix">%</span>
+          </div>
+          <span class="field-micro-hint">VAT, GST, or Sales Tax %</span>
+        </div>
+      </div>
+    </app-fintech-card>
+
+    <!-- Results & Chart Card -->
+    <app-fintech-card title="Fiscal Allocation Summary" icon="analytics">
+      <div class="results-hero-strip">
+        <div class="hero-metric-cell main-highlight">
+          <span class="hero-lbl">Net Product Subtotal</span>
+          <span class="hero-num text-neon font-mono">
+            ${{ results().netBase | number:'1.2-2' }}
+          </span>
+          <span class="hero-subtext">Merchant revenue retained</span>
+        </div>
+
+        <div class="hero-metric-cell fee-highlight">
+          <span class="hero-lbl">Tax Remittance Amount</span>
+          <span class="hero-num text-crimson font-mono">
+            ${{ results().taxAmount | number:'1.2-2' }}
+          </span>
+          <span class="hero-subtext">Tax Rate: {{ results().taxRate | number:'1.1-2' }}%</span>
+        </div>
+      </div>
+
+      <div class="results-split-layout">
+        <div class="breakdown-details-panel">
+          <div class="breakdown-list">
+            <div class="breakdown-item">
+              <span class="item-name">Net Subtotal:</span>
+              <span class="item-value font-mono">${{ results().netBase | number:'1.2-2' }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="item-name">Tax Output:</span>
+              <span class="item-value text-crimson font-mono">+${{ results().taxAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="breakdown-item divider"></div>
+            <div class="breakdown-item total">
+              <span class="item-name">Gross Invoice Total:</span>
+              <span class="item-value text-neon font-mono">${{ results().grossTotal | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-visual-panel">
+          <h3 class="chart-title">Revenue vs. Tax Share</h3>
+          <div class="chart-canvas-wrapper">
+            <canvas #calcChart id="calcChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </app-fintech-card>
+  </div>
+</app-calculator-layout>

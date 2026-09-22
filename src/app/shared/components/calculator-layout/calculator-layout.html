@@ -1,0 +1,112 @@
+<div class="calculator-page-container" id="calculator-page-root">
+  <header class="calculator-header-deck" id="calc-header-deck">
+    <div class="header-breadcrumbs" id="calc-breadcrumbs">
+      <a routerLink="/tools" class="crumb-link" id="back-to-tools-link">
+        <span class="material-icons">arrow_back</span>
+        <span>All Calculators</span>
+      </a>
+      <span class="crumb-separator">/</span>
+      <span class="crumb-category">{{ categoryLabel() }}</span>
+      <span class="crumb-separator">/</span>
+      <span class="crumb-current" id="current-crumb-label">{{ currentToolName() }}</span>
+    </div>
+
+    <div class="header-title-row" id="calc-title-row">
+      <div class="header-icon-badge" id="calc-icon-badge">
+        <span class="material-icons">{{ icon() }}</span>
+      </div>
+      <div class="header-title-copy">
+        <div class="header-eyebrow">X-Facture Finance Engine</div>
+        <h1 class="page-title" id="calc-display-title">{{ title() }}</h1>
+        <p class="page-subtitle" id="calc-display-subtitle">{{ subtitle() }}</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="calculator-dashboard-grid" id="calc-dashboard-layout-grid">
+    <main class="calculator-main-pane" id="calc-main-content-pane">
+      <ng-content select="[mainContent]"></ng-content>
+    </main>
+
+    @if (showAdsense()) {
+      <aside class="calculator-adsense-pane" id="calc-adsense-sidebar-pane">
+        <div class="adsense-skyscraper-card" id="calc-ads-card">
+          <div class="adsense-card-header">
+            <span class="ads-badge">SPONSORED</span>
+            <span class="ads-slot-label">Advertisement</span>
+          </div>
+          <div class="adsense-placeholder-inner">
+            <span class="material-icons ads-icon">ads_click</span>
+            <p class="ads-title">Relevant finance tools & offers</p>
+            <p class="ads-desc">A dedicated ad area keeps the calculator itself clean while supporting free access.</p>
+            <div class="ads-dimension-tag">300 × 600</div>
+          </div>
+          <div class="adsense-card-footer">X-Facture · Free Finance Tools</div>
+        </div>
+      </aside>
+    }
+  </div>
+
+  @if (calculator(); as current) {
+    <section class="calculator-knowledge-panel" aria-labelledby="calculator-knowledge-title">
+      <div class="knowledge-heading">
+        <div>
+          <span class="knowledge-eyebrow">Calculator guide</span>
+          <h2 id="calculator-knowledge-title">{{ current.name }}</h2>
+          <p>{{ current.description }}</p>
+        </div>
+        <div class="knowledge-count">
+          <span>{{ calculatorCount }}</span>
+          <small>finance tools</small>
+        </div>
+      </div>
+
+      <div class="knowledge-grid">
+        <article class="knowledge-card knowledge-card-wide">
+          <span class="knowledge-icon material-icons">functions</span>
+          <div>
+            <h3>Formula</h3>
+            <p>{{ current.formula || 'This calculator uses the assumptions shown in the inputs and results above.' }}</p>
+          </div>
+        </article>
+
+        <article class="knowledge-card knowledge-card-wide">
+          <span class="knowledge-icon material-icons">play_circle</span>
+          <div>
+            <h3>How it works</h3>
+            <p>{{ current.howItWorks || current.description }}</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="knowledge-bottom-grid">
+        <article class="knowledge-card">
+          <span class="knowledge-icon material-icons">verified</span>
+          <div>
+            <h3>Assumptions & notes</h3>
+            <ul>
+              @for (note of (current.notes ?? []); track note) {
+                <li>{{ note }}</li>
+              }
+            </ul>
+          </div>
+        </article>
+
+        <article class="knowledge-card related-card">
+          <span class="knowledge-icon material-icons">account_tree</span>
+          <div>
+            <h3>Related calculators</h3>
+            <div class="related-calculator-list">
+              @for (related of relatedCalculators(); track related.slug) {
+                <a [routerLink]="['/calculators', related.slug]" class="related-calculator-link">
+                  <span>{{ related.name }}</span>
+                  <span class="material-icons">arrow_forward</span>
+                </a>
+              }
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  }
+</div>

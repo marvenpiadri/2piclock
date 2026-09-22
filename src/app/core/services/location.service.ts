@@ -1,0 +1,127 @@
+import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { GeoLocation, PRESET_LOCATIONS } from '../models/location.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LocationService {
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
+  readonly allPresets: GeoLocation[] = PRESET_LOCATIONS;
+  readonly selectedLocation = signal<GeoLocation>(PRESET_LOCATIONS[0]); // Default to Tokyo or local
+  readonly watchlist = signal<GeoLocation[]>([
+    PRESET_LOCATIONS[0], // Tokyo
+    PRESET_LOCATIONS[1], // London
+    PRESET_LOCATIONS[2], // New York
+    PRESET_LOCATIONS[3], // Paris
+    PRESET_LOCATIONS[4], // Casablanca
+    PRESET_LOCATIONS[7]  // Reykjavik
+  ]);
+
+  readonly isLocating = signal<boolean>(false);
+  readonly locationError = signal<string | null>(null);
+
+  constructor() {
+    if (this.isBrowser) {
+      try {
+        const savedLocId = localStorage.getItem('2piclock_selected_location');
+        if (savedLocId) {
+          const found = this.allPresets.find(l => l.id === savedLocId);
+          if (found) {
+            this.selectedLocation.set(found);
+          } else {
+            const custom = JSON.parse(savedLocId);
+            if (custom && custom.latitude && custom.longitude) {
+              this.selectedLocation.set(custom);
+            }
+          }
+        }
+      } catch {
+        // Fallback to default
+      }
+    }
+  }
+
+  selectLocation(loc: GeoLocation): void {
+    this.selectedLocation.set(loc);
+    this.locationError.set(null);
+    if (this.isBrowser) {
+      try {
+        if (loc.isCustom) {
+          localStorage.setItem('2piclock_selected_location', JSON.stringify(loc));
+        } else {
+          localStorage.setItem('2piclock_selected_location', loc.id);
+        }
+      } catch {
+        // Ignore storage error
+      }
+    }
+  }
+
+  setCustomCoordinates(name: string, lat: number, lng: number, timezone?: string): void {
+    const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const customLoc: GeoLocation = {
+      id: `custom-${Date.now()}`,
+      name: name || `Custom (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)`,
+      country: 'Coordinates',
+      countryCode: '🌐',
+      flag: '📍',
+      latitude: lat,
+      longitude: lng,
+      timezone: tz,
+      isCustom: true
+    };
+    this.selectLocation(customLoc);
+  }
+
+  detectUserLocation(): void {
+    if (!this.isBrowser || !navigator.geolocation) {
+      this.locationError.set('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    this.isLocating.set(true);
+    this.locationError.set(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.isLocating.set(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+        const userLoc: GeoLocation = {
+          id: 'user-current-gps',
+          name: 'Current Location',
+          country: 'GPS Detected',
+          countryCode: 'GPS',
+          flag: '📍',
+          latitude: Math.round(lat * 10000) / 10000,
+          longitude: Math.round(lng * 10000) / 10000,
+          timezone: tz,
+          elevationMeters: pos.coords.altitude || 10,
+          isCustom: true
+        };
+
+        this.selectLocation(userLoc);
+      },
+      (err) => {
+        this.isLocating.set(false);
+        this.locationError.set(err.message || 'Unable to retrieve location.');
+      },
+      { timeout: 10000, enableHighAccuracy: false }
+    );
+  }
+
+  addToWatchlist(loc: GeoLocation): void {
+    if (!this.watchlist().some(l => l.id === loc.id)) {
+      this.watchlist.update(list => [...list, loc]);
+    }
+  }
+
+  removeFromWatchlist(locId: string): void {
+    this.watchlist.update(list => list.filter(l => l.id !== locId));
+  }
+}

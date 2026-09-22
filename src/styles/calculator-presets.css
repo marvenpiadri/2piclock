@@ -1,0 +1,269 @@
+/* X-Facture Calculator Preset System
+   Shared visual language for every quick preset/scenario/profile control. */
+
+/* Generic preset bars */
+.aging-presets-bar,
+.scenario-presets-bar,
+.preset-bar,
+.presets-bar,
+.calculator-presets-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.aging-lbl,
+.preset-label,
+.preset-bar-label,
+.presets-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 8px 0 2px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Presets are compact cards, not plain browser buttons. */
+.aging-btn,
+.scenario-btn,
+.preset-btn,
+.preset-button,
+.preset-card,
+.calculator-preset {
+  position: relative;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font: 700 11px/1.2 var(--font-sans);
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 1px rgba(0,0,0,.02);
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.aging-btn:hover,
+.scenario-btn:hover,
+.preset-btn:hover,
+.preset-button:hover,
+.preset-card:hover,
+.calculator-preset:hover {
+  border-color: var(--color-money-green);
+  background: var(--color-surface-hover);
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.aging-btn:focus-visible,
+.scenario-btn:focus-visible,
+.preset-btn:focus-visible,
+.preset-button:focus-visible,
+.preset-card:focus-visible,
+.calculator-preset:focus-visible {
+  outline: 2px solid var(--color-money-green);
+  outline-offset: 2px;
+}
+
+/* Works with Angular [class.active], [class.selected], or native aria state. */
+.aging-btn.active,
+.scenario-btn.active,
+.preset-btn.active,
+.preset-button.active,
+.preset-card.active,
+.calculator-preset.active,
+.aging-btn.selected,
+.scenario-btn.selected,
+.preset-btn.selected,
+.preset-button.selected,
+.preset-card.selected,
+.calculator-preset.selected,
+.aging-btn[aria-pressed="true"],
+.scenario-btn[aria-pressed="true"],
+.preset-btn[aria-pressed="true"],
+.preset-button[aria-pressed="true"],
+.preset-card[aria-pressed="true"],
+.calculator-preset[aria-pressed="true"] {
+  border-color: var(--color-money-green);
+  background: var(--color-money-green-light);
+  color: var(--color-text-main);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-money-green) 18%, transparent), var(--shadow-xs);
+}
+
+.aging-btn.active::before,
+.scenario-btn.active::before,
+.preset-btn.active::before,
+.preset-button.active::before,
+.preset-card.active::before,
+.calculator-preset.active::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--color-money-green);
+}
+
+/* Preset grids / card collections */
+.preset-grid,
+.presets-grid,
+.scenario-grid,
+.calculator-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preset-grid .preset-btn,
+.presets-grid .preset-btn,
+.scenario-grid .scenario-btn,
+.calculator-preset-grid .calculator-preset,
+.preset-grid .preset-card,
+.presets-grid .preset-card {
+  width: 100%;
+  min-height: 48px;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* Rich preset cards with title/subtitle/value content. */
+.preset-card,
+.calculator-preset.rich,
+.preset-option {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 62px;
+  padding: 10px 11px;
+  text-align: left;
+}
+
+.preset-card .preset-name,
+.preset-option .preset-name,
+.calculator-preset .preset-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-card .preset-description,
+.preset-option .preset-description,
+.calculator-preset .preset-description {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-card .preset-value,
+.preset-option .preset-value,
+.calculator-preset .preset-value {
+  color: var(--color-text-muted);
+  font: 700 9px/1.2 var(--font-mono);
+}
+
+/* Labels and separators inside a preset group. */
+.preset-group,
+.presets-section,
+.scenario-presets,
+.calculator-presets-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.preset-group-title,
+.presets-section .input-label {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+/* Dark mode remains token-driven; no white preset surfaces. */
+[data-theme="dark"] .aging-presets-bar,
+[data-theme="dark"] .scenario-presets-bar,
+[data-theme="dark"] .preset-bar,
+[data-theme="dark"] .presets-bar,
+[data-theme="dark"] .calculator-presets-bar,
+.theme-dark .aging-presets-bar,
+.theme-dark .scenario-presets-bar,
+.theme-dark .preset-bar,
+.theme-dark .presets-bar,
+.theme-dark .calculator-presets-bar {
+  background: var(--color-surface);
+}
+
+@media (max-width: 900px) {
+  .preset-grid,
+  .presets-grid,
+  .scenario-grid,
+  .calculator-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .aging-presets-bar,
+  .scenario-presets-bar,
+  .preset-bar,
+  .presets-bar,
+  .calculator-presets-bar {
+    align-items: stretch;
+  }
+
+  .aging-lbl,
+  .preset-label,
+  .preset-bar-label,
+  .presets-label {
+    width: 100%;
+    min-height: 24px;
+  }
+
+  .aging-btn,
+  .scenario-btn,
+  .preset-btn,
+  .preset-button,
+  .preset-card,
+  .calculator-preset {
+    min-height: 40px;
+    flex: 1 1 auto;
+  }
+
+  .preset-grid,
+  .presets-grid,
+  .scenario-grid,
+  .calculator-preset-grid {
+    grid-template-columns: 1fr;
+  }
+}

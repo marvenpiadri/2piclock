@@ -1,0 +1,88 @@
+<div class="client-picker-panel">
+  <div class="panel-header-row">
+    <label class="panel-title-label">
+      <span class="material-icons title-icon">person</span>
+      <span>Client / Bill To</span>
+    </label>
+
+    @if (savedClients().length > 0) {
+      <div class="quick-client-select">
+        <select class="client-dropdown" (change)="onSelectExisting($event)">
+          <option value="">Load saved client...</option>
+          @for (c of savedClients(); track c.id) {
+            <option [value]="c.id">{{ c.name }}{{ c.companyName ? ' (' + c.companyName + ')' : '' }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <div class="client-fields-grid">
+    <div class="field-item full-width">
+      <label class="field-label">Client / Contact Name</label>
+      <input
+        type="text"
+        class="form-input"
+        [value]="client().name"
+        (input)="onFieldChange('name', $any($event.target).value)"
+        placeholder="Client or Representative Name"
+        required
+      />
+    </div>
+
+    <div class="field-item">
+      <label class="field-label">Company / Legal Entity</label>
+      <input
+        type="text"
+        class="form-input"
+        [value]="client().legalName || ''"
+        (input)="onFieldChange('legalName', $any($event.target).value)"
+        placeholder="Company Name (Optional)"
+      />
+    </div>
+
+    <div class="field-item">
+      <label class="field-label">Tax ID / VAT Reg</label>
+      <input
+        type="text"
+        class="form-input"
+        [value]="client().taxId || ''"
+        (input)="onFieldChange('taxId', $any($event.target).value)"
+        placeholder="e.g. US-82-990142"
+      />
+    </div>
+
+    <div class="field-item">
+      <label class="field-label">Email Address</label>
+      <input
+        type="email"
+        class="form-input"
+        [value]="client().email || ''"
+        (input)="onFieldChange('email', $any($event.target).value)"
+        placeholder="billing@client.com"
+      />
+    </div>
+
+    <div class="field-item">
+      <label class="field-label">Phone Number</label>
+      <input
+        type="tel"
+        class="form-input"
+        [value]="client().phone || ''"
+        (input)="onFieldChange('phone', $any($event.target).value)"
+        placeholder="+1 (555) 000-0000"
+      />
+    </div>
+
+    <div class="field-item full-width">
+      <label class="field-label">Billing Address & Location</label>
+      <textarea
+        class="form-textarea"
+        rows="2"
+        [value]="client().address || ''"
+        (input)="onFieldChange('address', $any($event.target).value)"
+        placeholder="Street address, city, state, postal code, country..."
+      ></textarea>
+    </div>
+  </div>
+</div>

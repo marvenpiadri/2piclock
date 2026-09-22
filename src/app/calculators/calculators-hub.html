@@ -1,0 +1,36 @@
+<main class="calculators-hub-page">
+  <section class="hub-hero">
+    <div class="hub-eyebrow">X-Facture Finance Engine</div>
+    <h1>Financial Calculators</h1>
+    <p>Free, practical calculators for business finance, loans, pricing, payments, freelance work and inventory. Enter your numbers and get clear results instantly.</p>
+    <div class="hub-stats"><strong>{{ calculators.length }}</strong><span>calculators available</span></div>
+  </section>
+
+  <nav class="category-nav" aria-label="Calculator categories">
+    @for (category of categories; track category.id) {
+      <a [href]="'#' + category.id">{{ category.label }}</a>
+    }
+  </nav>
+
+  @for (group of groupedCalculators(); track group.id) {
+    <section class="calculator-category" [id]="group.id">
+      <div class="category-heading">
+        <h2>{{ group.label }}</h2>
+        <span>{{ group.calculators.length }} tools</span>
+      </div>
+      <div class="calculator-grid">
+        @for (calculator of group.calculators; track calculator.slug) {
+          <a class="calculator-card" [routerLink]="['/calculators', calculator.slug]">
+            <div class="calculator-card-top">
+              <span class="calculator-icon material-icons" aria-hidden="true">calculate</span>
+              <span class="open-icon material-icons" aria-hidden="true">arrow_forward</span>
+            </div>
+            <h3>{{ calculator.name }}</h3>
+            <p>{{ calculator.description }}</p>
+            <span class="use-tool">Use calculator</span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+</main>

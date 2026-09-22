@@ -1,0 +1,186 @@
+/* Universal calculator polish layer.
+   Use these primitives everywhere instead of calculator-specific styling. */
+
+.calculator-main-pane .breakdown-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--calc-radius-sm, 10px);
+  background: var(--color-surface);
+}
+
+.calculator-main-pane .breakdown-list > *,
+.calculator-main-pane .breakdown-list .breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  padding: 13px 15px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.calculator-main-pane .breakdown-list > *:last-child { border-bottom: 0; }
+
+.calculator-main-pane .breakdown-list .breakdown-label,
+.calculator-main-pane .breakdown-list .item-label,
+.calculator-main-pane .breakdown-list .label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.calculator-main-pane .breakdown-list .breakdown-label > div,
+.calculator-main-pane .breakdown-list .item-label > div,
+.calculator-main-pane .breakdown-list .label > div {
+  min-width: 0;
+}
+
+.calculator-main-pane .breakdown-list .breakdown-label strong,
+.calculator-main-pane .breakdown-list .item-label strong,
+.calculator-main-pane .breakdown-list .label strong {
+  display: block;
+  color: var(--color-text-main);
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+.calculator-main-pane .breakdown-list .breakdown-label small,
+.calculator-main-pane .breakdown-list .item-label small,
+.calculator-main-pane .breakdown-list .label small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+
+.calculator-main-pane .breakdown-list .breakdown-value,
+.calculator-main-pane .breakdown-list .item-value,
+.calculator-main-pane .breakdown-list .value {
+  flex: 0 0 auto;
+  color: var(--color-text-main);
+  font: 800 12px/1.1 var(--font-mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.calculator-main-pane .breakdown-list .total,
+.calculator-main-pane .breakdown-list .total-row {
+  background: var(--color-surface-subtle);
+}
+
+.calculator-main-pane .breakdown-list .total .breakdown-value,
+.calculator-main-pane .breakdown-list .total .item-value,
+.calculator-main-pane .breakdown-list .total-row .value {
+  color: var(--color-money-green);
+  font-size: 13px;
+}
+
+/* The preset-pill pattern is intentionally global: Stripe/PayPal and every
+   future calculator get identical control behavior and visual hierarchy. */
+.calculator-main-pane .preset-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.calculator-main-pane .preset-pill {
+  position: relative;
+  min-width: 0;
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.calculator-main-pane .preset-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-money-green);
+  background: var(--color-surface-hover);
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-xs);
+}
+
+.calculator-main-pane .preset-pill:active { transform: translateY(0); }
+.calculator-main-pane .preset-pill:focus-visible { outline: 2px solid var(--color-money-green); outline-offset: 2px; }
+
+.calculator-main-pane .preset-pill.active,
+.calculator-main-pane .preset-pill[aria-pressed="true"] {
+  border-color: var(--color-money-green);
+  background: var(--color-money-green-light);
+  color: var(--color-text-main);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-money-green) 18%, transparent);
+}
+
+.calculator-main-pane .preset-pill::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.calculator-main-pane .preset-pill.active::before,
+.calculator-main-pane .preset-pill[aria-pressed="true"]::before { background: var(--color-money-green); }
+
+.calculator-main-pane .preset-pill .preset-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: inherit;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-main-pane .preset-pill .preset-rates {
+  display: block;
+  color: var(--color-text-muted);
+  font: 700 9px/1.25 var(--font-mono);
+  white-space: nowrap;
+}
+
+.calculator-main-pane .preset-pill.active .preset-rates,
+.calculator-main-pane .preset-pill[aria-pressed="true"] .preset-rates { color: var(--color-money-green); }
+
+@media (max-width: 900px) {
+  .calculator-main-pane .preset-pill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .calculator-main-pane .preset-pill-grid { grid-template-columns: 1fr; }
+  .calculator-main-pane .preset-pill { min-height: 52px; }
+  .calculator-main-pane .breakdown-list > *,
+  .calculator-main-pane .breakdown-list .breakdown-item { gap: 10px; padding: 12px; }
+}

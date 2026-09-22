@@ -1,0 +1,501 @@
+<div class="pos-workspace">
+  <!-- Top Session Bar -->
+  <header class="pos-session-bar">
+    <div class="session-left">
+      <div class="register-brand">
+        <span class="material-icons register-icon">point_of_sale</span>
+        <div class="register-titles">
+          <span class="register-label">Store POS Register</span>
+          @if (currentSession(); as sess) {
+            <span class="session-meta-tag">
+              Session <strong>{{ sess.sessionNumber }}</strong> • Cashier: <strong>{{ sess.cashierName }}</strong>
+            </span>
+          } @else {
+            <span class="session-closed-tag">Register Drawer Closed</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="session-right">
+      @if (currentSession(); as sess) {
+        <div class="drawer-stats">
+          <span class="drawer-stat-item">
+            Sales: <strong>{{ sess.salesCount }}</strong>
+          </span>
+          <span class="drawer-stat-item">
+            Drawer Cash: <strong>{{ formatCurrency(expectedDrawerCash()) }}</strong>
+          </span>
+        </div>
+
+        <button type="button" class="btn-session x-report-btn" (click)="openXReport()" title="Generate mid-shift X-Report">
+          <span class="material-icons btn-icon">receipt_long</span>
+          <span>X-Report</span>
+        </button>
+
+        <button type="button" class="btn-session close-drawer-btn" (click)="openCloseRegisterModal()" title="Close Register & Reconcile Cash">
+          <span class="material-icons btn-icon">lock</span>
+          <span>Close Register (Z)</span>
+        </button>
+      } @else {
+        <button type="button" class="btn-session open-drawer-btn" (click)="openRegisterModal()">
+          <span class="material-icons btn-icon">lock_open</span>
+          <span>Open Register Till</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- POS Split Screen: Catalog & Active Cart -->
+  <main class="pos-split-grid">
+    <!-- Left Column: Product Selection Catalog -->
+    <section class="catalog-panel">
+      <app-product-picker
+        (productSelected)="onProductSelected($event)"
+      ></app-product-picker>
+    </section>
+
+    <!-- Right Column: Active Cart & Checkout Rail -->
+    <section class="cart-rail-panel">
+      <div class="cart-header">
+        <div class="cart-title-group">
+          <span class="material-icons cart-icon">shopping_cart</span>
+          <h3>Current Sale</h3>
+          <span class="cart-count-badge">{{ cart().length }}</span>
+        </div>
+        @if (cart().length > 0) {
+          <button type="button" class="btn-clear-cart" (click)="clearCart()" title="Clear cart">
+            Clear
+          </button>
+        }
+      </div>
+
+      <!-- Cart Items List -->
+      <div class="cart-items-scroll">
+        @for (item of cart(); track item.productId; let i = $index) {
+          <div class="cart-item-row">
+            <div class="item-primary-info">
+              <span class="item-title">{{ item.name }}</span>
+              <span class="item-unit-price font-mono">{{ formatCurrency(item.unitCost) }} each</span>
+            </div>
+
+            <!-- Stepper Controls -->
+            <div class="qty-stepper">
+              <button type="button" class="stepper-btn" (click)="decrementQty(i)">-</button>
+              <span class="qty-display font-mono">{{ item.quantity }}</span>
+              <button type="button" class="stepper-btn" (click)="incrementQty(i)">+</button>
+            </div>
+
+            <!-- Line Total & Delete -->
+            <div class="item-amount-group">
+              <span class="item-total-val font-mono font-bold">{{ formatCurrency(item.amount) }}</span>
+              <button type="button" class="item-remove-btn" (click)="removeItem(i)">&times;</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-cart-state">
+            <span class="material-icons empty-cart-icon">shopping_bag</span>
+            <p>Cart is empty</p>
+            <span class="empty-subtext">Tap or search products on the left to start sale</span>
+          </div>
+        }
+      </div>
+
+      <!-- Cart Modifiers: Discount & Quick Note -->
+      <div class="cart-modifiers-box">
+        <div class="modifier-row">
+          <label class="mod-label">Discount</label>
+          <div class="input-with-symbol">
+            <span class="input-prefix">$</span>
+            <input
+              type="number"
+              class="mod-input text-right"
+              [value]="currentDiscount()"
+              (input)="onDiscountChange($event)"
+              min="0"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div class="modifier-row">
+          <label class="mod-label">Sale Note</label>
+          <input
+            type="text"
+            class="mod-input"
+            [value]="currentNote()"
+            (input)="onNoteChange($event)"
+            placeholder="e.g. Regular customer discount..."
+          />
+        </div>
+      </div>
+
+      <!-- Running Totals & Checkout -->
+      <div class="cart-footer-block">
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <span class="font-mono">{{ formatCurrency(subtotal()) }}</span>
+        </div>
+        @if (taxAmount() > 0) {
+          <div class="summary-line">
+            <span>Estimated Tax</span>
+            <span class="font-mono">+{{ formatCurrency(taxAmount()) }}</span>
+          </div>
+        }
+        @if (currentDiscount() > 0) {
+          <div class="summary-line text-discount">
+            <span>Discount</span>
+            <span class="font-mono">-{{ formatCurrency(currentDiscount()) }}</span>
+          </div>
+        }
+
+        <div class="total-big-line">
+          <span class="total-label">TOTAL</span>
+          <strong class="total-value font-mono">{{ formatCurrency(total()) }}</strong>
+        </div>
+
+        <!-- Touch-friendly large Checkout CTA -->
+        <button
+          type="button"
+          class="btn-checkout-cta"
+          [disabled]="cart().length === 0"
+          (click)="openCheckout()"
+        >
+          <span class="material-icons checkout-icon">payments</span>
+          <span>CHECKOUT ({{ formatCurrency(total()) }})</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- =======================================================================
+       MODAL 1: OPEN REGISTER TILL
+       ======================================================================= -->
+  @if (showOpenModal()) {
+    <div class="modal-backdrop" (click)="showOpenModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-lockup">
+            <span class="material-icons modal-icon">lock_open</span>
+            <h3>Open Cash Register</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showOpenModal.set(false)">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Enter cashier identity and verify starting cash float before taking sales.
+          </p>
+
+          <div class="modal-field">
+            <label class="field-label">Cashier Name</label>
+            <input
+              type="text"
+              class="form-input"
+              [value]="openCashierName()"
+              (input)="openCashierName.set($any($event.target).value)"
+              placeholder="Clerk or Cashier Name"
+            />
+          </div>
+
+          <div class="modal-field">
+            <label class="field-label">Starting Cash Float (In Drawer)</label>
+            <div class="input-with-symbol">
+              <span class="input-prefix">$</span>
+              <input
+                type="number"
+                class="form-input text-right font-mono with-prefix"
+                [value]="openStartingFloat()"
+                (input)="openStartingFloat.set($any($event.target).value)"
+                min="0"
+                step="5"
+                placeholder="150.00"
+              />
+            </div>
+            <span class="field-hint">Usual morning float for change ($100 - $200).</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showOpenModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary" (click)="confirmOpenRegister()">
+            <span class="material-icons">check</span>
+            <span>Open Register & Start Sales</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- =======================================================================
+       MODAL 2: CHECKOUT & PAYMENT PROCESSING
+       ======================================================================= -->
+  @if (showCheckoutModal()) {
+    <div class="modal-backdrop" (click)="showCheckoutModal.set(false)">
+      <div class="modal-card modal-checkout" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-lockup">
+            <span class="material-icons modal-icon">point_of_sale</span>
+            <h3>Process Payment</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showCheckoutModal.set(false)">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Total Callout -->
+          <div class="checkout-amount-hero">
+            <span class="hero-label">Amount Due</span>
+            <span class="hero-val font-mono">{{ formatCurrency(total()) }}</span>
+          </div>
+
+          <!-- Payment Method Selector Tabs -->
+          <div class="payment-method-tabs">
+            <button
+              type="button"
+              class="method-tab"
+              [class.active]="paymentMethod() === 'cash'"
+              (click)="paymentMethod.set('cash')"
+            >
+              <span class="material-icons">payments</span>
+              <span>Cash</span>
+            </button>
+            <button
+              type="button"
+              class="method-tab"
+              [class.active]="paymentMethod() === 'card'"
+              (click)="paymentMethod.set('card')"
+            >
+              <span class="material-icons">credit_card</span>
+              <span>Credit / Debit Card</span>
+            </button>
+            <button
+              type="button"
+              class="method-tab"
+              [class.active]="paymentMethod() === 'other'"
+              (click)="paymentMethod.set('other')"
+            >
+              <span class="material-icons">contactless</span>
+              <span>Other / Mobile</span>
+            </button>
+          </div>
+
+          <!-- Cash payment helper buttons & change calculation -->
+          @if (paymentMethod() === 'cash') {
+            <div class="cash-tendered-panel">
+              <label class="field-label">Cash Tendered</label>
+              <div class="input-with-symbol">
+                <span class="input-prefix">$</span>
+                <input
+                  type="number"
+                  class="form-input text-right font-mono font-bold with-prefix tendered-input"
+                  [value]="tenderedCash()"
+                  (input)="tenderedCash.set($any($event.target).value)"
+                  step="any"
+                />
+              </div>
+
+              <!-- Quick Presets ($20, $50, $100, Exact) -->
+              <div class="cash-presets-row">
+                <button type="button" class="preset-btn" (click)="setTenderedPreset(total())">Exact</button>
+                <button type="button" class="preset-btn" (click)="setTenderedPreset(20)">$20</button>
+                <button type="button" class="preset-btn" (click)="setTenderedPreset(50)">$50</button>
+                <button type="button" class="preset-btn" (click)="setTenderedPreset(100)">$100</button>
+              </div>
+
+              <!-- Change calculation callout -->
+              <div class="change-due-box">
+                <span class="change-label">Change Due:</span>
+                <strong class="change-val font-mono">{{ formatCurrency(changeDue()) }}</strong>
+              </div>
+            </div>
+          } @else {
+            <div class="card-instructions-box">
+              <span class="material-icons">touch_app</span>
+              <p>Swipe, insert, or tap customer card on terminal. Press complete once authorization approves.</p>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showCheckoutModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary btn-complete-sale" (click)="completeCheckout()">
+            <span class="material-icons">receipt</span>
+            <span>Complete Sale & View Receipt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- =======================================================================
+       MODAL 3: CLOSE REGISTER TILL & Z-REPORT
+       ======================================================================= -->
+  @if (showCloseModal()) {
+    <div class="modal-backdrop" (click)="showCloseModal.set(false)">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-lockup">
+            <span class="material-icons modal-icon text-red">lock</span>
+            <h3>Close Register & End Session</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showCloseModal.set(false)">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Count the physical cash in the drawer and enter it below to reconcile discrepancies.
+          </p>
+
+          <div class="reconciliation-summary-box">
+            <div class="recon-row">
+              <span>Starting Float:</span>
+              <span class="font-mono">{{ formatCurrency(currentSession()?.startingFloat || 0) }}</span>
+            </div>
+            <div class="recon-row">
+              <span>Cash Sales:</span>
+              <span class="font-mono">+{{ formatCurrency(currentSession()?.cashSales || 0) }}</span>
+            </div>
+            <div class="recon-row font-bold recon-expected">
+              <span>Expected Cash in Drawer:</span>
+              <span class="font-mono">{{ formatCurrency(expectedDrawerCash()) }}</span>
+            </div>
+          </div>
+
+          <div class="modal-field">
+            <label class="field-label">Actual Cash Counted ($)</label>
+            <input
+              type="number"
+              class="form-input text-right font-mono font-bold"
+              [value]="closeActualCash()"
+              (input)="closeActualCash.set($any($event.target).value)"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <!-- Discrepancy Alert -->
+          <div
+            class="discrepancy-banner"
+            [class.balanced]="cashDiscrepancy() === 0"
+            [class.shortage]="cashDiscrepancy() < 0"
+            [class.overage]="cashDiscrepancy() > 0"
+          >
+            @if (cashDiscrepancy() === 0) {
+              <span class="material-icons">check_circle</span>
+              <span>Drawer is perfectly balanced ($0.00).</span>
+            } @else if (cashDiscrepancy() < 0) {
+              <span class="material-icons">warning</span>
+              <span>Cash Shortage: {{ formatCurrency(cashDiscrepancy()) }}</span>
+            } @else {
+              <span class="material-icons">add_circle</span>
+              <span>Cash Overage: +{{ formatCurrency(cashDiscrepancy()) }}</span>
+            }
+          </div>
+
+          <div class="modal-field">
+            <label class="field-label">End-of-shift notes (Optional)</label>
+            <input
+              type="text"
+              class="form-input"
+              [value]="closeNotes()"
+              (input)="closeNotes.set($any($event.target).value)"
+              placeholder="e.g. Drawer balanced, shift handover to evening clerk"
+            />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showCloseModal.set(false)">Cancel</button>
+          <button type="button" class="btn-danger" (click)="confirmCloseRegister()">
+            <span class="material-icons">lock</span>
+            <span>Lock Session & Print Z-Report</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- =======================================================================
+       MODAL 4: X-REPORT / Z-REPORT SLIP DISPLAY
+       ======================================================================= -->
+  @if (showXReportModal() && latestReport(); as report) {
+    <div class="modal-backdrop" (click)="showXReportModal.set(false)">
+      <div class="modal-card modal-report" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-lockup">
+            <span class="material-icons modal-icon">receipt</span>
+            <h3>{{ report.type }} — Register Summary</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showXReportModal.set(false)">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="thermal-report-preview">
+            <div class="report-header text-center">
+              <h4>{{ report.type | uppercase }}</h4>
+              <p>{{ report.timestamp | date:'medium' }}</p>
+              <p>Cashier: {{ report.cashierName }}</p>
+            </div>
+
+            <div class="report-divider-dashed"></div>
+
+            <div class="report-stat-row">
+              <span>Transaction Count:</span>
+              <strong>{{ report.salesCount }}</strong>
+            </div>
+            <div class="report-stat-row">
+              <span>Starting Cash Float:</span>
+              <span class="font-mono">{{ formatCurrency(report.startingFloat) }}</span>
+            </div>
+
+            <div class="report-divider-dashed"></div>
+
+            <div class="report-stat-row">
+              <span>Cash Sales:</span>
+              <span class="font-mono">{{ formatCurrency(report.byPaymentMethod.cash) }}</span>
+            </div>
+            <div class="report-stat-row">
+              <span>Card Sales:</span>
+              <span class="font-mono">{{ formatCurrency(report.byPaymentMethod.card) }}</span>
+            </div>
+            <div class="report-stat-row">
+              <span>Other / Mobile:</span>
+              <span class="font-mono">{{ formatCurrency(report.byPaymentMethod.other) }}</span>
+            </div>
+
+            <div class="report-divider-solid"></div>
+
+            <div class="report-stat-row font-bold">
+              <span>TOTAL SESSION SALES:</span>
+              <span class="font-mono">{{ formatCurrency(report.totalSales) }}</span>
+            </div>
+
+            @if (report.actualCash !== undefined) {
+              <div class="report-divider-dashed"></div>
+              <div class="report-stat-row">
+                <span>Expected Drawer Cash:</span>
+                <span class="font-mono">{{ formatCurrency(report.expectedCash) }}</span>
+              </div>
+              <div class="report-stat-row">
+                <span>Counted Cash:</span>
+                <span class="font-mono">{{ formatCurrency(report.actualCash) }}</span>
+              </div>
+              <div class="report-stat-row font-bold">
+                <span>Discrepancy:</span>
+                <span class="font-mono">{{ formatCurrency(report.discrepancy || 0) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showXReportModal.set(false)">Close</button>
+          <button type="button" class="btn-primary" onclick="window.print()">
+            <span class="material-icons">print</span>
+            <span>Print Report</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

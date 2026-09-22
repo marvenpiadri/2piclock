@@ -1,0 +1,163 @@
+<!-- Living Reactive Sky Engine Canvas Background -->
+<app-reactive-sky></app-reactive-sky>
+
+<div class="app-layout" (click)="closeMenus()">
+  <!-- Global 2PiClock Header Bar -->
+  <header class="app-header" (click)="$event.stopPropagation()">
+    <div class="header-left">
+      <!-- 2PiClock Brand Identity -->
+      <a routerLink="/" class="brand-logo" (click)="closeMenus()">
+        <div class="brand-badge">
+          <span class="brand-dial-icon">2π</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">2PiClock</span>
+          <span class="brand-sub">REACTIVE SKY ENGINE</span>
+        </div>
+      </a>
+
+      <!-- Primary Navigation Links -->
+      <nav class="primary-nav">
+        <a 
+          routerLink="/" 
+          [routerLinkActiveOptions]="{exact: true}" 
+          routerLinkActive="active" 
+          class="nav-link" 
+          (click)="closeMenus()">
+          <mat-icon class="nav-ico">wb_sunny</mat-icon>
+          <span>Sky View</span>
+        </a>
+
+        <a 
+          routerLink="/world-clocks" 
+          routerLinkActive="active" 
+          class="nav-link" 
+          (click)="closeMenus()">
+          <mat-icon class="nav-ico">public</mat-icon>
+          <span>World Observatory</span>
+        </a>
+
+        <a 
+          routerLink="/ephemeris" 
+          routerLinkActive="active" 
+          class="nav-link" 
+          (click)="closeMenus()">
+          <mat-icon class="nav-ico">show_chart</mat-icon>
+          <span>Solar Ephemeris</span>
+        </a>
+
+        <a 
+          routerLink="/atmosphere" 
+          routerLinkActive="active" 
+          class="nav-link" 
+          (click)="closeMenus()">
+          <mat-icon class="nav-ico">cloud</mat-icon>
+          <span>Atmosphere Studio</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Header Right Controls -->
+    <div class="header-right">
+      <!-- Location Selector Dropdown -->
+      <div class="nav-item-dropdown">
+        <button 
+          type="button" 
+          class="location-selector-btn" 
+          [class.active]="showLocationDropdown()"
+          (click)="toggleLocationDropdown()">
+          <span class="loc-flag">{{ selectedLocation().flag }}</span>
+          <span class="loc-name">{{ selectedLocation().name }}</span>
+          <mat-icon class="arrow-ico">expand_more</mat-icon>
+        </button>
+
+        @if (showLocationDropdown()) {
+          <div class="dropdown-menu-card location-menu-card" (click)="$event.stopPropagation()">
+            <!-- Dropdown Header & Search -->
+            <div class="menu-search-box">
+              <mat-icon class="search-ico">search</mat-icon>
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery" 
+                placeholder="Search city or country..."
+                class="city-search-input" />
+              @if (searchQuery()) {
+                <button type="button" class="btn-clear-search" (click)="searchQuery.set('')">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+
+            <!-- GPS Auto-Detect Button -->
+            <button type="button" class="gps-detect-btn" (click)="detectGPS()">
+              <mat-icon class="gps-ico">{{ isLocating() ? 'hourglass_empty' : 'my_location' }}</mat-icon>
+              <span>{{ isLocating() ? 'Detecting coordinates...' : 'Use Current GPS Location' }}</span>
+            </button>
+
+            @if (locationError()) {
+              <div class="location-error-badge">
+                {{ locationError() }}
+              </div>
+            }
+
+            <!-- City List -->
+            <div class="dropdown-scroll">
+              @for (loc of filteredLocations(); track loc.id) {
+                <button 
+                  type="button" 
+                  class="dropdown-city-item" 
+                  [class.selected]="selectedLocation().id === loc.id"
+                  (click)="selectLocation(loc)">
+                  <span class="city-flag">{{ loc.flag }}</span>
+                  <div class="city-info">
+                    <span class="city-name">{{ loc.name }}</span>
+                    <span class="city-country">{{ loc.country }} · {{ loc.timezone }}</span>
+                  </div>
+                  @if (selectedLocation().id === loc.id) {
+                    <mat-icon class="check-ico">check</mat-icon>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Custom Coordinates Form Footer -->
+            <div class="custom-coord-footer">
+              <span class="custom-coord-title">Custom Coordinates</span>
+              <div class="coord-inputs-row">
+                <input 
+                  type="number" 
+                  [(ngModel)]="customLat" 
+                  step="0.001" 
+                  placeholder="Lat (e.g. 51.5)"
+                  class="coord-input font-mono" />
+                <input 
+                  type="number" 
+                  [(ngModel)]="customLng" 
+                  step="0.001" 
+                  placeholder="Lng (e.g. -0.1)"
+                  class="coord-input font-mono" />
+                <button type="button" class="coord-apply-btn" (click)="applyCustomCoordinates()">
+                  Go
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Quick Telemetry Badge -->
+      <div class="header-time-pill font-mono">
+        <span class="time-readout">{{ localTime() }}</span>
+        <span class="elev-readout">
+          <mat-icon class="elev-icon">wb_sunny</mat-icon>
+          {{ celestial().sun.altitudeDeg >= 0 ? '+' : '' }}{{ celestial().sun.altitudeDeg.toFixed(0) }}°
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Router Content Outlet (Glass UI on top of living Sky Canvas) -->
+  <main class="main-content-viewport">
+    <router-outlet />
+  </main>
+</div>

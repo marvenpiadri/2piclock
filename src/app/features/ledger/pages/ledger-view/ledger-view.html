@@ -1,0 +1,208 @@
+<div class="ledger-workspace">
+  <!-- Header Deck -->
+  <div class="ledger-header-deck">
+    <div class="header-left">
+      <div class="header-icon-box">
+        <span class="material-icons">account_balance_wallet</span>
+      </div>
+      <div>
+        <h1 class="page-title">Smart Ledger</h1>
+        <p class="page-subtitle">
+          Real-time financial journal automatically aggregated from invoices, counter POS sales, and settlements.
+        </p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button type="button" class="btn-statement-link" routerLink="/statements/new">
+        <span class="material-icons">receipt</span>
+        <span>Generate Client Statement</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4-Card Period Summary Grid (§10) -->
+  <div class="ledger-summary-grid">
+    <div class="summary-metric-card income-card">
+      <div class="card-label-row">
+        <span class="metric-title">Cleared Income (Money In)</span>
+        <span class="material-icons card-metric-icon">arrow_downward</span>
+      </div>
+      <span class="metric-amount font-mono">+{{ formatCurrency(totalIncome()) }}</span>
+      <span class="metric-subtext">Settled invoices & completed POS sales</span>
+    </div>
+
+    <div class="summary-metric-card expense-card">
+      <div class="card-label-row">
+        <span class="metric-title">Refunds & Expenses (Money Out)</span>
+        <span class="material-icons card-metric-icon">arrow_upward</span>
+      </div>
+      <span class="metric-amount font-mono">-{{ formatCurrency(totalExpense()) }}</span>
+      <span class="metric-subtext">Returns, credits, and payables</span>
+    </div>
+
+    <div class="summary-metric-card net-card">
+      <div class="card-label-row">
+        <span class="metric-title">Net Ledger Balance</span>
+        <span class="material-icons card-metric-icon">account_balance</span>
+      </div>
+      <span class="metric-amount font-mono text-money">{{ formatCurrency(netProfit()) }}</span>
+      <span class="metric-subtext">Cumulative realized net funds</span>
+    </div>
+
+    <div class="summary-metric-card receivables-card">
+      <div class="card-label-row">
+        <span class="metric-title">Outstanding Receivables</span>
+        <span class="material-icons card-metric-icon">pending_actions</span>
+      </div>
+      <span class="metric-amount font-mono text-amber">{{ formatCurrency(outstandingReceivables()) }}</span>
+      <span class="metric-subtext">Unpaid sent / overdue customer invoices</span>
+    </div>
+  </div>
+
+  <!-- Filter Ribbon -->
+  <div class="ledger-filters-card">
+    <div class="filter-controls-row">
+      <div class="filter-item">
+        <label class="filter-label">Flow Type</label>
+        <select class="filter-select" [value]="filterType()" (change)="filterType.set($any($event.target).value); onFilterChange()">
+          <option value="all">All Flows (In & Out)</option>
+          <option value="income">Income Only (+)</option>
+          <option value="expense">Expenses / Refunds (-)</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label">Origin Module</label>
+        <select class="filter-select" [value]="filterDocType()" (change)="filterDocType.set($any($event.target).value); onFilterChange()">
+          <option value="all">All Sources</option>
+          <option value="invoices">Tax Invoices</option>
+          <option value="receipts">POS Sales Receipts</option>
+          <option value="credit-notes">Credit Notes</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label">Filter Client</label>
+        <select class="filter-select" [value]="filterClient()" (change)="filterClient.set($any($event.target).value); onFilterChange()">
+          <option value="all">All Clients</option>
+          @for (c of clients(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label">From Date</label>
+        <input type="date" class="filter-date" [value]="startDate()" (input)="startDate.set($any($event.target).value); onFilterChange()" />
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label">To Date</label>
+        <input type="date" class="filter-date" [value]="endDate()" (input)="endDate.set($any($event.target).value); onFilterChange()" />
+      </div>
+
+      <div class="filter-item search-grow">
+        <label class="filter-label">Search Entry</label>
+        <input
+          type="text"
+          class="filter-search"
+          placeholder="Search description, reference #, or cashier..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value); onFilterChange()"
+        />
+      </div>
+
+      <button type="button" class="btn-clear-filters" (click)="clearFilters()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Running Balance Data Table -->
+  <div class="ledger-table-container">
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th class="col-date">Date</th>
+            <th class="col-desc">Description & Source</th>
+            <th class="col-category">Category</th>
+            <th class="col-ref">Reference</th>
+            <th class="col-method">Method</th>
+            <th class="col-in text-right">Money In (+)</th>
+            <th class="col-out text-right">Money Out (-)</th>
+            <th class="col-balance text-right">Running Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of entries(); track entry.id) {
+            <tr class="ledger-row-item">
+              <td class="col-date font-mono">{{ entry.date }}</td>
+
+              <td class="col-desc">
+                <div class="desc-cell">
+                  <strong>{{ entry.description }}</strong>
+                  @if (entry.clientName) {
+                    <span class="client-tag">{{ entry.clientName }}</span>
+                  }
+                </div>
+              </td>
+
+              <td class="col-category">
+                <span class="cat-badge">{{ entry.category }}</span>
+              </td>
+
+              <td class="col-ref font-mono">
+                @if (entry.docNumber && entry.docType) {
+                  <a [routerLink]="['/' + entry.docType, entry.docNumber, 'preview']" class="ref-link">
+                    {{ entry.docNumber }}
+                  </a>
+                } @else {
+                  <span>{{ entry.docNumber || '—' }}</span>
+                }
+              </td>
+
+              <td class="col-method">
+                <span class="method-text">{{ entry.paymentMethod || 'Settled' }}</span>
+              </td>
+
+              <!-- Money In -->
+              <td class="col-in text-right font-mono font-bold">
+                @if (entry.type === 'income') {
+                  <span class="text-money">+{{ formatCurrency(entry.amount) }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+
+              <!-- Money Out -->
+              <td class="col-out text-right font-mono font-bold">
+                @if (entry.type === 'expense') {
+                  <span class="text-expense">-{{ formatCurrency(entry.amount) }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+
+              <!-- Running Balance -->
+              <td class="col-balance text-right font-mono font-bold">
+                <span class="running-balance-val">{{ formatCurrency(entry.runningBalance || 0) }}</span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty-cell">
+                <div class="empty-box">
+                  <span class="material-icons">receipt_long</span>
+                  <h3>No Ledger Entries</h3>
+                  <p>As invoices are marked paid or POS sales complete, transactions will automatically reflect here.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,221 @@
+<div class="dashboard-workspace">
+  <!-- Top Welcome & Quick Actions Bar -->
+  <div class="dash-hero-deck">
+    <div>
+      <h1 class="dash-headline">Business Command Center</h1>
+      <p class="dash-subtext">
+        Local-first documents, retail cash register, and smart ledger. Stored safely in your browser.
+      </p>
+    </div>
+
+    <div class="dash-quick-actions">
+      <a routerLink="/invoices/new" class="dash-cta-btn primary">
+        <span class="material-icons">add</span>
+        <span>New Invoice</span>
+      </a>
+      <a routerLink="/store/pos" class="dash-cta-btn pos-btn">
+        <span class="material-icons">point_of_sale</span>
+        <span>Open POS Terminal</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 4 Overview Metric Cards (§6) -->
+  <div class="dash-metrics-grid">
+    <div class="metric-box">
+      <div class="metric-top">
+        <span class="metric-lbl">Invoiced This Month</span>
+        <span class="material-icons metric-ico">receipt</span>
+      </div>
+      <div class="metric-val font-mono">{{ formatCurrency(totalInvoicedThisMonth()) }}</div>
+      <div class="metric-foot">Current calendar month</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-top">
+        <span class="metric-lbl">Cleared Collections</span>
+        <span class="material-icons metric-ico text-green">verified</span>
+      </div>
+      <div class="metric-val font-mono text-money">+{{ formatCurrency(totalIncome()) }}</div>
+      <div class="metric-foot">Realized cash & card collections</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-top">
+        <span class="metric-lbl">Outstanding Receivables</span>
+        <span class="material-icons metric-ico text-amber">hourglass_top</span>
+      </div>
+      <div class="metric-val font-mono text-amber">{{ formatCurrency(outstandingReceivables()) }}</div>
+      <div class="metric-foot">Unpaid & overdue client balances</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-top">
+        <span class="metric-lbl">Till Cash on Hand</span>
+        <span class="material-icons metric-ico">lock</span>
+      </div>
+      <div class="metric-val font-mono">
+        @if (posSession()) {
+          {{ formatCurrency(drawerCashOnHand()) }}
+        } @else {
+          Drawer Closed
+        }
+      </div>
+      <div class="metric-foot">
+        @if (posSession(); as s) {
+          Session {{ s.sessionNumber }} • {{ s.salesCount }} sales
+        } @else {
+          <a routerLink="/store/pos" class="foot-link">Open Till →</a>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Launcher Grid (§6 & §7) -->
+  <div class="dash-section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-heading">Document Generators</h2>
+        <p class="section-sub">Create any of the 10+ business documents with full layout engines and instant printing.</p>
+      </div>
+    </div>
+
+    <div class="launcher-grid">
+      @for (doc of docConfigs; track doc.docType) {
+        <div class="doc-launcher-card">
+          <div class="card-top-lockup">
+            <span class="material-icons launcher-icon">{{ doc.icon }}</span>
+            <div class="launcher-titles">
+              <h3 class="launcher-title">{{ doc.singularName }}</h3>
+              <span class="launcher-code font-mono">{{ doc.defaultPrefix }}</span>
+            </div>
+          </div>
+
+          <p class="launcher-desc">{{ doc.description }}</p>
+
+          <div class="launcher-btn-pair">
+            <a [routerLink]="['/' + doc.routeSegment]" class="btn-launcher-secondary">
+              Browse ({{ doc.pluralName }})
+            </a>
+            <a [routerLink]="['/' + doc.routeSegment, 'new']" class="btn-launcher-primary">
+              <span class="material-icons">add</span>
+              <span>New</span>
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Recent Activity Stream & Quick Modules -->
+  <div class="dash-bottom-grid">
+    <!-- Left: Recent Documents -->
+    <div class="recent-card">
+      <div class="card-header-clean">
+        <h3>Recent Activity</h3>
+        <a routerLink="/invoices" class="view-all-link">View All Invoices →</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="recent-table">
+          <thead>
+            <tr>
+              <th>Doc #</th>
+              <th>Date</th>
+              <th>Client</th>
+              <th>Status</th>
+              <th class="text-right">Total</th>
+              <th class="text-right">Print</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (doc of recentDocuments(); track doc.id) {
+              <tr class="recent-row" [routerLink]="['/' + doc.docType, doc.docNumber, 'preview']">
+                <td class="font-mono font-bold">{{ doc.docNumber }}</td>
+                <td class="text-muted">{{ doc.issueDate }}</td>
+                <td>{{ doc.client.name }}</td>
+                <td>
+                  <span class="status-pill status-{{ doc.status }}">{{ doc.status | uppercase }}</span>
+                </td>
+                <td class="text-right font-mono font-bold">
+                  {{ formatCurrency(doc.total, doc.currency) }}
+                </td>
+                <td class="text-right" (click)="$event.stopPropagation()">
+                  <a [routerLink]="['/' + doc.docType, doc.docNumber, 'preview']" class="btn-quick-view">
+                    <span class="material-icons">visibility</span>
+                  </a>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-recent-cell">
+                  <p>No documents created yet. Choose a document above or launch the POS terminal.</p>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right: Quick Links & System Status -->
+    <div class="system-summary-card">
+      <h3 class="side-card-title">Quick Workspace</h3>
+
+      <div class="quick-link-list">
+        <a routerLink="/store/pos" class="quick-link-row">
+          <div class="quick-link-icon-box">
+            <span class="material-icons">point_of_sale</span>
+          </div>
+          <div class="quick-link-text">
+            <strong>POS Cash Register</strong>
+            <span>Counter checkout with receipt printing</span>
+          </div>
+          <span class="material-icons nav-arrow">chevron_right</span>
+        </a>
+
+        <a routerLink="/ledger" class="quick-link-row">
+          <div class="quick-link-icon-box">
+            <span class="material-icons">account_balance_wallet</span>
+          </div>
+          <div class="quick-link-text">
+            <strong>Smart Ledger</strong>
+            <span>Live journal of realized revenues & running balance</span>
+          </div>
+          <span class="material-icons nav-arrow">chevron_right</span>
+        </a>
+
+        <a routerLink="/tools" class="quick-link-row">
+          <div class="quick-link-icon-box">
+            <span class="material-icons">calculate</span>
+          </div>
+          <div class="quick-link-text">
+            <strong>Financial Calculators</strong>
+            <span>Margin, markup, VAT & break-even math</span>
+          </div>
+          <span class="material-icons nav-arrow">chevron_right</span>
+        </a>
+
+        <a routerLink="/settings" class="quick-link-row">
+          <div class="quick-link-icon-box">
+            <span class="material-icons">cloud_download</span>
+          </div>
+          <div class="quick-link-text">
+            <strong>Backup & Data Export</strong>
+            <span>Save offline JSON archive & CSV exports</span>
+          </div>
+          <span class="material-icons nav-arrow">chevron_right</span>
+        </a>
+      </div>
+
+      <!-- Local-First Offline Indicator -->
+      <div class="offline-badge-box">
+        <span class="material-icons green-dot">fiber_manual_record</span>
+        <div>
+          <strong>Local-First Engine Active</strong>
+          <p>Zero external tracking. All data is securely stored in your browser's IndexedDB engine.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

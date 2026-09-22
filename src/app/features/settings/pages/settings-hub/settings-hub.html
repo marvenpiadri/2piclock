@@ -1,0 +1,942 @@
+<div class="settings-workspace">
+  <!-- Breadcrumb Deck -->
+  <nav class="settings-breadcrumbs">
+    <a routerLink="/dashboard" class="crumb-link">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <span class="crumb-separator">/</span>
+    <a routerLink="/dashboard" class="crumb-link">
+      <span class="material-icons">dashboard</span>
+      <span>Dashboard</span>
+    </a>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-current">Settings & Data Hub</span>
+  </nav>
+
+  <!-- Header Deck -->
+  <div class="settings-header-deck">
+    <div class="header-left">
+      <div class="header-icon-box">
+        <span class="material-icons">tune</span>
+      </div>
+      <div>
+        <h1 class="page-title">Business Settings & Data Center</h1>
+        <p class="page-subtitle">
+          Manage company branding, custom document numbering, financial defaults, theme appearance, and JSON data portability.
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-theme-toggle" (click)="themeService.toggleTheme()">
+        <span class="material-icons">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+        <span>{{ themeService.isDark() ? 'Light Mode' : 'Dark Mode' }}</span>
+      </button>
+
+      <a routerLink="/dashboard" class="btn-goto-dashboard">
+        <span class="material-icons">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Database Metrics Health Strip -->
+  <div class="database-metrics-strip">
+    <div class="metric-card">
+      <div class="metric-icon"><span class="material-icons">description</span></div>
+      <div class="metric-info">
+        <span class="metric-val">{{ docCount() }}</span>
+        <span class="metric-lbl">Documents</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon"><span class="material-icons">groups</span></div>
+      <div class="metric-info">
+        <span class="metric-val">{{ clientCount() }}</span>
+        <span class="metric-lbl">CRM Clients</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon"><span class="material-icons">inventory_2</span></div>
+      <div class="metric-info">
+        <span class="metric-val">{{ productCount() }}</span>
+        <span class="metric-lbl">Catalog Items</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon"><span class="material-icons">point_of_sale</span></div>
+      <div class="metric-info">
+        <span class="metric-val">{{ posSalesCount() }}</span>
+        <span class="metric-lbl">POS Orders</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon"><span class="material-icons">menu_book</span></div>
+      <div class="metric-info">
+        <span class="metric-val">{{ ledgerCount() }}</span>
+        <span class="metric-lbl">Ledger Entries</span>
+      </div>
+    </div>
+  </div>
+
+  @if (saveNotification()) {
+    <div class="toast-banner">
+      <span class="material-icons">check_circle</span>
+      <span>Settings saved successfully! All document generators and POS terminals updated.</span>
+    </div>
+  }
+
+  <!-- Tab Navigation Bar -->
+  <div class="settings-tabs-bar">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'profile'"
+      (click)="setTab('profile')"
+    >
+      <span class="material-icons tab-icon">business</span>
+      <span>1. Company Profile</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'numbering'"
+      (click)="setTab('numbering')"
+    >
+      <span class="material-icons tab-icon">tag</span>
+      <span>2. Document Prefixes</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'defaults'"
+      (click)="setTab('defaults')"
+    >
+      <span class="material-icons tab-icon">account_balance</span>
+      <span>3. Financial & Tax</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'appearance'"
+      (click)="setTab('appearance')"
+    >
+      <span class="material-icons tab-icon">palette</span>
+      <span>4. Branding & Templates</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'data'"
+      (click)="setTab('data')"
+    >
+      <span class="material-icons tab-icon">cloud_sync</span>
+      <span>5. Data Backup & Reset</span>
+    </button>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="settings-content-card">
+
+    <!-- TAB 1: COMPANY PROFILE -->
+    @if (activeTab() === 'profile') {
+      <form class="settings-form" (ngSubmit)="saveSettings()">
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">store</span>
+            <div>
+              <h3 class="section-title">Brand Identity & Logo</h3>
+              <p class="section-desc">Printed at the top of invoices, quotes, receipts, delivery notes, and statements.</p>
+            </div>
+          </div>
+
+          <div class="logo-upload-rack">
+            @if (logoUrl()) {
+              <div class="logo-preview-box">
+                <img [src]="logoUrl()" alt="Company Logo" class="uploaded-logo" referrerpolicy="no-referrer" />
+                <button type="button" class="btn-remove-logo" (click)="removeLogo()">
+                  <span class="material-icons">delete</span> Remove Logo
+                </button>
+              </div>
+            } @else {
+              <label class="logo-placeholder">
+                <span class="material-icons">add_photo_alternate</span>
+                <span class="logo-label-text">Upload Brand Logo</span>
+                <span class="logo-hint-text">PNG, JPG, SVG or WEBP</span>
+                <input type="file" accept="image/*" class="file-hidden-input" (change)="onLogoUpload($event)" />
+              </label>
+            }
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-wrap">
+              <label class="field-label">Trading Name *</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="companyName()"
+                (input)="companyName.set($any($event.target).value)"
+                placeholder="e.g. Acme Studio & Tech"
+                required
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Legal Registered Company Name</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="legalName()"
+                (input)="legalName.set($any($event.target).value)"
+                placeholder="e.g. Acme Global Services Ltd"
+              />
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field-wrap">
+              <label class="field-label">Primary Billing Email</label>
+              <input
+                type="email"
+                class="input-field"
+                [value]="email()"
+                (input)="email.set($any($event.target).value)"
+                placeholder="billing@acme.com"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Phone Number</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="phone()"
+                (input)="phone.set($any($event.target).value)"
+                placeholder="+1 (555) 019-2834"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Website URL</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="website()"
+                (input)="website.set($any($event.target).value)"
+                placeholder="https://www.acme.com"
+              />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-wrap">
+              <label class="field-label">Tax Registration / VAT # / Business ID</label>
+              <input
+                type="text"
+                class="input-field font-mono"
+                [value]="taxId()"
+                (input)="taxId.set($any($event.target).value)"
+                placeholder="VAT-GB999999999 or EIN 12-3456789"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Street Address</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="address()"
+                (input)="address.set($any($event.target).value)"
+                placeholder="100 Innovation Way, Suite 400"
+              />
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field-wrap">
+              <label class="field-label">City</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="city()"
+                (input)="city.set($any($event.target).value)"
+                placeholder="New York"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Postal / ZIP Code</label>
+              <input
+                type="text"
+                class="input-field font-mono"
+                [value]="postalCode()"
+                (input)="postalCode.set($any($event.target).value)"
+                placeholder="10001"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Country</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="country()"
+                (input)="country.set($any($event.target).value)"
+                placeholder="United States"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">account_balance</span>
+            <div>
+              <h3 class="section-title">Bank Settlement & Wire Instructions</h3>
+              <p class="section-desc">Printed at the bottom of outgoing invoices for client direct wire settlements.</p>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <label class="field-label">Bank Wire Instructions / IBAN & SWIFT</label>
+            <textarea
+              class="input-field font-mono"
+              rows="3"
+              [value]="bankDetails()"
+              (input)="bankDetails.set($any($event.target).value)"
+              placeholder="Bank: Chase Manhattan Bank&#10;Account Name: Acme Global Services Ltd&#10;IBAN: US33 0210 0002 1123 4567 89&#10;SWIFT/BIC: CHASUS33XXX"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">draw</span>
+            <div>
+              <h3 class="section-title">Authorized Signatory & Stamp</h3>
+              <p class="section-desc">Appears in formal contracts, work orders, service agreements, and tax invoices.</p>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-wrap">
+              <label class="field-label">Signatory Full Name</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="signatoryName()"
+                (input)="signatoryName.set($any($event.target).value)"
+                placeholder="e.g. Jane H. Smith"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Signatory Official Title</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="signatoryTitle()"
+                (input)="signatoryTitle.set($any($event.target).value)"
+                placeholder="e.g. Chief Financial Officer"
+              />
+            </div>
+          </div>
+
+          <div class="signature-upload-rack">
+            <label class="field-label">Digital Signature / Stamp Graphic (Optional)</label>
+            @if (signatureUrl()) {
+              <div class="signature-preview-box">
+                <img [src]="signatureUrl()" alt="Authorized Signature" class="uploaded-signature" referrerpolicy="no-referrer" />
+                <button type="button" class="btn-remove-logo" (click)="removeSignature()">
+                  <span class="material-icons">delete</span> Remove Signature
+                </button>
+              </div>
+            } @else {
+              <label class="signature-placeholder">
+                <span class="material-icons">border_color</span>
+                <span>Upload Signature PNG</span>
+                <input type="file" accept="image/*" class="file-hidden-input" (change)="onSignatureUpload($event)" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions-bottom">
+          <button type="submit" class="btn-save">
+            <span class="material-icons">save</span>
+            <span>Save Profile & Identity</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- TAB 2: DOCUMENT PREFIXES & NUMBERING -->
+    @if (activeTab() === 'numbering') {
+      <form class="settings-form" (ngSubmit)="saveSettings()">
+        <div class="form-section">
+          <div class="section-header-flex">
+            <div>
+              <h3 class="section-title">Document Numbering & Sequence Prefixes</h3>
+              <p class="section-desc">Customize prefixes, starting sequence numbers, and digit padding for all 15 document types.</p>
+            </div>
+            <button type="button" class="btn-secondary-action" (click)="resetPrefixesToDefault()">
+              <span class="material-icons">restore</span> Reset Defaults
+            </button>
+          </div>
+
+          <div class="prefix-table-container">
+            <table class="prefix-table">
+              <thead>
+                <tr>
+                  <th>Document Type</th>
+                  <th>Prefix</th>
+                  <th>Next Counter #</th>
+                  <th>Padding</th>
+                  <th>Sample Generated Number</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of prefixList(); track item.docType) {
+                  <tr>
+                    <td class="col-doctype">
+                      <div class="doctype-lockup">
+                        <span class="material-icons doc-type-icon">{{ item.icon }}</span>
+                        <div>
+                          <span class="doc-title-main">{{ item.singularName }}</span>
+                          <span class="doc-type-key">{{ item.docType }}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td class="col-prefix">
+                      <input
+                        type="text"
+                        class="prefix-input font-mono"
+                        [value]="item.prefix"
+                        (input)="updatePrefixItem(item.docType, 'prefix', $any($event.target).value)"
+                        maxlength="8"
+                      />
+                    </td>
+
+                    <td class="col-nextnum">
+                      <input
+                        type="number"
+                        class="num-input font-mono"
+                        [value]="item.nextNumber"
+                        (input)="updatePrefixItem(item.docType, 'nextNumber', $any($event.target).value)"
+                        min="1"
+                      />
+                    </td>
+
+                    <td class="col-padding">
+                      <select
+                        class="pad-select font-mono"
+                        [value]="item.padding"
+                        (change)="updatePrefixItem(item.docType, 'padding', $any($event.target).value)"
+                      >
+                        <option [value]="3">3 digits (001)</option>
+                        <option [value]="4">4 digits (0001)</option>
+                        <option [value]="5">5 digits (00001)</option>
+                        <option [value]="6">6 digits (000001)</option>
+                      </select>
+                    </td>
+
+                    <td class="col-preview">
+                      <span class="sample-badge font-mono">{{ getSampleDocNumber(item) }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="form-actions-bottom">
+          <button type="submit" class="btn-save">
+            <span class="material-icons">save</span>
+            <span>Save Prefix Configurations</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- TAB 3: FINANCIAL & TAX DEFAULTS -->
+    @if (activeTab() === 'defaults') {
+      <form class="settings-form" (ngSubmit)="saveSettings()">
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">attach_money</span>
+            <div>
+              <h3 class="section-title">Base Currency & Tax Rules</h3>
+              <p class="section-desc">Default valuation rules applied when creating new invoices, receipts, and quotes.</p>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field-wrap">
+              <label class="field-label">Base Currency</label>
+              <select
+                class="input-field font-mono"
+                [value]="defaultCurrency()"
+                (change)="defaultCurrency.set($any($event.target).value)"
+              >
+                @for (curr of currencyService.CURRENCIES; track curr.code) {
+                  <option [value]="curr.code">{{ curr.code }} - {{ curr.name }} ({{ curr.symbol }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Tax Label Name</label>
+              <input
+                type="text"
+                class="input-field"
+                [value]="taxName()"
+                (input)="taxName.set($any($event.target).value)"
+                placeholder="e.g. VAT, GST, Sales Tax, IVA"
+              />
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Default Tax Rate (%)</label>
+              <input
+                type="number"
+                class="input-field font-mono"
+                [value]="defaultTaxRate()"
+                (input)="defaultTaxRate.set(+$any($event.target).value)"
+                min="0"
+                max="100"
+                step="0.1"
+              />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <label class="toggle-card">
+              <input
+                type="checkbox"
+                class="toggle-checkbox"
+                [checked]="taxInclusive()"
+                (change)="taxInclusive.set($any($event.target).checked)"
+              />
+              <div class="toggle-text">
+                <span class="toggle-title">Tax Inclusive Pricing</span>
+                <span class="toggle-sub">Catalog product prices automatically include tax calculations</span>
+              </div>
+            </label>
+
+            <div class="field-wrap">
+              <label class="field-label">Default Payment Terms</label>
+              <select
+                class="input-field"
+                [value]="defaultPaymentTerms()"
+                (change)="defaultPaymentTerms.set($any($event.target).value)"
+              >
+                <option value="dueOnReceipt">Due on Receipt</option>
+                <option value="net7">Net 7 Days</option>
+                <option value="net15">Net 15 Days</option>
+                <option value="net30">Net 30 Days</option>
+                <option value="net60">Net 60 Days</option>
+                <option value="eom">End of Month (EOM)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">credit_card</span>
+            <div>
+              <h3 class="section-title">Accepted Payment Channels</h3>
+              <p class="section-desc">Select supported payment methods displayed in document footers.</p>
+            </div>
+          </div>
+
+          <div class="payment-methods-grid">
+            <label class="pay-method-chip" [class.selected]="isPaymentMethodSelected('bank_transfer')">
+              <input type="checkbox" [checked]="isPaymentMethodSelected('bank_transfer')" (change)="togglePaymentMethod('bank_transfer')" />
+              <span class="material-icons">account_balance</span>
+              <span>Bank Wire / ACH</span>
+            </label>
+
+            <label class="pay-method-chip" [class.selected]="isPaymentMethodSelected('credit_card')">
+              <input type="checkbox" [checked]="isPaymentMethodSelected('credit_card')" (change)="togglePaymentMethod('credit_card')" />
+              <span class="material-icons">credit_card</span>
+              <span>Credit & Debit Card</span>
+            </label>
+
+            <label class="pay-method-chip" [class.selected]="isPaymentMethodSelected('paypal')">
+              <input type="checkbox" [checked]="isPaymentMethodSelected('paypal')" (change)="togglePaymentMethod('paypal')" />
+              <span class="material-icons">payments</span>
+              <span>PayPal / Online</span>
+            </label>
+
+            <label class="pay-method-chip" [class.selected]="isPaymentMethodSelected('cash')">
+              <input type="checkbox" [checked]="isPaymentMethodSelected('cash')" (change)="togglePaymentMethod('cash')" />
+              <span class="material-icons">local_atm</span>
+              <span>Cash / Counter POS</span>
+            </label>
+
+            <label class="pay-method-chip" [class.selected]="isPaymentMethodSelected('check')">
+              <input type="checkbox" [checked]="isPaymentMethodSelected('check')" (change)="togglePaymentMethod('check')" />
+              <span class="material-icons">receipt</span>
+              <span>Company Check</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">description</span>
+            <div>
+              <h3 class="section-title">Standard Document Notes & Terms</h3>
+              <p class="section-desc">Default disclaimer appended at the bottom of generated PDF documents.</p>
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <textarea
+              class="input-field"
+              rows="4"
+              [value]="defaultNotes()"
+              (input)="defaultNotes.set($any($event.target).value)"
+              placeholder="e.g. Payment is due within agreed terms. Late payments subject to 1.5% interest per month."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions-bottom">
+          <button type="submit" class="btn-save">
+            <span class="material-icons">save</span>
+            <span>Save Financial Defaults</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- TAB 4: BRANDING & TEMPLATES -->
+    @if (activeTab() === 'appearance') {
+      <form class="settings-form" (ngSubmit)="saveSettings()">
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">style</span>
+            <div>
+              <h3 class="section-title">Document Layout Style & Accent Palette</h3>
+              <p class="section-desc">Select document layout template, brand color accent, and paper format.</p>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field-wrap">
+              <label class="field-label">Formal Document Style</label>
+              <select
+                class="input-field"
+                [value]="defaultFormalTemplate()"
+                (change)="defaultFormalTemplate.set($any($event.target).value)"
+              >
+                <option value="modern">Modern Minimalist</option>
+                <option value="classic">Classic Corporate</option>
+                <option value="bold">Bold Tech Accent</option>
+              </select>
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">POS Receipt Format</label>
+              <select
+                class="input-field"
+                [value]="defaultReceiptTemplate()"
+                (change)="defaultReceiptTemplate.set($any($event.target).value)"
+              >
+                <option value="thermal-80mm">Thermal 80mm (Standard POS)</option>
+                <option value="thermal-58mm">Thermal 58mm (Pocket Printer)</option>
+                <option value="modern">Modern Full A4 Slip</option>
+              </select>
+            </div>
+
+            <div class="field-wrap">
+              <label class="field-label">Paper Print Format</label>
+              <select
+                class="input-field"
+                [value]="paperSize()"
+                (change)="paperSize.set($any($event.target).value)"
+              >
+                <option value="a4">A4 (210 x 297 mm)</option>
+                <option value="letter">US Letter (8.5 x 11 in)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="brand-color-rack">
+            <label class="field-label">Brand Color Accent</label>
+            <div class="color-swatch-row">
+              @for (c of presetColors; track c.hex) {
+                <button
+                  type="button"
+                  class="color-chip-btn"
+                  [class.active]="brandColor() === c.hex"
+                  [style.background-color]="c.hex"
+                  (click)="brandColor.set(c.hex)"
+                  [title]="c.label"
+                >
+                  @if (brandColor() === c.hex) {
+                    <span class="material-icons">check</span>
+                  }
+                </button>
+              }
+              <div class="custom-color-wrap">
+                <input
+                  type="color"
+                  class="custom-color-picker"
+                  [value]="brandColor()"
+                  (input)="brandColor.set($any($event.target).value)"
+                />
+                <span class="custom-hex-code font-mono">{{ brandColor() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">point_of_sale</span>
+            <div>
+              <h3 class="section-title">POS Store Checkout Preferences</h3>
+              <p class="section-desc">Hardware checkout automation settings for local store counters.</p>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <label class="toggle-card">
+              <input
+                type="checkbox"
+                class="toggle-checkbox"
+                [checked]="posAutoPrint()"
+                (change)="posAutoPrint.set($any($event.target).checked)"
+              />
+              <div class="toggle-text">
+                <span class="toggle-title">Auto-Print POS Receipts</span>
+                <span class="toggle-sub">Automatically trigger browser print dialog upon checkout completion</span>
+              </div>
+            </label>
+
+            <label class="toggle-card">
+              <input
+                type="checkbox"
+                class="toggle-checkbox"
+                [checked]="posSoundEffects()"
+                (change)="posSoundEffects.set($any($event.target).checked)"
+              />
+              <div class="toggle-text">
+                <span class="toggle-title">Barcode Scanner Audio Beep</span>
+                <span class="toggle-sub">Play instant audio confirmation feedback on adding items</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Live Document Header Interactive Preview -->
+        <div class="form-section">
+          <div class="section-header">
+            <span class="material-icons text-money">visibility</span>
+            <div>
+              <h3 class="section-title">Live Document Header Mockup Preview</h3>
+              <p class="section-desc">Real-time rendering of your brand identity, logo, and selected template style.</p>
+            </div>
+          </div>
+
+          <div class="interactive-preview-frame" [style.border-top-color]="brandColor()">
+            <div class="preview-header-bar" [style.background-color]="brandColor()">
+              <span class="preview-template-tag">{{ defaultFormalTemplate() | titlecase }} Template</span>
+              <span class="preview-paper-tag">{{ paperSize() | uppercase }}</span>
+            </div>
+
+            <div class="preview-doc-body">
+              <div class="preview-top-lockup">
+                <div class="preview-company-side">
+                  @if (logoUrl()) {
+                    <img [src]="logoUrl()" alt="Logo Preview" class="preview-logo-img" referrerpolicy="no-referrer" />
+                  } @else {
+                    <div class="preview-logo-placeholder" [style.color]="brandColor()">
+                      <span class="material-icons">business</span>
+                    </div>
+                  }
+                  <div class="preview-company-details">
+                    <h4 class="preview-company-name">{{ companyName() || 'YOUR COMPANY NAME' }}</h4>
+                    @if (legalName()) { <p class="preview-sub">{{ legalName() }}</p> }
+                    @if (taxId()) { <p class="preview-sub font-mono">Tax ID: {{ taxId() }}</p> }
+                    <p class="preview-sub">{{ address() || '123 Business Way' }}, {{ city() || 'City' }} {{ postalCode() }}</p>
+                    @if (email()) { <p class="preview-sub">{{ email() }}</p> }
+                  </div>
+                </div>
+
+                <div class="preview-doc-side">
+                  <span class="preview-doc-title" [style.color]="brandColor()">TAX INVOICE</span>
+                  <span class="preview-doc-num font-mono">INV-{{ previewYear }}-1001</span>
+                  <div class="preview-meta-grid font-mono">
+                    <div><span>Date:</span> {{ previewYear }}-09-17</div>
+                    <div><span>Terms:</span> {{ defaultPaymentTerms() | uppercase }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fake Line Items Mock -->
+              <div class="preview-mock-lines">
+                <div class="mock-line-row header">
+                  <span>Description</span>
+                  <span>Qty</span>
+                  <span>Unit Price</span>
+                  <span class="text-right">Total</span>
+                </div>
+                <div class="mock-line-row">
+                  <span>Professional Software & Advisory Services</span>
+                  <span>1</span>
+                  <span>{{ currencyService.format(1250, defaultCurrency()) }}</span>
+                  <span class="text-right font-mono">{{ currencyService.format(1250, defaultCurrency()) }}</span>
+                </div>
+                <div class="mock-line-row totals">
+                  <div class="totals-block">
+                    <div><span>Subtotal:</span> {{ currencyService.format(1250, defaultCurrency()) }}</div>
+                    <div><span>{{ taxName() }} ({{ defaultTaxRate() }}%):</span> {{ currencyService.format(1250 * (defaultTaxRate() / 100), defaultCurrency()) }}</div>
+                    <div class="grand-total" [style.color]="brandColor()">
+                      <span>Total Due:</span> {{ currencyService.format(1250 * (1 + defaultTaxRate() / 100), defaultCurrency()) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions-bottom">
+          <button type="submit" class="btn-save">
+            <span class="material-icons">save</span>
+            <span>Save Branding & Templates</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- TAB 5: DATA BACKUP & RESET CENTER -->
+    @if (activeTab() === 'data') {
+      <div class="backup-section-deck">
+
+        @if (importResultMsg()) {
+          <div class="import-banner" [class.error]="importResultMsg()?.type === 'error'">
+            <span class="material-icons">{{ importResultMsg()?.type === 'success' ? 'check_circle' : 'error' }}</span>
+            <span>{{ importResultMsg()?.text }}</span>
+          </div>
+        }
+
+        <div class="backup-grid">
+          <!-- JSON Full Backup -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">download</span>
+              <h4>Complete JSON Archive</h4>
+            </div>
+            <p>
+              Export all documents, clients, catalog, POS sales, and ledger journal entries into a single timestamped JSON file.
+            </p>
+            <button type="button" class="btn-backup-action" (click)="exportFullJson()">
+              <span class="material-icons">save_alt</span>
+              <span>Export Full JSON Archive</span>
+            </button>
+          </div>
+
+          <!-- JSON Restore -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">upload</span>
+              <h4>Restore from JSON Archive</h4>
+            </div>
+            <p>
+              Restores documents, clients, products, and ledger records from an x-facture JSON backup file into local IndexedDB.
+            </p>
+            <label class="btn-backup-action label-as-button">
+              <span class="material-icons">folder_open</span>
+              <span>Import & Restore (.json)</span>
+              <input type="file" accept=".json" class="file-hidden-input" (change)="onImportFileSelected($event)" />
+            </label>
+          </div>
+
+          <!-- Documents CSV -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">table_chart</span>
+              <h4>Export Documents (CSV)</h4>
+            </div>
+            <p>
+              Export tabular list of all documents with status, client, dates, subtotal, tax, and totals for spreadsheets.
+            </p>
+            <button type="button" class="btn-backup-action secondary" (click)="exportDocumentsCsv()">
+              <span class="material-icons">description</span>
+              <span>Export Documents (.csv)</span>
+            </button>
+          </div>
+
+          <!-- Ledger CSV -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">receipt_long</span>
+              <h4>Export Ledger Journal (CSV)</h4>
+            </div>
+            <p>
+              Export chronological financial journal entries with inflow/outflow tags, categories, amounts, and payment methods.
+            </p>
+            <button type="button" class="btn-backup-action secondary" (click)="exportLedgerCsv()">
+              <span class="material-icons">format_list_numbered</span>
+              <span>Export Ledger (.csv)</span>
+            </button>
+          </div>
+
+          <!-- Clients CSV -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">groups</span>
+              <h4>Export CRM Clients (CSV)</h4>
+            </div>
+            <p>
+              Export full directory of client records including contact names, company names, emails, phones, and addresses.
+            </p>
+            <button type="button" class="btn-backup-action secondary" (click)="exportClientsCsv()">
+              <span class="material-icons">contacts</span>
+              <span>Export Clients (.csv)</span>
+            </button>
+          </div>
+
+          <!-- Catalog CSV -->
+          <div class="backup-card">
+            <div class="b-icon-row">
+              <span class="material-icons">inventory_2</span>
+              <h4>Export Product Catalog (CSV)</h4>
+            </div>
+            <p>
+              Export product & service catalog with SKUs, prices, tax rates, stock quantities, and descriptions.
+            </p>
+            <button type="button" class="btn-backup-action secondary" (click)="exportProductsCsv()">
+              <span class="material-icons">inventory</span>
+              <span>Export Products (.csv)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone-box">
+          <div class="danger-info">
+            <h4>Reset Local IndexedDB Database</h4>
+            <p>Permanently removes all locally stored documents, sales, clients, catalog items, and ledger journals. Irreversible without an existing backup archive.</p>
+          </div>
+          <button type="button" class="btn-danger-reset" (click)="resetAllData()">
+            <span class="material-icons">delete_forever</span>
+            <span>Reset Database</span>
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

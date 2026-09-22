@@ -1,0 +1,98 @@
+<app-calculator-layout
+  title="Startup Cash Burn Rate & Runway Calculator"
+  subtitle="Forecast the exact months until capital depletion, evaluate net burn against recurring revenue, and simulate growth runway."
+  icon="hourglass_bottom"
+  currentToolName="Startup Cash Burn & Runway Model"
+>
+  <div mainContent class="calculator-main-pane">
+    <div class="scenario-presets-bar">
+      <span class="preset-label">Quick Scenarios:</span>
+      <button type="button" class="scenario-btn" (click)="setScenario(50000, 5000, 15000, 5)">Early Seed Stage</button>
+      <button type="button" class="scenario-btn" (click)="setScenario(250000, 35000, 60000, 8)">Post-Series A</button>
+      <button type="button" class="scenario-btn" (click)="setScenario(100000, 40000, 38000, 2)">Default Alive</button>
+    </div>
+
+    <app-fintech-card title="Cash & Operating Inputs" icon="account_balance" class="input-card">
+      <div class="inputs-two-col-grid">
+        <app-fintech-input
+          id="startingCash"
+          label="Current Cash Balance ($)"
+          [value]="startingCash()"
+          (valueChange)="startingCash.set($event)"
+          prefix="$"
+          [min]="0"
+          [step]="1000"
+        ></app-fintech-input>
+
+        <app-fintech-input
+          id="monthlyRevenue"
+          label="Monthly Revenue ($)"
+          [value]="monthlyRevenue()"
+          (valueChange)="monthlyRevenue.set($event)"
+          prefix="$"
+          [min]="0"
+          [step]="500"
+        ></app-fintech-input>
+
+        <app-fintech-input
+          id="monthlyExpenses"
+          label="Monthly Operating Expenses ($)"
+          [value]="monthlyExpenses()"
+          (valueChange)="monthlyExpenses.set($event)"
+          prefix="$"
+          [min]="0"
+          [step]="500"
+        ></app-fintech-input>
+
+        <app-fintech-input
+          id="revenueGrowthRate"
+          label="Planned Monthly Revenue Growth (%)"
+          [value]="revenueGrowthRate()"
+          (valueChange)="revenueGrowthRate.set($event)"
+          suffix="%"
+          [min]="-50"
+          [max]="200"
+          [step]="0.5"
+        ></app-fintech-input>
+      </div>
+    </app-fintech-card>
+
+    <app-fintech-card title="Runway & Cash Forecast" icon="analytics" class="results-card">
+      <div class="results-hero-strip">
+        <div class="hero-metric-cell main-highlight">
+          <span class="hero-lbl">Remaining Runway</span>
+          <span class="hero-num font-mono text-neon">
+            @if (isCashFlowPositive()) {
+              Unlimited
+            } @else {
+              {{ runwayMonths() | number:'1.1-1' }} Months
+            }
+          </span>
+          <span class="hero-subtext">Projected zero-cash date: {{ zeroCashDate() }}</span>
+        </div>
+
+        <div class="hero-metric-cell fee-highlight">
+          <span class="hero-lbl">Net Monthly Burn</span>
+          <span class="hero-num font-mono" [class.text-crimson]="!isCashFlowPositive()" [class.text-neon]="isCashFlowPositive()">
+            @if (isCashFlowPositive()) {
+              +${{ (monthlyRevenue() - monthlyExpenses()) | number:'1.0-0' }}/mo
+            } @else {
+              -${{ netBurnRate() | number:'1.0-0' }}/mo
+            }
+          </span>
+          <span class="hero-subtext">Operating expenses: ${{ grossBurnRate() | number:'1.0-0' }}/mo</span>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-header-row">
+          <h3 class="chart-title">12-Month Cash Balance Projection</h3>
+          <span class="chart-legend-badge">Revenue growth is modeled monthly</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas #calcChart id="calcChart"></canvas>
+        </div>
+      </div>
+    </app-fintech-card>
+  </div>
+</app-calculator-layout>

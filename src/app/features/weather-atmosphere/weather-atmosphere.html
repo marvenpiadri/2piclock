@@ -1,0 +1,96 @@
+<div class="weather-studio-page">
+  <div class="page-header glass-panel">
+    <div class="header-content">
+      <div>
+        <h1 class="page-title">Atmospheric Physics & Weather Simulation</h1>
+        <p class="page-subtitle">Real-time tropospheric simulator reacting to clouds, precipitation, fog scattering, and lightning</p>
+      </div>
+      @if (overrideConfig().active) {
+        <button class="reset-live-btn" (click)="resetToLiveWeather()">
+          <mat-icon>sync</mat-icon>
+          <span>Sync to Live Weather</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Atmospheric Condition Preset Cards -->
+  <section class="conditions-section glass-panel">
+    <div class="section-heading">
+      <mat-icon>tune</mat-icon>
+      <span>Select Atmospheric Condition Preset</span>
+    </div>
+
+    <div class="presets-grid">
+      @for (c of conditions; track c.id) {
+        <button 
+          class="condition-card" 
+          [class.active]="weather().condition === c.id"
+          (click)="setCondition(c.id)">
+          <div class="c-icon-row">
+            <mat-icon class="c-icon">{{ c.icon }}</mat-icon>
+            @if (weather().condition === c.id) {
+              <span class="active-badge font-mono">ACTIVE</span>
+            }
+          </div>
+          <div class="c-label">{{ c.label }}</div>
+          <div class="c-desc">{{ c.desc }}</div>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Interactive Atmosphere Tuning Controls -->
+  <div class="controls-matrix-grid">
+    <!-- Cloud Cover Tuning -->
+    <div class="control-card glass-panel">
+      <div class="ctrl-header">
+        <mat-icon>cloud</mat-icon>
+        <span>Cloud Cover Density (Troposphere)</span>
+      </div>
+      <div class="slider-row">
+        <input 
+          type="range" 
+          min="0" 
+          max="100" 
+          [value]="weather().cloudCoverPct" 
+          (input)="setCloudCover($event)"
+          class="param-slider" />
+        <span class="slider-val font-mono">{{ weather().cloudCoverPct }}%</span>
+      </div>
+      <p class="ctrl-tip">
+        Directly modulates sky opacity, solar corona diffusion, and star occlusion in real time.
+      </p>
+    </div>
+
+    <!-- Live Atmospheric Readings -->
+    <div class="control-card glass-panel">
+      <div class="ctrl-header">
+        <mat-icon>device_thermostat</mat-icon>
+        <span>Active Troposphere State</span>
+      </div>
+      <div class="readout-metrics font-mono">
+        <div class="metric-item">
+          <span class="l">Current Temp:</span>
+          <span class="v">{{ weather().temperatureC }}°C / {{ weather().temperatureF }}°F</span>
+        </div>
+        <div class="metric-item">
+          <span class="l">Relative Humidity:</span>
+          <span class="v">{{ weather().humidityPct }}%</span>
+        </div>
+        <div class="metric-item">
+          <span class="l">Precipitation Index:</span>
+          <span class="v">{{ weather().precipitationPct }}%</span>
+        </div>
+        <div class="metric-item">
+          <span class="l">Surface Pressure:</span>
+          <span class="v">{{ weather().pressureHpa }} hPa</span>
+        </div>
+        <div class="metric-item">
+          <span class="l">Status:</span>
+          <span class="v highlight">{{ weather().isSimulated ? 'Simulation Override' : 'Live Open-Meteo Feed' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

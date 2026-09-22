@@ -84,6 +84,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   // Motion preference
   private reducedMotion = false;
+  private resizeHandler: (() => void) | null = null;
 
   constructor() {
     if (this.isBrowser) {
@@ -107,6 +108,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.animFrameId !== null) {
       cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+      this.resizeHandler = null;
     }
   }
 
@@ -127,6 +133,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     };
 
     resize();
+    this.resizeHandler = resize;
     window.addEventListener('resize', resize, { passive: true });
   }
 

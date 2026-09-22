@@ -89,7 +89,7 @@ export class SeoService {
   }
 
   private normalizeUrl(url: string): string {
-    return url.replace(/([^:]\\/)\\/+/g, '$1');
+    return url.replace(/([^:]\/)\/+/g, '$1');
   }
 
   private updateCanonicalLink(url: string): void {

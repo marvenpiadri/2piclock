@@ -1,20 +1,9 @@
 import { Injectable } from '@angular/core';
 import * as Astronomy from 'astronomy-engine';
 import * as SunCalc from 'suncalc';
+import { PlanetaryPosition } from '../models/planetary.model';
 
-export interface SolarCrossCheck {\n  astronomyEngineAltitudeDeg: number;\n  astronomyEngineAzimuthDeg: number;\n  sunCalcAltitudeDeg: number;\n  sunCalcAzimuthDeg: number;\n  altitudeDeltaDeg: number;\n  azimuthDeltaDeg: number;\n}\n\nexport interface PlanetaryPosition {
-  body: Astronomy.Body;
-  name: string;
-  altitudeDeg: number;
-  azimuthDeg: number;
-  rightAscensionHours: number;
-  declinationDeg: number;
-  distanceAu: number;
-  magnitude: number;
-  visible: boolean;
-}
-
-@Injectable({ providedIn: 'root' })
+export interface SolarCrossCheck {\n  astronomyEngineAltitudeDeg: number;\n  astronomyEngineAzimuthDeg: number;\n  sunCalcAltitudeDeg: number;\n  sunCalcAzimuthDeg: number;\n  altitudeDeltaDeg: number;\n  azimuthDeltaDeg: number;\n}\n\n@Injectable({ providedIn: 'root' })
 export class PrecisionAstronomyService {
   readonly planets: readonly { body: Astronomy.Body; name: string }[] = [
     { body: Astronomy.Body.Mercury, name: 'Mercury' },

@@ -52,7 +52,7 @@ export class WeatherService {
     }
 
     this.isLoading.set(true);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,surface_pressure&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index&timezone=auto`;
 
     fetch(url)
       .then(res => res.json())
@@ -77,10 +77,12 @@ export class WeatherService {
             cloudCoverPct: c.cloud_cover !== undefined ? c.cloud_cover : this.getConditionDefaultCloud(condition),
             precipitationPct: c.precipitation > 0 ? Math.min(100, Math.round(c.precipitation * 20)) : 0,
             windSpeedKmh: Math.round(c.wind_speed_10m || 10),
-            windDirectionDeg: c.wind_direction_10m || 180,
-            visibilityKm: condition === 'fog' ? 1.5 : (condition === 'heavy_rain' ? 4 : 18),
-            uvIndex: 4.5,
+            windDirectionDeg: c.wind_direction_10m ?? 180,
+            windGustKmh: Math.round(c.wind_gusts_10m || c.wind_speed_10m || 10),
+            visibilityKm: Number.isFinite(c.visibility) ? Math.max(0.1, Math.round((c.visibility / 1000) * 10) / 10) : (condition === 'fog' ? 1.5 : (condition === 'heavy_rain' ? 4 : 18)),
+            uvIndex: Number.isFinite(c.uv_index) ? Math.round(c.uv_index * 10) / 10 : 0,
             pressureHpa: Math.round(c.surface_pressure || 1013),
+            dataSource: 'open-meteo',
             isSimulated: false,
             updatedAt: new Date()
           };
@@ -182,6 +184,7 @@ export class WeatherService {
       visibilityKm: 16,
       uvIndex: 5,
       pressureHpa: 1014,
+      dataSource: 'fallback',
       isSimulated: true,
       updatedAt: new Date()
     };

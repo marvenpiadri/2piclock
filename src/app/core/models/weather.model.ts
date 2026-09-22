@@ -17,13 +17,15 @@ export interface WeatherData {
   feelsLikeC: number;
   feelsLikeF: number;
   humidityPct: number;
-  cloudCoverPct: number; // 0 to 100
-  precipitationPct: number; // 0 to 100
+  cloudCoverPct: number;
+  precipitationPct: number;
   windSpeedKmh: number;
   windDirectionDeg: number;
+  windGustKmh?: number;
   visibilityKm: number;
   uvIndex: number;
   pressureHpa: number;
+  dataSource?: 'open-meteo' | 'fallback' | 'simulation';
   isSimulated: boolean;
   updatedAt: Date;
 }

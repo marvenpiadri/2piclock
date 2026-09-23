@@ -9,34 +9,12 @@
     </div>
     <div class="flex items-center gap-3 flex-wrap">
       <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
-        <button 
-          (click)="clockStyleMode.set('analog')"
-          [class.bg-amber-500]="clockStyleMode() === 'analog'"
-          [class.text-slate-950]="clockStyleMode() === 'analog'"
-          [class.text-slate-400]="clockStyleMode() !== 'analog'"
-          class="px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5">
-          <mat-icon class="text-sm">schedule</mat-icon>
-          Analog
-        </button>
-        <button 
-          (click)="clockStyleMode.set('digital')"
-          [class.bg-amber-500]="clockStyleMode() === 'digital'"
-          [class.text-slate-950]="clockStyleMode() === 'digital'"
-          [class.text-slate-400]="clockStyleMode() !== 'digital'"
-          class="px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5">
-          <mat-icon class="text-sm">pin</mat-icon>
-          Digital
-        </button>
+        <app-ui-button [variant]="clockStyleMode() === 'analog' ? 'primary' : 'ghost'" size="sm" (clicked)="clockStyleMode.set('analog')"><mat-icon>schedule</mat-icon>Analog</app-ui-button>
+        <app-ui-button [variant]="clockStyleMode() === 'digital' ? 'primary' : 'ghost'" size="sm" (clicked)="clockStyleMode.set('digital')"><mat-icon>pin</mat-icon>Digital</app-ui-button>
       </div>
 
-      <button (click)="showShareModal.set(true)" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
-        <mat-icon class="text-sm">camera_alt</mat-icon>
-        Export Infographic Card
-      </button>
-      <button (click)="router.navigate(['/'])" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs rounded-xl flex items-center gap-2 border border-slate-700 transition-colors">
-        <mat-icon class="text-sm">visibility</mat-icon>
-        Sky Simulator
-      </button>
+      <app-ui-button variant="primary" size="md" (clicked)="showShareModal.set(true)"><mat-icon>camera_alt</mat-icon>Export Card</app-ui-button>
+      <app-ui-button variant="secondary" size="md" (clicked)="router.navigate(['/'])"><mat-icon>visibility</mat-icon>Sky Simulator</app-ui-button>
     </div>
   </div>
 
@@ -45,7 +23,7 @@
 
   <!-- Cities Grid -->
   <div class="cities-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    @for (city of citySkies(); track city.location.id) {
+    @for (city of visibleCitySkies(); track city.location.id) {
       <div 
         class="city-sky-card glass-panel rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-500/40 transition-all duration-300 cursor-pointer bg-slate-900/80 shadow-lg group"
         [class.selected]="selectedLocation().id === city.location.id"
@@ -105,10 +83,7 @@
             </div>
           </div>
 
-          <button class="view-sky-btn w-full mt-2 py-2 px-3 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 font-mono text-xs flex items-center justify-center gap-2 transition-all" (click)="$event.stopPropagation(); selectAndGoToSky(city.location)">
-            <span>Observe Sky</span>
-            <mat-icon class="text-sm">arrow_forward</mat-icon>
-          </button>
+          <app-ui-button variant="secondary" size="md" (clicked)="$event.stopPropagation(); selectAndGoToSky(city.location)"><span>Observe Sky</span><mat-icon>arrow_forward</mat-icon></app-ui-button>
         </div>
       </div>
     }

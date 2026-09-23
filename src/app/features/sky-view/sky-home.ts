@@ -12,6 +12,8 @@ import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, 
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-sky-home',
@@ -24,6 +26,7 @@ import { Meta, Title } from '@angular/platform-browser';
     WeatherAlertsModalComponent,
     AstronomicalEventsPanelComponent,
     SettingsModalComponent,
+    RouterLink,
     CountryFlagComponent,
     AnalogClockComponent,
     WeatherParticlesComponent,
@@ -40,6 +43,9 @@ export class SkyHomeComponent {
   private observatoryViewService = inject(ObservatoryViewService);
   private title = inject(Title);
   private meta = inject(Meta);
+  private route = inject(ActivatedRoute);
+
+  readonly skyPage = (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'world';
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
@@ -82,7 +88,7 @@ export class SkyHomeComponent {
   readonly isInspectorVisible = signal<boolean>(false);
   readonly isGlassEnabled = signal<boolean>(false);
 
-  // /sky is a scroll-driven report: one full-screen section per subject.
+  // Route-driven Sky pages keep each subject focused and lightweight.
   readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
   readonly skySections = [
     { id: 'time', label: 'Time', icon: 'schedule' },
@@ -308,6 +314,12 @@ export class SkyHomeComponent {
   openDrawerTab(tab: 'weather' | 'ephemeris' | 'solar-jump' | 'locations'): void {
     this.activeDrawerTab.set(tab);
     this.isDrawerOpen.set(true);
+  }
+
+  formatDayLength(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return `${h}h ${m}m`;
   }
 
   formatMoonDistance(dist: number): string {

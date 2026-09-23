@@ -4,7 +4,8 @@ import {
   EventEmitter,
   Output,
   inject,
-  signal
+  signal,
+  Input
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -183,6 +184,10 @@ import { CelestialService } from '../../../core/services/celestial.service';
 export class SettingsModalComponent {
   @Output() closeModalEvent = new EventEmitter<void>();
   @Output() glassModeChange = new EventEmitter<boolean>();
+
+  @Input() set glassEnabled(value: boolean) {
+    this.isGlassEnabled.set(value);
+  }
 
   private weatherService = inject(WeatherService);
   private celestialService = inject(CelestialService);

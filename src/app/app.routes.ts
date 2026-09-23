@@ -9,7 +9,10 @@ import { SpaceViewComponent } from './shared/components/space-view/space-view';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'sky', pathMatch: 'full' },
-  { path: 'sky', component: SkyHomeComponent },
+  { path: 'sky', component: SkyHomeComponent, data: { skyPage: 'time' } },
+  { path: 'sky/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
+  { path: 'sky/astronomy', component: SkyHomeComponent, data: { skyPage: 'astronomy' } },
+  { path: 'sky/world', component: SkyHomeComponent, data: { skyPage: 'world' } },
   { path: 'world', component: WorldClocksComponent },
   { path: 'world-clocks', redirectTo: 'world', pathMatch: 'full' },
   { path: 'space', component: SpaceViewComponent },

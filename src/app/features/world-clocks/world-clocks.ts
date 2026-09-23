@@ -10,6 +10,7 @@ import { TerminatorRibbonComponent } from '../../shared/components/terminator-ri
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
 import { CountryFlagComponent } from '../../shared/components/country-flag/country-flag';
+import { UiButtonComponent } from '../../shared/components/ui-button/ui-button';
 
 interface WorldCitySkyData {
   location: GeoLocation;
@@ -33,7 +34,8 @@ interface WorldCitySkyData {
     TerminatorRibbonComponent,
     ShareExportModalComponent,
     AnalogClockComponent,
-    CountryFlagComponent
+    CountryFlagComponent,
+    UiButtonComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './world-clocks.html',
@@ -50,6 +52,8 @@ export class WorldClocksComponent {
 
   readonly showShareModal = signal<boolean>(false);
   readonly clockStyleMode = signal<'analog' | 'digital'>('analog');
+  readonly visibleCityCount = signal(24);
+  readonly visibleCitySkies = computed(() => this.citySkies().slice(0, this.visibleCityCount()));
 
   // Computed list of all cities with real-time astronomical and sky states
   readonly citySkies = computed<WorldCitySkyData[]>(() => {
@@ -128,6 +132,10 @@ export class WorldClocksComponent {
       };
     });
   });
+
+  loadMoreCities(): void {
+    this.visibleCityCount.update(count => Math.min(count + 24, this.citySkies().length));
+  }
 
   selectAndGoToSky(loc: GeoLocation): void {
     this.locationService.selectLocation(loc);

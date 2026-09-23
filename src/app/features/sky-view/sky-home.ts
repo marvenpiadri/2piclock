@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CelestialService } from '../../core/services/celestial.service';
@@ -11,6 +11,7 @@ import { ShareExportModalComponent } from '../../shared/components/share-export-
 import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
+import { Meta, Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-sky-home',
@@ -37,6 +38,8 @@ export class SkyHomeComponent {
   private locationService = inject(LocationService);
   private weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
+  private title = inject(Title);
+  private meta = inject(Meta);
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
@@ -76,7 +79,7 @@ export class SkyHomeComponent {
   readonly showShareModal = signal<boolean>(false);
   
   readonly isInspectorVisible = signal<boolean>(false);
-  readonly isGlassEnabled = signal<boolean>(true);
+  readonly isGlassEnabled = signal<boolean>(false);
 
   // /sky is a scroll-driven report: one full-screen section per subject.
   readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer'>('time');
@@ -96,6 +99,18 @@ export class SkyHomeComponent {
     { name: 'Dubai', zone: 'Asia/Dubai' },
     { name: 'Tokyo', zone: 'Asia/Tokyo' }
   ];
+
+  constructor() {
+    effect(() => {
+      const location = this.selectedLocation();
+      const title = `Time in ${location.name}, ${location.country} | 2piClock`;
+      const description = `Current local time, weather, sunrise, sunset and astronomical conditions for ${location.name}, ${location.country}.`;
+      this.title.setTitle(title);
+      this.meta.updateTag({ name: 'description', content: description });
+      this.meta.updateTag({ property: 'og:title', content: title });
+      this.meta.updateTag({ property: 'og:description', content: description });
+    });
+  }
 
   formatWorldTime(zone: string): string {
     return this.activeDate().toLocaleTimeString('en-GB', {

@@ -1,30 +1,13 @@
-:host{display:block;width:100%;min-height:calc(100vh - 64px);position:relative;z-index:1}
-.world-clocks-page{max-width:1600px;margin:0 auto;padding:18px 20px 72px;display:flex;flex-direction:column;gap:18px}
-.page-header{padding:16px 18px!important;background:rgba(10,10,10,.78)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:16px!important;box-shadow:0 12px 36px rgba(0,0,0,.25)}
-.page-title{font-size:1.05rem;font-weight:800;color:#f5f5f5;margin:0;letter-spacing:-.015em}
-.page-subtitle{font-size:.78rem;color:#8b8b8b;margin-top:4px;max-width:760px}
-.cities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
-.city-sky-card{display:flex;flex-direction:column;overflow:hidden;border-radius:16px;cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;background:rgba(10,10,10,.78)!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:0 10px 28px rgba(0,0,0,.22)}
-.city-sky-card:hover{transform:translateY(-3px);border-color:rgba(245,158,11,.42)!important;box-shadow:0 16px 34px rgba(0,0,0,.34)}
-.city-sky-card.selected{border-color:rgba(245,158,11,.78)!important;box-shadow:0 0 0 1px rgba(245,158,11,.18),0 16px 38px rgba(0,0,0,.36)}
-.city-sky-header{padding:13px 14px;display:flex;flex-direction:column;gap:8px;position:relative;min-height:78px;justify-content:space-between}
-.header-top{display:flex;align-items:center;justify-content:space-between}
-.city-twilight-badge{font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.48);color:#fbbf24;border:1px solid rgba(245,158,11,.25);backdrop-filter:blur(5px);text-transform:uppercase}
-.city-sun-alt{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.city-sun-alt mat-icon{font-size:15px;width:15px;height:15px}
-.city-card-body{padding:14px 15px;display:flex;flex-direction:column;gap:9px;background:rgba(9,9,9,.62)}
-.city-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.city-name{font-size:1rem;font-weight:750;color:#f5f5f5}
-.city-country{font-size:.7rem;color:#777}
-.city-time-display{font-size:1.65rem;font-weight:800;color:#fbbf24;letter-spacing:-.03em}
-.city-date-sub{font-size:.7rem;color:#737373;margin-top:-5px}
-.city-solar-events{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:rgba(255,255,255,.035);padding:5px;border-radius:9px;margin-top:2px}
-.event-mini{display:flex;flex-direction:column;align-items:center;padding:6px 3px;background:rgba(0,0,0,.24);border-radius:7px}
-.event-mini .lbl{font-size:.58rem;color:#6f6f6f}
-.event-mini .val{font-size:.69rem;font-weight:700;color:#cfcfcf}
-.view-sky-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:3px;padding:8px 12px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.25);border-radius:10px;color:#fbbf24;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .18s ease}
-.view-sky-btn mat-icon{font-size:15px;width:15px;height:15px}
-.view-sky-btn:hover{background:#f59e0b;color:#090909;border-color:#f59e0b}
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
 
-.pagination-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;color:#666;font:10px monospace;border-top:1px solid rgba(255,255,255,.07)}
-@media(max-width:640px){.pagination-bar{flex-direction:column;align-items:flex-start;gap:10px}}
+app-world-view {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}

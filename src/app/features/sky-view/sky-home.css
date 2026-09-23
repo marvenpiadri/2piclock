@@ -67,3 +67,31 @@ button{font-family:inherit}
 @media(max-width:900px){.section-inner,.narrow-inner{width:calc(100% - 40px)}.hero-layout{grid-template-columns:1fr;gap:10px}.time-stage{min-height:48vh}.polar-clock-container{width:min(58vh,460px)}.home-weather-card{width:min(520px,100%);margin:0 auto}.weather-main-card{padding:20px}.weather-stat-grid{grid-template-columns:repeat(2,1fr)}.astro-report-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.section-inner{min-height:100vh;padding:58px 0 32px}.top-context{grid-template-columns:auto 1fr auto}.brand-mark{font-size:14px}.top-location{justify-self:center;padding:6px}.top-location span{display:none}.home-heading{margin-top:12px}.hero-layout{gap:4px}.time-stage{min-height:43vh}.polar-clock-container{width:min(70vw,400px)}.clock-time{font-size:35px}.home-weather-card{padding:15px}.weather-temperature span{font-size:49px}.weather-key-stats{margin-top:13px}.time-controls{overflow-x:auto;justify-content:flex-start;flex-wrap:nowrap}.time-controls>*{flex:0 0 auto}.weather-main-card{flex-direction:column;align-items:flex-start;gap:18px}.weather-big-temp{font-size:55px}.weather-stat-grid{grid-template-columns:1fr 1fr}.weather-explanation{flex-direction:column;align-items:flex-start}.world-clock{grid-template-columns:1fr auto}.world-clock>span{display:none}.today-grid{grid-template-columns:1fr}.today-event-strip{flex-direction:column;align-items:flex-start}.next-list{grid-template-columns:1fr}.footer-section{min-height:65vh}}
 @media(prefers-reduced-motion:reduce){.sky-report-scroll{scroll-behavior:auto}.starfield{animation:none}}
+
+/* Minimal report material */
+.sky-report > app-weather-particles { transition: opacity .45s ease; }
+.sky-report.astronomy-active > app-weather-particles { opacity: 0; pointer-events:none; }
+.home-info-panel { width:min(440px,100%); padding:18px; border:1px solid rgba(255,255,255,.09); border-radius:16px; background:rgba(10,12,16,.62); backdrop-filter:blur(16px); box-shadow:0 18px 50px rgba(0,0,0,.22); }
+.glass-off .home-info-panel,.glass-off .weather-main-card,.glass-off .weather-stat,.glass-off .weather-explanation,.glass-off .astro-report-grid,.glass-off .world-clock,.glass-off .today-card,.glass-off .today-event-strip,.glass-off .next-list,.glass-off .next-note { background:rgba(10,12,16,.9); backdrop-filter:none; box-shadow:none; }
+.info-panel-top { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.07); }
+.info-panel-top h2 { margin:4px 0 2px; font:600 22px/1.05 system-ui,sans-serif; letter-spacing:-.025em; }
+.info-panel-top p { margin:0; color:#777; font:10px/1.2 monospace; }
+.country-panel-flag { width:30px; height:auto; border-radius:5px; }
+.analog-clock-row { display:grid; grid-template-columns:145px 1fr; gap:18px; align-items:center; padding:17px 0; }
+.analog-clock-row app-analog-clock { width:145px; }
+.analog-clock-row app-analog-clock > div { max-width:none !important; }
+.location-facts { display:grid; gap:9px; }
+.location-facts div,.country-facts div { display:flex; justify-content:space-between; gap:12px; border-bottom:1px solid rgba(255,255,255,.045); padding-bottom:7px; }
+.location-facts span,.country-facts span { color:#666; font:8px monospace; text-transform:uppercase; letter-spacing:.06em; }
+.location-facts strong,.country-facts strong { color:#ddd; font:600 9px system-ui,sans-serif; text-align:right; }
+.info-weather { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:13px 0; border-top:1px solid rgba(255,255,255,.07); border-bottom:1px solid rgba(255,255,255,.07); }
+.info-weather strong { display:block; margin-top:4px; font:600 14px system-ui,sans-serif; }
+.info-weather p { margin:4px 0 0; color:#777; font:9px monospace; }
+.info-weather mat-icon { color:#f5b23d; font-size:22px; width:22px; height:22px; }
+.country-facts { display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding:13px 0 2px; }
+.country-facts div { border:0; display:block; padding:0; }
+.country-facts strong { display:block; text-align:left; margin-top:4px; }
+.home-heading h1 { max-width:760px; }
+.home-heading p { margin:7px 0 0; color:#777; font:10px monospace; }
+@media(max-width:900px){.home-info-panel{margin:0 auto}.analog-clock-row{grid-template-columns:130px 1fr}.analog-clock-row app-analog-clock{width:130px}}
+@media(max-width:620px){.home-info-panel{padding:15px}.analog-clock-row{grid-template-columns:112px 1fr;gap:13px}.analog-clock-row app-analog-clock{width:112px}.country-facts{grid-template-columns:1fr}.info-panel-top h2{font-size:19px}}

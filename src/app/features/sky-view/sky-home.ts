@@ -9,7 +9,6 @@ import { ObservatoryViewService, ObservatoryView } from '../../core/services/obs
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
-import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -25,7 +24,6 @@ import { RouterLink } from '@angular/router';
     ShareExportModalComponent, 
     WeatherAlertsModalComponent,
     AstronomicalEventsPanelComponent,
-    SettingsModalComponent,
     RouterLink,
     CountryFlagComponent,
     AnalogClockComponent,
@@ -86,8 +84,6 @@ export class SkyHomeComponent {
   readonly showShareModal = signal<boolean>(false);
   
   readonly isInspectorVisible = signal<boolean>(false);
-  readonly isGlassEnabled = signal<boolean>(false);
-
   // Route-driven Sky pages keep each subject focused and lightweight.
   readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
   readonly skySections = [
@@ -168,10 +164,6 @@ export class SkyHomeComponent {
 
   openWeatherReport(): void {
     this.scrollToSection('weather');
-  }
-
-  setGlassEnabled(enabled: boolean): void {
-    this.isGlassEnabled.set(enabled);
   }
 
 

@@ -125,6 +125,24 @@ import { CelestialService } from '../../../core/services/celestial.service';
             </button>
           </div>
 
+          <!-- Item 4: Glass Material -->
+          <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-cyan-500/15 text-cyan-300 flex items-center justify-center shrink-0">
+                <mat-icon class="text-base">blur_on</mat-icon>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white">Glass Material</div>
+                <div class="text-[10px] text-neutral-400">Use translucent surfaces over the live atmosphere</div>
+              </div>
+            </div>
+            <button type="button" (click)="toggleGlassMode()" class="px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer"
+              [class.bg-emerald-500/20]="isGlassEnabled()" [class.text-emerald-300]="isGlassEnabled()" [class.border-emerald-500/40]="isGlassEnabled()"
+              [class.bg-neutral-800]="!isGlassEnabled()" [class.text-neutral-400]="!isGlassEnabled()" [class.border-white/10]="!isGlassEnabled()">
+              {{ isGlassEnabled() ? 'ENABLED' : 'DISABLED' }}
+            </button>
+          </div>
+
           <!-- Item 4: Primary Clock Style -->
           <div class="p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
@@ -164,6 +182,7 @@ import { CelestialService } from '../../../core/services/celestial.service';
 })
 export class SettingsModalComponent {
   @Output() closeModalEvent = new EventEmitter<void>();
+  @Output() glassModeChange = new EventEmitter<boolean>();
 
   private weatherService = inject(WeatherService);
   private celestialService = inject(CelestialService);
@@ -172,6 +191,7 @@ export class SettingsModalComponent {
   readonly showParticles = signal<boolean>(true);
   readonly showWindVectors = signal<boolean>(true);
   readonly clockDisplayMode = signal<'analog' | 'radian'>('analog');
+  readonly isGlassEnabled = signal<boolean>(true);
 
   toggleTemperatureUnit(): void {
     this.weatherService.toggleFahrenheit();
@@ -187,6 +207,11 @@ export class SettingsModalComponent {
 
   toggleClockMode(): void {
     this.clockDisplayMode.update(m => m === 'analog' ? 'radian' : 'analog');
+  }
+
+  toggleGlassMode(): void {
+    this.isGlassEnabled.update(v => !v);
+    this.glassModeChange.emit(this.isGlassEnabled());
   }
 
   closeModal(): void {

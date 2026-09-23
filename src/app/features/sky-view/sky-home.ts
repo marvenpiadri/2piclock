@@ -8,7 +8,7 @@ import { WeatherService } from '../../core/services/weather.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherTrendChartComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
+import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 
@@ -26,7 +26,6 @@ import { FormsModule } from '@angular/forms';
     CountryFlagComponent,
     AnalogClockComponent,
     WeatherParticlesComponent,
-    WeatherTrendChartComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
@@ -77,6 +76,7 @@ export class SkyHomeComponent {
   readonly showShareModal = signal<boolean>(false);
   
   readonly isInspectorVisible = signal<boolean>(false);
+  readonly isGlassEnabled = signal<boolean>(true);
 
   // /sky is a scroll-driven report: one full-screen section per subject.
   readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer'>('time');
@@ -136,6 +136,10 @@ export class SkyHomeComponent {
 
   openWeatherReport(): void {
     this.scrollToSection('weather');
+  }
+
+  setGlassEnabled(enabled: boolean): void {
+    this.isGlassEnabled.set(enabled);
   }
 
 

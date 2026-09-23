@@ -1,64 +1,37 @@
 :host {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  background-color: #030712;
-  color: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Display", system-ui, sans-serif;
+  display:block;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  position:relative;
+  background:#050505;
+  color:#f5f5f5;
+  font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","SF Pro Display",system-ui,sans-serif;
 }
-
-.app-layout {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-  z-index: 20;
-}
-
+.app-layout { position:relative; width:100%; height:100%; display:flex; overflow:hidden; z-index:20; }
 .vertical-nav-sidebar {
-  height: 100%;
-  overflow-y: auto;
+  height:100%;
+  overflow-y:auto;
+  background:rgba(8,8,8,.88)!important;
+  border-color:rgba(255,255,255,.09)!important;
+  box-shadow:12px 0 40px rgba(0,0,0,.18);
 }
+.main-content-viewport { height:100%; overflow-y:auto; }
+.full-page-glass-substrate { position:fixed; inset:0; pointer-events:none; z-index:10; transition:backdrop-filter .4s ease,background-color .4s ease; }
+.nav-vertical-item,.nav-category-item { transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease; }
+.nav-vertical-item:hover { transform:translateX(2px); }
+.nav-category-item:hover { transform:translateY(-1px); }
 
-.main-content-viewport {
-  height: 100%;
-  overflow-y: auto;
-}
+/* Windy-inspired control language: compact, dark, layered, with one clear active accent. */
+.search-capsule > div:first-child { min-height:42px; background:rgba(255,255,255,.055)!important; border-color:rgba(255,255,255,.10)!important; }
+.search-capsule > div:first-child:focus-within { border-color:rgba(245,158,11,.65)!important; box-shadow:0 0 0 3px rgba(245,158,11,.10); }
+.search-dropdown-menu { background:rgba(10,10,10,.96)!important; border-color:rgba(255,255,255,.12)!important; }
+.nav-vertical-item[routerlinkactive] { border-radius:14px; }
+.nav-vertical-item:hover { background:rgba(255,255,255,.055)!important; }
+.glass-panel { border-radius:16px; }
 
-.full-page-glass-substrate {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  transition: backdrop-filter 0.4s ease, background-color 0.4s ease;
-}
-
-.nav-vertical-item:hover {
-  transform: translateX(2px);
-}
-
-.nav-category-item:hover {
-  transform: translateY(-1px);
-}
-
-/* Custom Sleek Scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+/* Custom sleek scrollbars */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,.14); border-radius:9999px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.26); }

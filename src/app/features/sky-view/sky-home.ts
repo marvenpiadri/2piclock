@@ -79,14 +79,15 @@ export class SkyHomeComponent {
   readonly isInspectorVisible = signal<boolean>(false);
 
   // /sky is a scroll-driven report: one full-screen section per subject.
-  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next'>('time');
+  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer'>('time');
   readonly skySections = [
     { id: 'time', label: 'Time', icon: 'schedule' },
     { id: 'weather', label: 'Weather', icon: 'cloud' },
     { id: 'astronomy', label: 'Astronomy', icon: 'auto_awesome' },
     { id: 'world', label: 'World Time', icon: 'public' },
     { id: 'today', label: 'Today', icon: 'today' },
-    { id: 'next', label: 'Coming Up', icon: 'event' }
+    { id: 'next', label: 'Coming Up', icon: 'event' },
+    { id: 'footer', label: 'About', icon: 'info' }
   ] as const;
 
   readonly worldClockCities = [
@@ -123,7 +124,7 @@ export class SkyHomeComponent {
       }
     }
 
-    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next');
+    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer');
   }
 
   scrollToSection(id: string): void {

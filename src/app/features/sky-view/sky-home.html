@@ -1,466 +1,281 @@
-<div class="sky-report" [class.astronomy-active]="activeSection() === 'astronomy'">
-
-  @if (showParticles()) {
-    <app-weather-particles></app-weather-particles>
-  }
-
-  <!-- Persistent location context -->
-  <header class="sky-report-header">
-    <button type="button" class="location-chip" (click)="openDrawerTab('locations')" title="Change location">
-      <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag>
-      <span class="location-name">{{ selectedLocation().name }}</span>
-      <span class="location-country">{{ selectedLocation().country }}</span>
-      <span class="location-zone">{{ timezoneDisplay() }}</span>
-      <mat-icon>expand_more</mat-icon>
-    </button>
-
-    <div class="header-actions">
-      @if (activeAlerts().length > 0) {
-        <button type="button" class="mini-action alert-action" (click)="openAlertsModal()" title="Weather alerts">
-          <mat-icon>warning</mat-icon>
-          <span>{{ activeAlerts().length }}</span>
-        </button>
-      }
-      <button type="button" class="mini-action" (click)="openSettingsModal()" title="Settings">
-        <mat-icon>settings</mat-icon>
-      </button>
-    </div>
-  </header>
-
-  <!-- Quiet section navigation. It is part of the page, not a competing panel. -->
-  <nav class="sky-section-nav" aria-label="Sky report sections">
-    <div class="nav-rail">
-      @for (section of skySections; track section.id) {
-        <button
-          type="button"
-          class="nav-item"
-          [class.active]="activeSection() === section.id"
-          (click)="scrollToSection(section.id)"
-          [attr.aria-label]="'Go to ' + section.label"
-          [title]="section.label">
-          <span class="nav-dot"></span>
-          <span class="nav-label">{{ section.label }}</span>
-        </button>
-      }
-    </div>
-    <button type="button" class="nav-settings" (click)="openSettingsModal()" title="Settings">
-      <mat-icon>tune</mat-icon>
-    </button>
-  </nav>
+<div class="sky-report" [class.glass-off]="!isGlassEnabled()" [class.astronomy-active]="activeSection() === 'astronomy'">
+  @if (showParticles()) { <app-weather-particles></app-weather-particles> }
 
   <main class="sky-report-scroll" (scroll)="onSkyScroll($event)">
-
-    <!-- ========================================================= -->
-    <!-- TIME — the identity of 2piClock                           -->
-    <!-- ========================================================= -->
+    <!-- TIME / HOME -->
     <section id="sky-section-time" class="sky-section time-section">
       <div class="section-inner time-inner">
 
-        <div class="section-heading hero-heading">
-          <span class="section-eyebrow">LOCAL TIME</span>
-          <h1>{{ selectedLocation().name }}</h1>
-          <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
-        </div>
-
-        <div class="time-stage">
-          <div class="polar-clock-container">
-            <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="2Pi celestial clock">
-              <defs>
-                <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-                <filter id="moonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-
-              <circle cx="0" cy="0" r="148" fill="rgba(8,8,8,.38)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
-              <circle cx="0" cy="0" r="132" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>
-              <circle cx="0" cy="0" r="116" fill="none" stroke="rgba(245,158,11,.28)" stroke-width="1" stroke-dasharray="2 4"/>
-
-              @for (hour of [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]; track hour) {
-                <g [attr.transform]="'rotate(' + (hour * 15) + ')'">
-                  <line x1="0" [attr.y1]="hour % 6 === 0 ? '-148' : (hour % 3 === 0 ? '-142' : '-138')" x2="0" y2="-132"
-                    [attr.stroke]="hour % 6 === 0 ? 'rgba(245,158,11,.95)' : 'rgba(255,255,255,.28)'"
-                    [attr.stroke-width]="hour % 6 === 0 ? '2' : '1'"/>
-                </g>
-              }
-
-              <text x="0" y="-152" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">12:00 · π</text>
-              <text x="152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700">18:00 · 3π/2</text>
-              <text x="0" y="158" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">00:00 · 0 / 2π</text>
-              <text x="-152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end">06:00 · π/2</text>
-
-              <line x1="-128" y1="0" x2="128" y2="0" stroke="rgba(245,158,11,.45)" stroke-width="1" stroke-dasharray="3 3"/>
-              <text x="-124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700">EAST</text>
-              <text x="124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700" text-anchor="end">WEST</text>
-
-              <g [attr.transform]="'rotate(' + (dayFraction() * 360 - 180) + ')'">
-                <line x1="0" y1="0" x2="0" y2="-122" stroke="rgba(245,158,11,.9)" stroke-width="2"/>
-                <circle cx="0" cy="-122" r="9" fill="#f59e0b" filter="url(#sunGlowFilter)"/>
-                <circle cx="0" cy="-122" r="3.5" fill="#fff"/>
-              </g>
-
-              <g [attr.transform]="'rotate(' + celestial().moon.azimuthDeg + ')'">
-                <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(186,230,253,.85)" stroke-width="1.8" stroke-dasharray="3 2"/>
-                <circle cx="0" cy="-96" r="7" fill="#38bdf8" filter="url(#moonGlowFilter)"/>
-                <circle cx="0" cy="-96" r="3" fill="#f8fafc"/>
-              </g>
-
-              <circle cx="0" cy="0" r="78" fill="rgba(8,8,8,.94)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
-            </svg>
-
-            <div class="clock-readout">
-              <div class="clock-time">{{ localTime() }}</div>
-              <div class="clock-date">{{ localDate() }}</div>
-              <div class="clock-state">{{ getTwilightLabel(celestial().twilightState) }}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Only the weather facts that matter at a glance -->
-        <div class="weather-glance">
-          <div class="glance-main">
-            <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : 'cloud' }}</mat-icon>
+        <div class="top-context">
+          <div class="brand-mark">2π</div>
+          <div class="top-location">
+            <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag>
             <div>
-              <span class="glance-label">RIGHT NOW</span>
-              <strong>{{ weather().conditionLabel }}</strong>
+              <strong>{{ selectedLocation().name }}</strong>
+              <span>{{ selectedLocation().country }} · {{ timezoneDisplay() }}</span>
             </div>
+            <button type="button" class="context-button" (click)="openDrawerTab('locations')" title="Change location">
+              <mat-icon>expand_more</mat-icon>
+            </button>
           </div>
-          <div class="glance-stat">
-            <span>Temperature</span>
-            <strong>{{ isFahrenheit() ? weather().temperatureF + '°F' : weather().temperatureC + '°C' }}</strong>
+          <div class="top-actions">
+            @if (activeAlerts().length > 0) {
+              <button type="button" class="quiet-button alert-action" (click)="openAlertsModal()" title="Weather alerts">
+                <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
+              </button>
+            }
+            <button type="button" class="quiet-button" (click)="openSettingsModal()" title="Settings"><mat-icon>settings</mat-icon></button>
           </div>
-          <div class="glance-stat">
-            <span>Feels like</span>
-            <strong>{{ isFahrenheit() ? weather().feelsLikeF + '°F' : weather().feelsLikeC + '°C' }}</strong>
-          </div>
-          <div class="glance-stat">
-            <span>Humidity</span>
-            <strong>{{ weather().humidityPct }}%</strong>
-          </div>
-          <button type="button" class="report-link" (click)="openWeatherReport()">
-            Weather report
-            <mat-icon>arrow_downward</mat-icon>
-          </button>
         </div>
 
-        <div class="time-tools">
-          @if (!isLive()) {
-            <button type="button" class="live-return" (click)="setLive()">
-              <span></span> Return to live
+        <div class="home-heading">
+          <span class="section-eyebrow">LOCAL TIME</span>
+          <h1>{{ localDate() }}</h1>
+        </div>
+
+        <div class="hero-layout">
+          <div class="time-stage">
+            <!-- Keep the existing 2π clock language: sun/moon rotation + exact local time. -->
+            <div class="polar-clock-container">
+              <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="2Pi celestial clock">
+                <defs>
+                  <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <filter id="moonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <circle cx="0" cy="0" r="148" fill="rgba(8,8,8,.38)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
+                <circle cx="0" cy="0" r="132" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".8"/>
+                <circle cx="0" cy="0" r="116" fill="none" stroke="rgba(245,158,11,.28)" stroke-width="1" stroke-dasharray="2 4"/>
+                @for (hour of [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]; track hour) {
+                  <g [attr.transform]="'rotate(' + (hour * 15) + ')'">
+                    <line x1="0" [attr.y1]="hour % 6 === 0 ? '-148' : (hour % 3 === 0 ? '-142' : '-138')" x2="0" y2="-132"
+                      [attr.stroke]="hour % 6 === 0 ? 'rgba(245,158,11,.95)' : 'rgba(255,255,255,.28)'"
+                      [attr.stroke-width]="hour % 6 === 0 ? '2' : '1'"/>
+                  </g>
+                }
+                <text x="0" y="-152" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">12:00 · π</text>
+                <text x="152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700">18:00 · 3π/2</text>
+                <text x="0" y="158" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">00:00 · 0 / 2π</text>
+                <text x="-152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end">06:00 · π/2</text>
+                <line x1="-128" y1="0" x2="128" y2="0" stroke="rgba(245,158,11,.45)" stroke-width="1" stroke-dasharray="3 3"/>
+                <text x="-124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700">EAST</text>
+                <text x="124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700" text-anchor="end">WEST</text>
+                <g [attr.transform]="'rotate(' + (dayFraction() * 360 - 180) + ')'">
+                  <line x1="0" y1="0" x2="0" y2="-122" stroke="rgba(245,158,11,.9)" stroke-width="2"/>
+                  <circle cx="0" cy="-122" r="9" fill="#f59e0b" filter="url(#sunGlowFilter)"/>
+                  <circle cx="0" cy="-122" r="3.5" fill="#fff"/>
+                </g>
+                <g [attr.transform]="'rotate(' + celestial().moon.azimuthDeg + ')'">
+                  <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(186,230,253,.85)" stroke-width="1.8" stroke-dasharray="3 2"/>
+                  <circle cx="0" cy="-96" r="7" fill="#38bdf8" filter="url(#moonGlowFilter)"/>
+                  <circle cx="0" cy="-96" r="3" fill="#f8fafc"/>
+                </g>
+                <circle cx="0" cy="0" r="78" fill="rgba(8,8,8,.94)" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>
+              </svg>
+              <div class="clock-readout">
+                <div class="clock-time">{{ localTime() }}</div>
+                <div class="clock-date">{{ timezoneDisplay() }}</div>
+                <div class="clock-state">{{ getTwilightLabel(celestial().twilightState) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weather is a companion to the clock, not another dashboard. -->
+          <aside class="home-weather-card">
+            <div class="weather-card-head">
+              <div>
+                <span class="section-eyebrow">RIGHT NOW</span>
+                <strong>{{ weather().conditionLabel }}</strong>
+              </div>
+              <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+            </div>
+            <div class="weather-temperature">
+              <span>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</span>
+              <small>{{ isFahrenheit() ? 'F' : 'C' }}</small>
+            </div>
+            <p class="weather-feels">Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+            <div class="weather-key-stats">
+              <div><span>Rain</span><strong>{{ weather().precipitationPct }}%</strong></div>
+              <div><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong></div>
+              <div><span>Clouds</span><strong>{{ weather().cloudCoverPct }}%</strong></div>
+            </div>
+            <button type="button" class="weather-card-link" (click)="scrollToSection('weather')">
+              Full weather report <mat-icon>arrow_forward</mat-icon>
             </button>
+          </aside>
+        </div>
+
+        <div class="time-controls">
+          @if (!isLive()) {
+            <button type="button" class="live-return" (click)="setLive()"><i></i> Return to live</button>
           } @else {
             <span class="live-status"><i></i> Live</span>
           }
-
           <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')">Sunrise <b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
           <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')">Noon <b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
           <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')">Sunset <b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
+          <button type="button" class="next-section-button" (click)="scrollToSection('weather')">Explore weather <mat-icon>south</mat-icon></button>
         </div>
 
         <div class="time-scrubber">
-          <div class="scrubber-head">
-            <span>TIME MACHINE</span>
-            <span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span>
-          </div>
+          <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
           <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" (input)="onScrubberInput($event)" aria-label="Time of day"/>
           <div class="scrubber-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
         </div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- WEATHER — quick understanding first, depth second        -->
-    <!-- ========================================================= -->
+    <!-- WEATHER -->
     <section id="sky-section-weather" class="sky-section weather-section">
       <div class="section-inner report-inner">
         <div class="section-heading">
-          <span class="section-eyebrow">WEATHER REPORT</span>
-          <h2>What is happening outside?</h2>
-          <p>{{ selectedLocation().name }} · Current conditions and the near future.</p>
+          <span class="section-eyebrow">WEATHER · {{ selectedLocation().name }}</span>
+          <h2>Weather, without the noise.</h2>
+          <p>Everything important first. More detail only when it helps.</p>
         </div>
 
-        <div class="weather-hero">
-          <div class="weather-hero-temp">
-            <span>{{ isFahrenheit() ? weather().temperatureF + '°' : weather().temperatureC + '°' }}</span>
-            <small>{{ isFahrenheit() ? 'F' : 'C' }}</small>
+        <div class="weather-main-card">
+          <div class="weather-main-condition">
+            <div class="weather-big-icon">
+              <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+            </div>
+            <div>
+              <span class="section-eyebrow">CURRENT CONDITIONS</span>
+              <strong>{{ weather().conditionLabel }}</strong>
+              <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
+            </div>
           </div>
-          <div class="weather-hero-copy">
-            <strong>{{ weather().conditionLabel }}</strong>
-            <span>Feels like {{ isFahrenheit() ? weather().feelsLikeF + '°F' : weather().feelsLikeC + '°C' }}</span>
-            <span>{{ weather().humidityPct }}% humidity</span>
+          <div class="weather-big-temp">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}<small>°{{ isFahrenheit() ? 'F' : 'C' }}</small></div>
+        </div>
+
+        <div class="weather-stat-grid">
+          <div class="weather-stat"><span>Humidity</span><strong>{{ weather().humidityPct }}%</strong><small>Moisture in the air</small></div>
+          <div class="weather-stat"><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong><small>Current precipitation probability</small></div>
+          <div class="weather-stat"><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong><small>Current wind speed</small></div>
+          <div class="weather-stat"><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong><small>Visible cloud coverage</small></div>
+          <div class="weather-stat"><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong><small>Approximate visibility</small></div>
+          <div class="weather-stat"><span>Feels like</span><strong>{{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</strong><small>Perceived temperature</small></div>
+        </div>
+
+        <div class="weather-explanation">
+          <div>
+            <span class="section-eyebrow">AT A GLANCE</span>
+            <strong>{{ weather().conditionLabel }} · {{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</strong>
+            <p>Use the sky above and these six facts to understand the current conditions before opening deeper forecast tools.</p>
           </div>
-          <div class="weather-hero-icon">
-            <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
-          </div>
+          <button type="button" class="primary-report-button" (click)="openDrawerTab('weather')">Open full weather information <mat-icon>arrow_forward</mat-icon></button>
         </div>
 
-        <div class="weather-report-grid">
-          <div class="report-item"><span>Rain</span><strong>{{ weather().precipitationPct }}%</strong></div>
-          <div class="report-item"><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong></div>
-          <div class="report-item"><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong></div>
-          <div class="report-item"><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong></div>
-        </div>
-
-        <div class="weather-trend-wrap">
-          <div class="subheading"><span>Next hours</span><span>Temperature & humidity</span></div>
-          <app-weather-trend-chart [isFahrenheit]="isFahrenheit()"></app-weather-trend-chart>
-        </div>
-
-        <div class="weather-section-actions">
-          <button type="button" class="primary-report-button" (click)="openDrawerTab('weather')">
-            <mat-icon>cloud</mat-icon>
-            Open full weather information
-          </button>
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('astronomy')">
-            Tonight's sky <mat-icon>arrow_downward</mat-icon>
-          </button>
+        <div class="section-nav-actions">
+          <button type="button" class="secondary-report-button" (click)="scrollToSection('time')"><mat-icon>north</mat-icon> Time</button>
+          <button type="button" class="secondary-report-button" (click)="scrollToSection('astronomy')">Tonight's sky <mat-icon>arrow_forward</mat-icon></button>
         </div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- ASTRONOMY — change the visual world here                  -->
-    <!-- ========================================================= -->
+    <!-- ASTRONOMY -->
     <section id="sky-section-astronomy" class="sky-section astronomy-section">
       <div class="starfield" aria-hidden="true"></div>
       <div class="section-inner astronomy-inner">
         <div class="section-heading">
           <span class="section-eyebrow">ASTRONOMY · {{ selectedLocation().name }}</span>
           <h2>Tonight, above you.</h2>
-          <p>The sky changes with your exact location and local time.</p>
+          <p>The sky follows your exact location and local time.</p>
         </div>
-
         <div class="astronomy-visual">
-          <div class="moon-orbit">
-            <div class="moon-core"></div>
-            <span class="orbit-point orbit-sun">SUN</span>
-            <span class="orbit-point orbit-moon">MOON</span>
-          </div>
-          <div class="astro-now">
-            <span>{{ getTwilightLabel(celestial().twilightState) }}</span>
-            <strong>{{ localTime() }}</strong>
-          </div>
+          <div class="moon-orbit"><div class="moon-core"></div><span class="orbit-point orbit-sun">SUN</span><span class="orbit-point orbit-moon">MOON</span></div>
+          <div class="astro-now"><span>{{ getTwilightLabel(celestial().twilightState) }}</span><strong>{{ localTime() }}</strong></div>
         </div>
-
         <div class="astro-report-grid">
-          <div class="astro-item">
-            <span>Moon phase</span>
-            <strong>{{ celestial().moon.phaseName }}</strong>
-            <small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small>
-          </div>
-          <div class="astro-item">
-            <span>Moon altitude</span>
-            <strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong>
-            <small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small>
-          </div>
-          <div class="astro-item">
-            <span>Sunrise</span>
-            <strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong>
-            <small>Local time</small>
-          </div>
-          <div class="astro-item">
-            <span>Sunset</span>
-            <strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong>
-            <small>Local time</small>
-          </div>
+          <div class="astro-item"><span>Moon phase</span><strong>{{ celestial().moon.phaseName }}</strong><small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small></div>
+          <div class="astro-item"><span>Moon altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong><small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small></div>
+          <div class="astro-item"><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong><small>Local time</small></div>
+          <div class="astro-item"><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></div>
         </div>
-
-        <div class="astronomy-actions">
-          <button type="button" class="primary-report-button" (click)="openEventsPanel()">
-            <mat-icon>auto_awesome</mat-icon>
-            Explore astronomical events
-          </button>
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('world')">
-            World time <mat-icon>arrow_downward</mat-icon>
-          </button>
+        <div class="section-nav-actions">
+          <button type="button" class="secondary-report-button" (click)="scrollToSection('weather')"><mat-icon>arrow_back</mat-icon> Weather</button>
+          <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
+          <button type="button" class="secondary-report-button" (click)="scrollToSection('world')">World time <mat-icon>arrow_forward</mat-icon></button>
         </div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- WORLD TIME                                                  -->
-    <!-- ========================================================= -->
+    <!-- WORLD TIME -->
     <section id="sky-section-world" class="sky-section world-section">
       <div class="section-inner report-inner narrow-inner">
-        <div class="section-heading">
-          <span class="section-eyebrow">WORLD TIME</span>
-          <h2>Time keeps moving everywhere.</h2>
-          <p>A quick global view from {{ selectedLocation().name }}.</p>
-        </div>
-
+        <div class="section-heading"><span class="section-eyebrow">WORLD TIME</span><h2>Time keeps moving everywhere.</h2><p>A compact global view from {{ selectedLocation().name }}.</p></div>
         <div class="world-clock-list">
-          <div class="world-clock local-world-clock">
-            <div><span class="world-city">Here</span><small>{{ selectedLocation().name }}</small></div>
-            <strong>{{ localTime() }}</strong>
-            <span>{{ timezoneDisplay() }}</span>
-          </div>
+          <div class="world-clock local-world-clock"><div><span class="world-city">Here</span><small>{{ selectedLocation().name }}</small></div><strong>{{ localTime() }}</strong><span>{{ timezoneDisplay() }}</span></div>
           @for (city of worldClockCities; track city.name) {
-            <div class="world-clock">
-              <div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div>
-              <strong>{{ formatWorldTime(city.zone) }}</strong>
-              <span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span>
-            </div>
+            <div class="world-clock"><div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div><strong>{{ formatWorldTime(city.zone) }}</strong><span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span></div>
           }
         </div>
-
-        <div class="world-footer">
-          <span>Need more cities or timezone tools?</span>
-          <a href="/world">Explore World Clocks <mat-icon>arrow_forward</mat-icon></a>
-        </div>
+        <div class="world-footer"><span>Need more cities?</span><a href="/world">Explore World Clocks <mat-icon>arrow_forward</mat-icon></a></div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- TODAY                                                       -->
-    <!-- ========================================================= -->
+    <!-- TODAY -->
     <section id="sky-section-today" class="sky-section today-section">
       <div class="section-inner report-inner">
-        <div class="section-heading">
-          <span class="section-eyebrow">TODAY · {{ selectedLocation().name }}</span>
-          <h2>What matters today?</h2>
-          <p>A time-aware briefing for the place you selected.</p>
-        </div>
-
+        <div class="section-heading"><span class="section-eyebrow">TODAY · {{ selectedLocation().name }}</span><h2>Your day, in context.</h2><p>Time, weather and sky information brought together.</p></div>
         <div class="today-grid">
-          <article class="today-card">
-            <span class="today-icon"><mat-icon>wb_sunny</mat-icon></span>
-            <div><small>Daylight</small><strong>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</strong><p>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</p></div>
-          </article>
-          <article class="today-card">
-            <span class="today-icon"><mat-icon>nightlight_round</mat-icon></span>
-            <div><small>Moon</small><strong>{{ celestial().moon.phaseName }}</strong><p>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</p></div>
-          </article>
-          <article class="today-card">
-            <span class="today-icon"><mat-icon>cloud</mat-icon></span>
-            <div><small>Weather</small><strong>{{ weather().conditionLabel }}</strong><p>{{ weather().temperatureC }}°C · {{ weather().humidityPct }}% humidity</p></div>
-          </article>
-          <article class="today-card">
-            <span class="today-icon"><mat-icon>schedule</mat-icon></span>
-            <div><small>Local time</small><strong>{{ localTime() }}</strong><p>{{ timezoneDisplay() }}</p></div>
-          </article>
+          <article class="today-card"><span class="today-icon"><mat-icon>wb_sunny</mat-icon></span><div><small>Daylight</small><strong>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</strong><p>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</p></div></article>
+          <article class="today-card"><span class="today-icon"><mat-icon>nightlight_round</mat-icon></span><div><small>Moon</small><strong>{{ celestial().moon.phaseName }}</strong><p>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</p></div></article>
+          <article class="today-card"><span class="today-icon"><mat-icon>cloud</mat-icon></span><div><small>Weather</small><strong>{{ weather().conditionLabel }}</strong><p>{{ weather().temperatureC }}°C · {{ weather().humidityPct }}% humidity</p></div></article>
+          <article class="today-card"><span class="today-icon"><mat-icon>schedule</mat-icon></span><div><small>Local time</small><strong>{{ localTime() }}</strong><p>{{ timezoneDisplay() }}</p></div></article>
         </div>
-
-        <div class="today-event-strip">
-          <div>
-            <span class="section-eyebrow">ASTRONOMICAL CALENDAR</span>
-            <strong>See what is happening in the sky around this date.</strong>
-          </div>
-          <button type="button" class="primary-report-button" (click)="openEventsPanel()">View events <mat-icon>arrow_forward</mat-icon></button>
-        </div>
+        <div class="today-event-strip"><div><span class="section-eyebrow">ASTRONOMICAL CALENDAR</span><strong>See what is happening around this date.</strong></div><button type="button" class="primary-report-button" (click)="openEventsPanel()">View events <mat-icon>arrow_forward</mat-icon></button></div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- COMING UP                                                    -->
-    <!-- ========================================================= -->
+    <!-- COMING UP -->
     <section id="sky-section-next" class="sky-section next-section">
       <div class="section-inner report-inner narrow-inner">
-        <div class="section-heading">
-          <span class="section-eyebrow">COMING UP</span>
-          <h2>What happens next?</h2>
-          <p>2piClock connects the present moment with the next important moment.</p>
-        </div>
-
+        <div class="section-heading"><span class="section-eyebrow">COMING UP</span><h2>What happens next?</h2><p>Connect the present moment with the next important moment.</p></div>
         <div class="next-list">
-          <div><span>Next sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
-          <div><span>Next sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
+          <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
+          <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
           <div><span>Moon</span><strong>{{ celestial().moon.phaseName }}</strong></div>
           <div><span>Current sky</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
         </div>
-
-        <div class="next-note">
-          <mat-icon>auto_awesome</mat-icon>
-          <div>
-            <strong>More is coming to Sky.</strong>
-            <p>This space is designed for location-aware events, local context and future reporting without crowding the main time experience.</p>
-          </div>
-        </div>
+        <div class="next-note"><mat-icon>auto_awesome</mat-icon><div><strong>More location-aware reporting can live here.</strong><p>Events, local context and future information can grow without returning the home screen to a crowded dashboard.</p></div></div>
+        <div class="section-nav-actions"><button type="button" class="secondary-report-button" (click)="scrollToSection('today')"><mat-icon>arrow_back</mat-icon> Today</button><button type="button" class="primary-report-button" (click)="scrollToSection('footer')">Finish <mat-icon>arrow_downward</mat-icon></button></div>
       </div>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- FOOTER                                                       -->
-    <!-- ========================================================= -->
+    <!-- FOOTER -->
     <section id="sky-section-footer" class="sky-section footer-section">
       <div class="section-inner footer-inner">
-        <div class="footer-brand">2π</div>
-        <h2>Time, weather and the sky.</h2>
-        <p>One location. One continuous view of what is happening now and what comes next.</p>
-        <div class="footer-links">
-          <a href="/sky">Sky</a>
-          <a href="/world">World clocks</a>
-          <a href="/weather">Weather</a>
-          <a href="/ephemeris">Astronomy</a>
-          <a href="/planner">Meeting planner</a>
-        </div>
+        <div class="footer-brand">2π</div><h2>Time, weather and the sky.</h2><p>One location. One continuous view of what is happening now and what comes next.</p>
+        <div class="footer-links"><a href="/sky">Sky</a><a href="/world">World clocks</a><a href="/weather">Weather</a><a href="/ephemeris">Astronomy</a><a href="/planner">Meeting planner</a></div>
         <span class="footer-small">2piClock · {{ selectedLocation().name }} · {{ timezoneDisplay() }}</span>
       </div>
     </section>
-
   </main>
 
   @if (isDrawerOpen()) {
     <div class="drawer-backdrop" (click)="closeDrawer()"></div>
     <aside class="sky-drawer">
-      <div class="drawer-header">
-        <div>
-          <span>2piClock</span>
-          <strong>{{ selectedLocation().name }}</strong>
-        </div>
-        <button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close</mat-icon></button>
-      </div>
-
+      <div class="drawer-header"><div><span>2piClock</span><strong>{{ selectedLocation().name }}</strong></div><button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close</mat-icon></button></div>
       <div class="drawer-content">
-        <button type="button" class="drawer-location" (click)="openDrawerTab('locations')">
-          <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag>
-          <span>{{ selectedLocation().name }}</span>
-          <mat-icon>location_on</mat-icon>
-        </button>
-
-        <div class="drawer-tabs">
-          <button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button>
-          <button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Locations</button>
-        </div>
-
+        <button type="button" class="drawer-location" (click)="openDrawerTab('locations')"><app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ selectedLocation().name }}</span><mat-icon>location_on</mat-icon></button>
+        <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Locations</button></div>
         @if (activeDrawerTab() === 'weather') {
-          <div class="drawer-report">
-            <span class="section-eyebrow">FULL WEATHER</span>
-            <strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong>
-            <span>Feels like {{ weather().feelsLikeC }}°C</span>
-            <span>Humidity {{ weather().humidityPct }}%</span>
-            <span>Wind {{ weather().windSpeedKmh }} km/h</span>
-            <span>Cloud {{ weather().cloudCoverPct }}%</span>
-            <span>Visibility {{ weather().visibilityKm }} km</span>
-            <button type="button" class="primary-report-button" (click)="openWeatherReport(); closeDrawer()">Jump to weather report</button>
-          </div>
+          <div class="drawer-report"><span class="section-eyebrow">FULL WEATHER</span><strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong><span>Feels like {{ weather().feelsLikeC }}°C</span><span>Humidity {{ weather().humidityPct }}%</span><span>Wind {{ weather().windSpeedKmh }} km/h</span><span>Cloud {{ weather().cloudCoverPct }}%</span><span>Visibility {{ weather().visibilityKm }} km</span><button type="button" class="primary-report-button" (click)="scrollToSection('weather'); closeDrawer()">Jump to weather report</button></div>
         } @else {
-          <div class="location-list">
-            <input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />
-            @for (loc of filteredDrawerLocations(); track loc.name + loc.country) {
-              <button type="button" (click)="selectLocation(loc); closeDrawer()">
-                <span>{{ loc.name }}</span><small>{{ loc.country }}</small>
-              </button>
-            }
-          </div>
+          <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
         }
       </div>
     </aside>
   }
 
-  @if (showEventsPanel()) {
-    <app-astronomy-events-panel (closePanelEvent)="closeEventsPanel()"></app-astronomy-events-panel>
-  }
-  @if (showAlertsModal()) {
-    <app-weather-alerts-modal (closeModalEvent)="closeAlertsModal()"></app-weather-alerts-modal>
-  }
-  @if (showSettingsModal()) {
-    <app-settings-modal (closeModalEvent)="closeSettingsModal()"></app-settings-modal>
-  }
-  @if (showShareModal()) {
-    <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal>
-  }
+  @if (showEventsPanel()) { <app-astronomy-events-panel (closePanelEvent)="closeEventsPanel()"></app-astronomy-events-panel> }
+  @if (showAlertsModal()) { <app-weather-alerts-modal (closeModalEvent)="closeAlertsModal()"></app-weather-alerts-modal> }
+  @if (showSettingsModal()) { <app-settings-modal (closeModalEvent)="closeSettingsModal()" (glassModeChange)="setGlassEnabled($event)"></app-settings-modal> }
+  @if (showShareModal()) { <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal> }
 </div>

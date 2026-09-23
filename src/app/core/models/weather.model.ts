@@ -3,12 +3,16 @@ export type WeatherCondition =
   | 'partly_cloudy'
   | 'cloudy'
   | 'overcast'
+  | 'drizzle'
   | 'rain'
   | 'heavy_rain'
   | 'thunderstorm'
+  | 'severe_thunderstorm'
   | 'snow'
+  | 'heavy_snow'
   | 'blizzard'
-  | 'fog';
+  | 'fog'
+  | 'haze';
 
 export type WeatherAggressivenessLevel =
   | 'Calm'

@@ -60,8 +60,71 @@ export class SkyHomeComponent {
   readonly isDrawerOpen = signal<boolean>(false);
   readonly activeDrawerTab = signal<'weather' | 'ephemeris' | 'solar-jump' | 'locations'>('weather');
 
-  // Temperature unit toggle
+  // Ephemeris Model Selector (like Windy's forecast model selector)
+  readonly selectedEphemerisModel = signal<'vsop87' | 'noaa' | 'nist' | '2pi'>('vsop87');
   readonly isFahrenheit = signal<boolean>(false);
+
+  // Layer & Visual Toggles
+  readonly showParticles = signal<boolean>(true);
+  readonly showTwilightBands = signal<boolean>(true);
+  readonly showConstellations = signal<boolean>(true);
+  readonly isFullscreen = signal<boolean>(false);
+  readonly zoomLevel = signal<number>(100);
+
+  // Computed 10-day calendar ribbon starting from today (Windy style bottom day selector)
+  readonly upcomingDays = computed(() => {
+    const days: { date: Date; label: string; isToday: boolean; isSelected: boolean }[] = [];
+    const active = this.activeDate();
+    const now = new Date();
+    
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNum = d.getDate();
+      const isToday = i === 0;
+      const isSelected = d.toDateString() === active.toDateString();
+      
+      days.push({
+        date: d,
+        label: `${dayName} ${dayNum}`,
+        isToday,
+        isSelected
+      });
+    }
+    return days;
+  });
+
+  selectDay(d: Date): void {
+    this.timeControlService.setSpecificDate(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      d.getDate()
+    );
+  }
+
+  toggleFullscreen(): void {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => console.debug('Fullscreen request error:', err));
+      this.isFullscreen.set(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch((err) => console.debug('Fullscreen exit error:', err));
+      }
+      this.isFullscreen.set(false);
+    }
+  }
+
+  zoomIn(): void {
+    this.zoomLevel.update(z => Math.min(180, z + 15));
+  }
+
+  zoomOut(): void {
+    this.zoomLevel.update(z => Math.max(60, z - 15));
+  }
+
+  resetZoom(): void {
+    this.zoomLevel.set(100);
+  }
 
   // Drawer location search filter
   readonly drawerSearchQuery = signal<string>('');

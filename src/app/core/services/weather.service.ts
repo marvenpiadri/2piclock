@@ -213,12 +213,14 @@ export class WeatherService {
       case 'blizzard': return 'Winter Blizzard';
       case 'fog': return 'Atmospheric Fog';
       case 'haze': return 'Haze';
+      default: return 'Clear Sky';
     }
   }
 
   private getConditionDefaultCloud(c: WeatherCondition): number {
     switch (c) {
       case 'clear': return 5;
+      case 'haze': return 30;
       case 'partly_cloudy': return 40;
       case 'cloudy': return 75;
       case 'overcast': return 95;
@@ -231,6 +233,7 @@ export class WeatherService {
       case 'heavy_snow': return 100;
       case 'blizzard': return 100;
       case 'fog': return 65;
+      default: return 20;
     }
   }
 

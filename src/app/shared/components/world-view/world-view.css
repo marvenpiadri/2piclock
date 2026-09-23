@@ -1,270 +1,29 @@
-.world-view-container {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.globe-tool-btn {
-  color: #94a3b8;
-  background: transparent;
-  border: 1px solid transparent;
-}
-
-.globe-tool-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.globe-tool-btn.active {
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.15);
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-/* Cosmic backdrop */
-.cosmic-stars-backdrop {
-  background-image: 
-    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 90px 40px, #fbbf24, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 160px 120px, #38bdf8, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 230px 200px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 300px 80px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 360px 240px, rgba(255,255,255,0.6), rgba(0,0,0,0));
-  background-repeat: repeat;
-  background-size: 400px 400px;
-}
-
-/* Base Marker Anchor Containers (Managed purely by MapLibre Matrix Transforms) */
-:host ::ng-deep .subsolar-marker-anchor {
-  z-index: 18;
-  pointer-events: auto;
-}
-
-:host ::ng-deep .sublunar-marker-anchor {
-  z-index: 17;
-  pointer-events: auto;
-}
-
-:host ::ng-deep .observer-marker-anchor {
-  z-index: 24;
-  pointer-events: auto;
-}
-
-:host ::ng-deep .city-marker-anchor {
-  z-index: 12;
-  pointer-events: auto;
-}
-
-:host ::ng-deep .city-marker-anchor.is-selected {
-  z-index: 30;
-}
-
-:host ::ng-deep .probe-marker-anchor {
-  z-index: 28;
-  pointer-events: auto;
-}
-
-/* Subsolar Zenith Point Marker */
-:host ::ng-deep .subsolar-sun-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fef08a 20%, #f59e0b 80%, #d97706 100%);
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 16px #fbbf24, 0 0 32px rgba(245, 158, 11, 0.6);
-  font-size: 13px;
-}
-
-:host ::ng-deep .subsolar-pulse-ring {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 2px solid rgba(251, 191, 36, 0.8);
-  animation: subsolarWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-  pointer-events: none;
-}
-
-@keyframes subsolarWave {
-  0% {
-    transform: scale(0.4);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-
-:host ::ng-deep .subsolar-tooltip {
-  margin-top: 4px;
-  pointer-events: none;
-}
-
-/* Sublunar Overhead Point Marker */
-:host ::ng-deep .sublunar-moon-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 30%, #94a3b8 80%, #475569 100%);
-  border: 2px solid #e0f2fe;
-  box-shadow: 0 0 14px #38bdf8, 0 0 28px rgba(56, 189, 248, 0.5);
-  font-size: 12px;
-  color: #0f172a;
-}
-
-:host ::ng-deep .sublunar-pulse-ring {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid rgba(56, 189, 248, 0.8);
-  animation: sublunarWave 2.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-  pointer-events: none;
-}
-
-@keyframes sublunarWave {
-  0% {
-    transform: scale(0.4);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.0);
-    opacity: 0;
-  }
-}
-
-:host ::ng-deep .sublunar-tooltip {
-  margin-top: 4px;
-  pointer-events: none;
-}
-
-/* Observer Location Beacon Marker */
-:host ::ng-deep .observer-beacon-core {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #10b981;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 16px #10b981, 0 0 30px rgba(16, 185, 129, 0.6);
-}
-
-:host ::ng-deep .observer-beacon-pulse {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid rgba(16, 185, 129, 0.8);
-  animation: observerWave 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-  pointer-events: none;
-}
-
-@keyframes observerWave {
-  0% {
-    transform: scale(0.3);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.0);
-    opacity: 0;
-  }
-}
-
-:host ::ng-deep .observer-label-box {
-  margin-top: 4px;
-  pointer-events: none;
-}
-
-/* Scientific NASA City Clock Markers */
-:host ::ng-deep .city-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1px solid #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-}
-
-:host ::ng-deep .city-pill {
-  white-space: nowrap;
-}
-
-:host ::ng-deep .city-pill-selected {
-  white-space: nowrap;
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.7);
-}
-
-/* Hub Comparison Cards */
-.hub-card {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.hub-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(56, 189, 248, 0.3);
-  transform: translateY(-2px);
-}
-
-.hub-card.active-hub {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
-}
-
-/* Probe Pinpoint Marker */
-:host ::ng-deep .probe-inner {
-  position: relative;
-  width: 24px;
-  height: 24px;
-}
-
-:host ::ng-deep .probe-crosshair {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1.5px solid #f59e0b;
-  box-shadow: 0 0 12px #f59e0b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:host ::ng-deep .probe-target-pulse {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid rgba(245, 158, 11, 0.8);
-  animation: probeWave 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-  pointer-events: none;
-}
-
-@keyframes probeWave {
-  0% {
-    transform: scale(0.4);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.0);
-    opacity: 0;
-  }
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.world-view-container{animation:fadeIn .3s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.globe-tool-btn{color:#8b8b8b;background:transparent;border:1px solid transparent}
+.globe-tool-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+.globe-tool-btn.active{color:#fbbf24;background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.34)}
+.cosmic-stars-backdrop{background-image:radial-gradient(1px 1px at 20px 30px,#fff,rgba(0,0,0,0)),radial-gradient(1px 1px at 40px 70px,rgba(255,255,255,.7),rgba(0,0,0,0)),radial-gradient(1.5px 1.5px at 90px 40px,#fbbf24,rgba(0,0,0,0)),radial-gradient(1px 1px at 160px 120px,rgba(255,255,255,.75),rgba(0,0,0,0)),radial-gradient(1px 1px at 230px 200px,rgba(255,255,255,.8),rgba(0,0,0,0)),radial-gradient(1.5px 1.5px at 300px 80px,#fff,rgba(0,0,0,0)),radial-gradient(1px 1px at 360px 240px,rgba(255,255,255,.6),rgba(0,0,0,0));background-repeat:repeat;background-size:400px 400px}
+:host ::ng-deep .subsolar-marker-anchor,:host ::ng-deep .sublunar-marker-anchor,:host ::ng-deep .observer-marker-anchor,:host ::ng-deep .city-marker-anchor,:host ::ng-deep .probe-marker-anchor{pointer-events:auto}
+:host ::ng-deep .subsolar-marker-anchor{z-index:18}:host ::ng-deep .sublunar-marker-anchor{z-index:17}:host ::ng-deep .observer-marker-anchor{z-index:24}:host ::ng-deep .city-marker-anchor{z-index:12}:host ::ng-deep .city-marker-anchor.is-selected{z-index:30}:host ::ng-deep .probe-marker-anchor{z-index:28}
+:host ::ng-deep .subsolar-sun-dot{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle,#fef08a 20%,#f59e0b 80%,#d97706 100%);border:2px solid #fff;box-shadow:0 0 16px #fbbf24,0 0 32px rgba(245,158,11,.6);font-size:13px}
+:host ::ng-deep .subsolar-pulse-ring{position:absolute;width:48px;height:48px;border-radius:50%;border:2px solid rgba(251,191,36,.8);animation:subsolarWave 2.4s cubic-bezier(0,.2,.8,1) infinite;pointer-events:none}
+@keyframes subsolarWave{0%{transform:scale(.4);opacity:1}100%{transform:scale(2.2);opacity:0}}
+:host ::ng-deep .subsolar-tooltip,:host ::ng-deep .sublunar-tooltip,:host ::ng-deep .observer-label-box{margin-top:4px;pointer-events:none}
+:host ::ng-deep .sublunar-moon-dot{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#fff 30%,#aaa 80%,#555 100%);border:2px solid #eee;box-shadow:0 0 14px #fbbf24,0 0 28px rgba(245,158,11,.35);font-size:12px;color:#111}
+:host ::ng-deep .sublunar-pulse-ring{position:absolute;width:44px;height:44px;border-radius:50%;border:2px solid rgba(245,158,11,.65);animation:sublunarWave 2.8s cubic-bezier(0,.2,.8,1) infinite;pointer-events:none}
+@keyframes sublunarWave{0%{transform:scale(.4);opacity:1}100%{transform:scale(2);opacity:0}}
+:host ::ng-deep .observer-beacon-core{width:20px;height:20px;border-radius:50%;background:#22c55e;border:2px solid #fff;box-shadow:0 0 16px #22c55e,0 0 30px rgba(34,197,94,.5)}
+:host ::ng-deep .observer-beacon-pulse{position:absolute;width:40px;height:40px;border-radius:50%;border:2px solid rgba(34,197,94,.7);animation:observerWave 2s cubic-bezier(0,.2,.8,1) infinite;pointer-events:none}
+@keyframes observerWave{0%{transform:scale(.3);opacity:1}100%{transform:scale(2);opacity:0}}
+:host ::ng-deep .city-dot{width:7px;height:7px;border-radius:50%;border:1px solid #fff;box-shadow:0 0 6px rgba(255,255,255,.8)}
+:host ::ng-deep .city-pill,:host ::ng-deep .city-pill-selected{white-space:nowrap}
+:host ::ng-deep .city-pill-selected{box-shadow:0 0 24px rgba(245,158,11,.55)}
+.hub-card{background:rgba(12,12,12,.68);border-color:rgba(255,255,255,.08)}
+.hub-card:hover{background:rgba(255,255,255,.06);border-color:rgba(245,158,11,.35);transform:translateY(-2px)}
+.hub-card.active-hub{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.42);box-shadow:0 0 16px rgba(245,158,11,.14)}
+:host ::ng-deep .probe-inner{position:relative;width:24px;height:24px}
+:host ::ng-deep .probe-crosshair{width:20px;height:20px;border-radius:50%;background:rgba(10,10,10,.92);border:1.5px solid #f59e0b;box-shadow:0 0 12px #f59e0b;display:flex;align-items:center;justify-content:center}
+:host ::ng-deep .probe-target-pulse{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid rgba(245,158,11,.8);animation:probeWave 1.8s cubic-bezier(0,.2,.8,1) infinite;pointer-events:none}
+@keyframes probeWave{0%{transform:scale(.4);opacity:1}100%{transform:scale(2);opacity:0}}
+.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}

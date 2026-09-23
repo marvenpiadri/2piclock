@@ -28,7 +28,7 @@ export class WeatherService {
     const condition = ovr.condition || raw.condition;
     const cloudCoverPct = ovr.cloudCoverPct !== undefined ? ovr.cloudCoverPct : this.getConditionDefaultCloud(condition);
     const precipitationPct = ovr.precipitationPct !== undefined ? ovr.precipitationPct : this.getConditionDefaultPrecip(condition);
-    const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : (condition === 'thunderstorm' ? 42 : raw.windSpeedKmh));
+    const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
     const windGustKmh = Math.round(windSpeedKmh * 1.45);
 
     const { score, label } = this.calculateAggressiveness(condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC);
@@ -43,7 +43,7 @@ export class WeatherService {
       windGustKmh,
       aggressivenessIndex: Math.min(100, Math.max(0, score + (ovr.aggressivenessBoost || 0))),
       aggressivenessLabel: label,
-      lightningFrequencyPerMin: condition === 'thunderstorm' ? 8 : 0,
+      lightningFrequencyPerMin: (condition === 'severe_thunderstorm' ? 18 : (condition === 'thunderstorm' ? 8 : 0)),
       winterFrostLevel: raw.temperatureC <= 0 ? Math.min(100, Math.round((0 - raw.temperatureC) * 5 + 30)) : 0,
       visibilityKm: condition === 'fog' ? 1.2 : (condition === 'blizzard' ? 1.5 : (condition === 'heavy_rain' ? 3.5 : 16.0)),
       isSimulated: true
@@ -147,14 +147,18 @@ export class WeatherService {
   ): { score: number; label: WeatherAggressivenessLevel } {
     let base = 10;
     if (cond === 'clear') base = 5;
+    else if (cond === 'haze') base = 20;
     else if (cond === 'partly_cloudy') base = 15;
     else if (cond === 'cloudy' || cond === 'overcast') base = 25;
     else if (cond === 'fog') base = 35;
+    else if (cond === 'drizzle') base = 30;
     else if (cond === 'rain') base = 45;
     else if (cond === 'snow') base = 50;
+    else if (cond === 'heavy_snow') base = 72;
     else if (cond === 'heavy_rain') base = 70;
     else if (cond === 'blizzard') base = 85;
     else if (cond === 'thunderstorm') base = 88;
+    else if (cond === 'severe_thunderstorm') base = 96;
 
     // Wind component
     const windScore = Math.min(30, (windKmh / 60) * 20 + (gustKmh / 80) * 10);
@@ -166,7 +170,7 @@ export class WeatherService {
     const total = Math.min(100, Math.round(base + windScore + precipScore + freezeScore));
 
     let label: WeatherAggressivenessLevel = 'Calm';
-    if (total >= 85) label = cond === 'blizzard' || tempC < -5 ? 'Violent Blizzard' : 'Severe Storm';
+    if (total >= 85) label = cond === 'blizzard' || cond === 'heavy_snow' || tempC < -5 ? 'Violent Blizzard' : 'Severe Storm';
     else if (total >= 65) label = 'Severe Storm';
     else if (total >= 45) label = 'Vigorous';
     else if (total >= 30) label = 'Active';
@@ -181,12 +185,15 @@ export class WeatherService {
     if (code === 1 || code === 2) return 'partly_cloudy';
     if (code === 3) return 'overcast';
     if (code >= 45 && code <= 48) return 'fog';
-    if (code >= 51 && code <= 65) return 'rain';
+    if (code >= 51 && code <= 57) return 'drizzle';
+    if (code >= 58 && code <= 65) return 'rain';
     if (code >= 66 && code <= 67) return 'rain';
-    if (code >= 71 && code <= 77) return 'snow';
+    if (code >= 71 && code <= 75) return 'snow';
+    if (code >= 76 && code <= 77) return 'heavy_snow';
     if (code >= 80 && code <= 82) return 'heavy_rain';
     if (code >= 85 && code <= 86) return 'blizzard';
-    if (code >= 95 && code <= 99) return 'thunderstorm';
+    if (code === 95) return 'thunderstorm';
+    if (code >= 96 && code <= 99) return 'severe_thunderstorm';
     return 'partly_cloudy';
   }
 
@@ -196,12 +203,16 @@ export class WeatherService {
       case 'partly_cloudy': return 'Partly Cloudy';
       case 'cloudy': return 'Cloudy';
       case 'overcast': return 'Overcast';
-      case 'rain': return 'Light Rain';
+      case 'drizzle': return 'Drizzle';
+      case 'rain': return 'Rain';
       case 'heavy_rain': return 'Heavy Downpour';
       case 'thunderstorm': return 'Thunderstorm & Lightning';
+      case 'severe_thunderstorm': return 'Severe Thunderstorm';
       case 'snow': return 'Snowfall';
+      case 'heavy_snow': return 'Heavy Snow';
       case 'blizzard': return 'Winter Blizzard';
       case 'fog': return 'Atmospheric Fog';
+      case 'haze': return 'Haze';
     }
   }
 
@@ -211,10 +222,13 @@ export class WeatherService {
       case 'partly_cloudy': return 40;
       case 'cloudy': return 75;
       case 'overcast': return 95;
+      case 'drizzle': return 65;
       case 'rain': return 85;
       case 'heavy_rain': return 100;
       case 'thunderstorm': return 100;
+      case 'severe_thunderstorm': return 100;
       case 'snow': return 90;
+      case 'heavy_snow': return 100;
       case 'blizzard': return 100;
       case 'fog': return 65;
     }
@@ -222,10 +236,13 @@ export class WeatherService {
 
   private getConditionDefaultPrecip(c: WeatherCondition): number {
     switch (c) {
+      case 'drizzle': return 35;
       case 'rain': return 60;
       case 'heavy_rain': return 95;
       case 'thunderstorm': return 92;
+      case 'severe_thunderstorm': return 100;
       case 'snow': return 75;
+      case 'heavy_snow': return 92;
       case 'blizzard': return 98;
       default: return 0;
     }

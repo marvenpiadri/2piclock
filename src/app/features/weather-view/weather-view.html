@@ -1,0 +1,80 @@
+<div class="weather-view">
+  <div #mapContainer class="weather-map"></div>
+  <canvas #particleCanvas class="weather-particles" aria-hidden="true"></canvas>
+
+  <header class="weather-toolbar">
+    <div class="weather-location">
+      <span class="brand-mark">2π</span>
+      <div>
+        <strong>{{ selectedLocation().name }}</strong>
+        <span>{{ selectedLocation().country }} · Weather Observatory</span>
+      </div>
+    </div>
+
+    <div class="weather-layers" role="tablist" aria-label="Weather layer">
+      @for (layer of layerOptions; track layer.id) {
+        <button type="button"
+          [class.active]="activeLayer() === layer.id"
+          (click)="setLayer(layer.id)"
+          [title]="layer.label">
+          <mat-icon>{{ layer.icon }}</mat-icon>
+          <span>{{ layer.label }}</span>
+        </button>
+      }
+    </div>
+
+    <button type="button" class="compact-action" (click)="centerLocation()" title="Center on selected location">
+      <mat-icon>my_location</mat-icon>
+    </button>
+  </header>
+
+  <aside class="weather-inspector">
+    <div class="inspector-kicker">LOCAL WEATHER</div>
+    <div class="inspector-temperature">{{ liveWeather().temperatureC.toFixed(1) }}°C</div>
+    <div class="inspector-condition">{{ liveWeather().conditionLabel }}</div>
+    <div class="inspector-grid">
+      <span>Wind <b>{{ liveWeather().windSpeedKmh | number:'1.0-0' }} km/h</b></span>
+      <span>Gust <b>{{ liveWeather().windGustKmh | number:'1.0-0' }} km/h</b></span>
+      <span>Cloud <b>{{ liveWeather().cloudCoverPct | number:'1.0-0' }}%</b></span>
+      <span>Visibility <b>{{ liveWeather().visibilityKm }} km</b></span>
+    </div>
+    <div class="inspector-source">
+      {{ isLoading() ? 'Updating field…' : dataError() ? 'Weather field unavailable' : 'Open-Meteo forecast field' }}
+    </div>
+  </aside>
+
+  <div class="weather-legend">
+    <span class="legend-title">{{ layerTitle() }}</span>
+    <span>Local model field</span>
+  </div>
+
+  <footer class="weather-timeline">
+    <button type="button" class="transport" (click)="togglePlay()" [title]="isPlaying() ? 'Pause weather animation' : 'Play weather animation'">
+      <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+    </button>
+    <button type="button" class="transport" (click)="jumpForecast(-1)" title="Previous forecast hour">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <div class="timeline-label">
+      <span>FORECAST</span>
+      <strong>{{ activeForecastTime() | date:'EEE HH:mm' }}</strong>
+    </div>
+    <input
+      type="range"
+      min="0"
+      [max]="forecastMax()"
+      [value]="forecastIndex()"
+      (input)="onForecastInput($event)"
+      aria-label="Weather forecast time" />
+    <button type="button" class="transport" (click)="jumpForecast(1)" title="Next forecast hour">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <div class="speed-group">
+      @for (speed of [1, 2, 4]; track speed) {
+        <button type="button" [class.active]="particleSpeed() === speed" (click)="setParticleSpeed(speed)">{{ speed }}×</button>
+      }
+    </div>
+  </footer>
+
+  <div class="weather-attribution">Weather data: Open-Meteo · Map: OpenFreeMap / OpenStreetMap</div>
+</div>

@@ -159,6 +159,26 @@ export class TimeControlService {
     this.simulatedTimeOfDayMs.set(this.getInitialTimeOfDayMs());
   }
 
+  /**
+   * Set the simulation to an exact instant.
+   * Unlike setTimeHoursMinutes(), this preserves the Date's timezone instant,
+   * which is required when astronomy events are calculated for a selected city.
+   */
+  setSpecificInstant(date: Date): void {
+    const instant = new Date(date.getTime());
+    this.baseDate.set(new Date(
+      instant.getFullYear(),
+      instant.getMonth(),
+      instant.getDate(),
+      0, 0, 0, 0
+    ));
+    this.isLive.set(false);
+    this.simulatedTimeOfDayMs.set(
+      (instant.getHours() * 3600 + instant.getMinutes() * 60 + instant.getSeconds()) * 1000 +
+      instant.getMilliseconds()
+    );
+  }
+
   setTimeOfDayFraction(fraction: number): void {
     this.isLive.set(false);
     this.simulatedTimeOfDayMs.set(

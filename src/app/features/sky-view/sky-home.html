@@ -35,6 +35,12 @@
 
         <div class="hero-layout">
           <div class="time-stage">
+            <div class="sky-orbit-backdrop" aria-hidden="true">
+              <span class="orbit-ring orbit-ring-one"></span>
+              <span class="orbit-ring orbit-ring-two"></span>
+              <span class="orbit-sun"></span>
+              <span class="orbit-moon"></span>
+            </div>
             <!-- Keep the existing celestial clock language: sun/moon rotation + exact local time. -->
             <div class="polar-clock-container">
               <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="Celestial clock">
@@ -158,44 +164,62 @@
         <div class="section-heading">
           <span class="section-eyebrow">WEATHER · {{ selectedLocation().name }}</span>
           <h2>Weather, without the noise.</h2>
-          <p>Everything important first. More detail only when it helps.</p>
+          <p>Current conditions first, then the hours and week ahead.</p>
         </div>
 
         <div class="weather-main-card">
           <div class="weather-main-condition">
-            <div class="weather-big-icon">
-              <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
-            </div>
+            <div class="weather-big-icon"><mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon></div>
             <div>
               <span class="section-eyebrow">CURRENT CONDITIONS</span>
               <strong>{{ weather().conditionLabel }}</strong>
-              <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
+              <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
             </div>
           </div>
           <div class="weather-big-temp">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}<small>°{{ isFahrenheit() ? 'F' : 'C' }}</small></div>
         </div>
 
         <div class="weather-stat-grid">
-          <div class="weather-stat"><span>Humidity</span><strong>{{ weather().humidityPct }}%</strong><small>Moisture in the air</small></div>
-          <div class="weather-stat"><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong><small>Current precipitation probability</small></div>
-          <div class="weather-stat"><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong><small>Current wind speed</small></div>
-          <div class="weather-stat"><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong><small>Visible cloud coverage</small></div>
-          <div class="weather-stat"><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong><small>Approximate visibility</small></div>
-          <div class="weather-stat"><span>Feels like</span><strong>{{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</strong><small>Perceived temperature</small></div>
+          <div class="weather-stat"><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong><small>Current probability</small></div>
+          <div class="weather-stat"><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong><small>Surface wind</small></div>
+          <div class="weather-stat"><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong><small>Current sky</small></div>
+          <div class="weather-stat"><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong><small>Approximate range</small></div>
+          <div class="weather-stat"><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong><small>Surface pressure</small></div>
+          <div class="weather-stat"><span>UV index</span><strong>{{ weather().uvIndex }}</strong><small>Current UV level</small></div>
         </div>
 
-        <div class="weather-explanation">
-          <div>
-            <span class="section-eyebrow">AT A GLANCE</span>
-            <strong>{{ weather().conditionLabel }} · {{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</strong>
-            <p>Use the sky above and these six facts to understand the current conditions before opening deeper forecast tools.</p>
+        <div class="forecast-block">
+          <div class="forecast-heading"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h3>Hourly forecast</h3></div><span>Swipe / scroll</span></div>
+          <div class="hourly-forecast">
+            @for (item of weatherService.hourlyForecasts().slice(0, 24); track item.timeMs) {
+              <div class="hour-item">
+                <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
+                <mat-icon>{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
+                <small>{{ item.weather.precipitationPct }}%</small>
+              </div>
+            }
           </div>
-          <button type="button" class="primary-report-button" (click)="openDrawerTab('weather')">Open full weather information <mat-icon>arrow_forward</mat-icon></button>
+        </div>
+
+        <div class="forecast-block weekly-block">
+          <div class="forecast-heading"><div><span class="section-eyebrow">7 DAY OUTLOOK</span><h3>Week ahead</h3></div><span>High / low · rain</span></div>
+          <div class="weekly-forecast">
+            @for (day of weeklyForecast(); track day.key) {
+              <div class="week-day">
+                <strong>{{ day.label }}</strong>
+                <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : day.condition.toLowerCase().includes('snow') ? 'ac_unit' : 'wb_sunny' }}</mat-icon>
+                <span class="week-condition">{{ day.condition }}</span>
+                <div class="week-temp"><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><span>{{ isFahrenheit() ? day.lowF : day.lowC }}°</span></div>
+                <small>{{ day.precipitationPct }}% rain</small>
+              </div>
+            }
+          </div>
         </div>
 
         <div class="section-nav-actions">
           <button type="button" class="secondary-report-button" (click)="scrollToSection('time')"><mat-icon>north</mat-icon> Time</button>
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('astronomy')">Tonight's sky <mat-icon>arrow_forward</mat-icon></button>
+          <button type="button" class="secondary-report-button" (click)="scrollToSection('astronomy')">Astronomy <mat-icon>arrow_forward</mat-icon></button>
         </div>
       </div>
     </section>
@@ -242,33 +266,10 @@
     </section>
 
     <!-- TODAY -->
-    <section id="sky-section-today" class="sky-section today-section">
-      <div class="section-inner report-inner">
-        <div class="section-heading"><span class="section-eyebrow">TODAY · {{ selectedLocation().name }}</span><h2>Your day, in context.</h2><p>Time, weather and sky information brought together.</p></div>
-        <div class="today-grid">
-          <article class="today-card"><span class="today-icon"><mat-icon>wb_sunny</mat-icon></span><div><small>Daylight</small><strong>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</strong><p>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</p></div></article>
-          <article class="today-card"><span class="today-icon"><mat-icon>nightlight_round</mat-icon></span><div><small>Moon</small><strong>{{ celestial().moon.phaseName }}</strong><p>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</p></div></article>
-          <article class="today-card"><span class="today-icon"><mat-icon>cloud</mat-icon></span><div><small>Weather</small><strong>{{ weather().conditionLabel }}</strong><p>{{ weather().temperatureC }}°C · {{ weather().humidityPct }}% humidity</p></div></article>
-          <article class="today-card"><span class="today-icon"><mat-icon>schedule</mat-icon></span><div><small>Local time</small><strong>{{ localTime() }}</strong><p>{{ timezoneDisplay() }}</p></div></article>
-        </div>
-        <div class="today-event-strip"><div><span class="section-eyebrow">ASTRONOMICAL CALENDAR</span><strong>See what is happening around this date.</strong></div><button type="button" class="primary-report-button" (click)="openEventsPanel()">View events <mat-icon>arrow_forward</mat-icon></button></div>
-      </div>
-    </section>
+    
 
     <!-- COMING UP -->
-    <section id="sky-section-next" class="sky-section next-section">
-      <div class="section-inner report-inner narrow-inner">
-        <div class="section-heading"><span class="section-eyebrow">COMING UP</span><h2>What happens next?</h2><p>Connect the present moment with the next important moment.</p></div>
-        <div class="next-list">
-          <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
-          <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
-          <div><span>Moon</span><strong>{{ celestial().moon.phaseName }}</strong></div>
-          <div><span>Current sky</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
-        </div>
-        <div class="next-note"><mat-icon>auto_awesome</mat-icon><div><strong>More location-aware reporting can live here.</strong><p>Events, local context and future information can grow without returning the home screen to a crowded dashboard.</p></div></div>
-        <div class="section-nav-actions"><button type="button" class="secondary-report-button" (click)="scrollToSection('today')"><mat-icon>arrow_back</mat-icon> Today</button><button type="button" class="primary-report-button" (click)="scrollToSection('footer')">Finish <mat-icon>arrow_downward</mat-icon></button></div>
-      </div>
-    </section>
+    
 
     <!-- FOOTER -->
     <section id="sky-section-footer" class="sky-section footer-section">

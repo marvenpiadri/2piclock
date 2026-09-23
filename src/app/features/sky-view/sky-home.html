@@ -1,4 +1,4 @@
-<div class="sky-report" [class.glass-off]="!isGlassEnabled()">
+<div class="sky-report">
   <header class="sky-header">
     <div class="sky-header-left">
       @if (skyPage === 'time') {
@@ -263,6 +263,6 @@
 
   @if (showEventsPanel()) { <app-astronomy-events-panel (closePanelEvent)="closeEventsPanel()"></app-astronomy-events-panel> }
   @if (showAlertsModal()) { <app-weather-alerts-modal (closeModalEvent)="closeAlertsModal()"></app-weather-alerts-modal> }
-  @if (showSettingsModal()) { <app-settings-modal [glassEnabled]="isGlassEnabled()" (closeModalEvent)="closeSettingsModal()" (glassModeChange)="setGlassEnabled($event)"></app-settings-modal> }
+  @if (showSettingsModal()) { <app-settings-modal (closeModalEvent)="closeSettingsModal()"></app-settings-modal> }
   @if (showShareModal()) { <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal> }
 </div>

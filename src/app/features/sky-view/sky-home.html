@@ -7,7 +7,6 @@
       <div class="section-inner time-inner">
 
         <div class="top-context">
-          <div class="brand-mark">2π</div>
           <div class="top-location">
             <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag>
             <div>
@@ -29,15 +28,16 @@
         </div>
 
         <div class="home-heading">
-          <span class="section-eyebrow">LOCAL TIME</span>
-          <h1>{{ localDate() }}</h1>
+          <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
+          <h1>Time in {{ selectedLocation().name }}, {{ selectedLocation().country }}</h1>
+          <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
         </div>
 
         <div class="hero-layout">
           <div class="time-stage">
-            <!-- Keep the existing 2π clock language: sun/moon rotation + exact local time. -->
+            <!-- Keep the existing celestial clock language: sun/moon rotation + exact local time. -->
             <div class="polar-clock-container">
-              <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="2Pi celestial clock">
+              <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="Celestial clock">
                 <defs>
                   <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
                     <feGaussianBlur stdDeviation="4" result="blur" />
@@ -58,10 +58,10 @@
                       [attr.stroke-width]="hour % 6 === 0 ? '2' : '1'"/>
                   </g>
                 }
-                <text x="0" y="-152" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">12:00 · π</text>
-                <text x="152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700">18:00 · 3π/2</text>
-                <text x="0" y="158" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">00:00 · 0 / 2π</text>
-                <text x="-152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end">06:00 · π/2</text>
+                <text x="0" y="-152" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">12:00</text>
+                <text x="152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700">18:00</text>
+                <text x="0" y="158" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="middle">00:00</text>
+                <text x="-152" y="3" fill="#e5e5e5" font-size="8.5" font-family="monospace" font-weight="700" text-anchor="end">06:00</text>
                 <line x1="-128" y1="0" x2="128" y2="0" stroke="rgba(245,158,11,.45)" stroke-width="1" stroke-dasharray="3 3"/>
                 <text x="-124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700">EAST</text>
                 <text x="124" y="-4" fill="#f59e0b" font-size="7" font-family="monospace" font-weight="700" text-anchor="end">WEST</text>
@@ -85,25 +85,47 @@
             </div>
           </div>
 
-          <!-- Weather is a companion to the clock, not another dashboard. -->
-          <aside class="home-weather-card">
-            <div class="weather-card-head">
+          <aside class="home-info-panel">
+            <div class="info-panel-top">
               <div>
-                <span class="section-eyebrow">RIGHT NOW</span>
+                <span class="section-eyebrow">SELECTED LOCATION</span>
+                <h2>{{ selectedLocation().name }}</h2>
+                <p>{{ selectedLocation().country }}</p>
+              </div>
+              <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'country-panel-flag'"></app-country-flag>
+            </div>
+
+            <div class="analog-clock-row">
+              <app-analog-clock
+                [timezone]="selectedLocation().timezone"
+                [activeDate]="activeDate()"
+                [latitude]="selectedLocation().latitude"
+                [longitude]="selectedLocation().longitude">
+              </app-analog-clock>
+              <div class="location-facts">
+                <div><span>Local time</span><strong>{{ localTime() }}</strong></div>
+                <div><span>Time zone</span><strong>{{ timezoneDisplay() }}</strong></div>
+                <div><span>Coordinates</span><strong>{{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</strong></div>
+                <div><span>Elevation</span><strong>{{ selectedLocation().elevationMeters ? selectedLocation().elevationMeters + ' m' : '—' }}</strong></div>
+              </div>
+            </div>
+
+            <div class="info-weather">
+              <div>
+                <span class="section-eyebrow">CURRENT WEATHER</span>
                 <strong>{{ weather().conditionLabel }}</strong>
+                <p>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}° · feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
               </div>
               <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
             </div>
-            <div class="weather-temperature">
-              <span>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</span>
-              <small>{{ isFahrenheit() ? 'F' : 'C' }}</small>
+
+            <div class="country-facts">
+              <div><span>Country</span><strong>{{ selectedLocation().country }}</strong></div>
+              <div><span>Location</span><strong>{{ selectedLocation().name }}</strong></div>
+              <div><span>UTC offset</span><strong>{{ timezoneDisplay() }}</strong></div>
+              <div><span>Daylight</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
             </div>
-            <p class="weather-feels">Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
-            <div class="weather-key-stats">
-              <div><span>Rain</span><strong>{{ weather().precipitationPct }}%</strong></div>
-              <div><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong></div>
-              <div><span>Clouds</span><strong>{{ weather().cloudCoverPct }}%</strong></div>
-            </div>
+
             <button type="button" class="weather-card-link" (click)="scrollToSection('weather')">
               Full weather report <mat-icon>arrow_forward</mat-icon>
             </button>

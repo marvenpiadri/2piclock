@@ -8,7 +8,8 @@ import { WeatherService } from '../../core/services/weather.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { AstronomyDetails, CountryFlagComponent, AnalogClockComponent, WeatherOverlayComponent } from '../../shared/components';
+import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherTrendChartComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
+import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -19,10 +20,13 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     MatIconModule, 
     ShareExportModalComponent, 
-    AstronomyDetails,
+    WeatherAlertsModalComponent,
+    AstronomicalEventsPanelComponent,
+    SettingsModalComponent,
     CountryFlagComponent,
     AnalogClockComponent,
-    WeatherOverlayComponent
+    WeatherParticlesComponent,
+    WeatherTrendChartComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
@@ -38,6 +42,10 @@ export class SkyHomeComponent {
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
+  readonly activeAlerts = this.weatherService.activeAlerts;
+  readonly showAlertsModal = signal<boolean>(false);
+  readonly showEventsPanel = signal<boolean>(false);
+  readonly showSettingsModal = signal<boolean>(false);
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly allPresets = this.locationService.allPresets;
   readonly activeDate = this.timeControlService.currentActiveDate;
@@ -68,6 +76,12 @@ export class SkyHomeComponent {
 
   readonly showShareModal = signal<boolean>(false);
   
+  readonly isInspectorVisible = signal<boolean>(true);
+
+  toggleInspector(): void {
+    this.isInspectorVisible.update(v => !v);
+  }
+
   // Right Inspector Panel 100% Drawer state
   readonly isDrawerOpen = signal<boolean>(false);
   readonly activeDrawerTab = signal<'weather' | 'ephemeris' | 'solar-jump' | 'locations'>('weather');
@@ -363,5 +377,29 @@ export class SkyHomeComponent {
       case 'Waning Crescent': return 'nightlight_round';
       default: return 'nightlight_round';
     }
+  }
+
+  openAlertsModal(): void {
+    this.showAlertsModal.set(true);
+  }
+
+  closeAlertsModal(): void {
+    this.showAlertsModal.set(false);
+  }
+
+  openEventsPanel(): void {
+    this.showEventsPanel.set(true);
+  }
+
+  closeEventsPanel(): void {
+    this.showEventsPanel.set(false);
+  }
+
+  openSettingsModal(): void {
+    this.showSettingsModal.set(true);
+  }
+
+  closeSettingsModal(): void {
+    this.showSettingsModal.set(false);
   }
 }

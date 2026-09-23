@@ -13,41 +13,122 @@ export class WeatherService {
   private isBrowser = isPlatformBrowser(this.platformId);
 
   readonly rawWeather = signal<WeatherData>(this.getDefaultWeatherData());
+  readonly hourlyForecasts = signal<{ timeMs: number; weather: WeatherData }[]>([]);
   readonly isLoading = signal<boolean>(false);
   readonly overrideConfig = signal<WeatherOverrideConfig>({ active: false });
+  readonly isFahrenheit = signal<boolean>(false);
+
+  toggleFahrenheit(): void {
+    this.isFahrenheit.update(v => !v);
+  }
+
+  readonly activeAlerts = computed(() => {
+    const w = this.rawWeather();
+    const alerts: { id: string; title: string; category: string; severity: 'Warning' | 'Advisory' | 'Watch'; description: string; issuedAt: string }[] = [];
+
+    if (w.condition === 'thunderstorm' || w.condition === 'severe_thunderstorm') {
+      alerts.push({
+        id: 'alert-lightning',
+        title: 'Thunderstorm & Lightning Warning',
+        category: 'Convective Storm',
+        severity: 'Warning',
+        description: 'Active cloud-to-ground lightning activity and convective gust fronts detected.',
+        issuedAt: 'Live Telemetry'
+      });
+    }
+
+    if (w.windSpeedKmh > 40 || (w.windGustKmh ?? 0) > 55) {
+      alerts.push({
+        id: 'alert-wind',
+        title: 'High Wind & Gale Advisory',
+        category: 'Atmosphere Flow',
+        severity: 'Advisory',
+        description: `Sustained surface winds exceeding ${w.windSpeedKmh} km/h with gusts up to ${w.windGustKmh ?? w.windSpeedKmh} km/h.`,
+        issuedAt: 'Live Telemetry'
+      });
+    }
+
+    if (w.condition === 'heavy_rain') {
+      alerts.push({
+        id: 'alert-rain',
+        title: 'Heavy Rain & Flash Flood Watch',
+        category: 'Precipitation',
+        severity: 'Watch',
+        description: 'Intense rain rate with reduced visibility.',
+        issuedAt: 'Live Telemetry'
+      });
+    }
+
+    if (w.condition === 'blizzard' || w.condition === 'heavy_snow') {
+      alerts.push({
+        id: 'alert-snow',
+        title: 'Winter Blizzard Warning',
+        category: 'Winter Weather',
+        severity: 'Warning',
+        description: 'Blowing snow and severe freeze conditions.',
+        issuedAt: 'Live Telemetry'
+      });
+    }
+
+    return alerts;
+  });
+
+  // Compute weather status for any specific simulated date & time
+  getWeatherForInstant(date: Date, _loc?: GeoLocation): WeatherData {
+    const ovr = this.overrideConfig();
+    const hourly = this.hourlyForecasts();
+
+    // If manual override is active
+    if (ovr.active) {
+      const raw = this.rawWeather();
+      const condition = ovr.condition || raw.condition;
+      const cloudCoverPct = ovr.cloudCoverPct !== undefined ? ovr.cloudCoverPct : this.getConditionDefaultCloud(condition);
+      const precipitationPct = ovr.precipitationPct !== undefined ? ovr.precipitationPct : this.getConditionDefaultPrecip(condition);
+      const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
+      const windGustKmh = Math.round(windSpeedKmh * 1.45);
+      const { score, label } = this.calculateAggressiveness(condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC);
+
+      return {
+        ...raw,
+        condition,
+        conditionLabel: this.formatConditionLabel(condition),
+        cloudCoverPct,
+        precipitationPct,
+        windSpeedKmh,
+        windGustKmh,
+        aggressivenessIndex: Math.min(100, Math.max(0, score + (ovr.aggressivenessBoost || 0))),
+        aggressivenessLabel: label,
+        isSimulated: true
+      };
+    }
+
+    // Try finding exact hourly forecast match for this simulated time
+    if (hourly.length > 0) {
+      const targetMs = date.getTime();
+      let closest = hourly[0];
+      let minDiff = Math.abs(targetMs - closest.timeMs);
+
+      for (let i = 1; i < hourly.length; i++) {
+        const diff = Math.abs(targetMs - hourly[i].timeMs);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = hourly[i];
+        }
+      }
+
+      // If closest forecast is within 2 hours
+      if (minDiff <= 7200000) {
+        return closest.weather;
+      }
+    }
+
+    // Default: use current raw weather
+    return this.rawWeather();
+  }
 
   // Active combined weather accounting for manual overrides
   readonly currentWeather = computed<WeatherData>(() => {
-    const raw = this.rawWeather();
-    const ovr = this.overrideConfig();
-
-    if (!ovr.active) {
-      return raw;
-    }
-
-    const condition = ovr.condition || raw.condition;
-    const cloudCoverPct = ovr.cloudCoverPct !== undefined ? ovr.cloudCoverPct : this.getConditionDefaultCloud(condition);
-    const precipitationPct = ovr.precipitationPct !== undefined ? ovr.precipitationPct : this.getConditionDefaultPrecip(condition);
-    const windSpeedKmh = ovr.windSpeedKmh !== undefined ? ovr.windSpeedKmh : (condition === 'blizzard' ? 55 : ((condition === 'severe_thunderstorm' || condition === 'thunderstorm') ? 42 : raw.windSpeedKmh));
-    const windGustKmh = Math.round(windSpeedKmh * 1.45);
-
-    const { score, label } = this.calculateAggressiveness(condition, windSpeedKmh, windGustKmh, precipitationPct, raw.temperatureC);
-
-    return {
-      ...raw,
-      condition,
-      conditionLabel: this.formatConditionLabel(condition),
-      cloudCoverPct,
-      precipitationPct,
-      windSpeedKmh,
-      windGustKmh,
-      aggressivenessIndex: Math.min(100, Math.max(0, score + (ovr.aggressivenessBoost || 0))),
-      aggressivenessLabel: label,
-      lightningFrequencyPerMin: (condition === 'severe_thunderstorm' ? 18 : (condition === 'thunderstorm' ? 8 : 0)),
-      winterFrostLevel: raw.temperatureC <= 0 ? Math.min(100, Math.round((0 - raw.temperatureC) * 5 + 30)) : 0,
-      visibilityKm: condition === 'fog' ? 1.2 : (condition === 'blizzard' ? 1.5 : (condition === 'heavy_rain' ? 3.5 : 16.0)),
-      isSimulated: true
-    };
+    return this.rawWeather();
   });
 
   private lastFetchedKey = '';
@@ -68,6 +149,8 @@ export class WeatherService {
       .set('latitude', loc.latitude)
       .set('longitude', loc.longitude)
       .set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
+      .set('hourly', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
+      .set('forecast_days', '14')
       .set('timezone', 'auto');
 
     this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
@@ -115,6 +198,62 @@ export class WeatherService {
 
             this.rawWeather.set(weather);
             this.lastFetchedKey = key;
+
+            // Parse 14-day hourly forecast series
+            if (data.hourly && Array.isArray(data.hourly.time)) {
+              const times: string[] = data.hourly.time;
+              const hTemps = data.hourly.temperature_2m || [];
+              const hCodes = data.hourly.weather_code || [];
+              const hClouds = data.hourly.cloud_cover || [];
+              const hWinds = data.hourly.wind_speed_10m || [];
+              const hPrecip = data.hourly.precipitation_probability || [];
+              const hHumid = data.hourly.relative_humidity_2m || [];
+              const hPress = data.hourly.surface_pressure || [];
+
+              const parsed: { timeMs: number; weather: WeatherData }[] = [];
+              for (let i = 0; i < times.length; i++) {
+                const tMs = new Date(times[i]).getTime();
+                if (!isNaN(tMs)) {
+                  const hCond = this.mapWmoCodeToCondition(hCodes[i] ?? 0);
+                  const hTC = Math.round((hTemps[i] ?? tempC) * 10) / 10;
+                  const hTF = Math.round((hTC * 9 / 5 + 32) * 10) / 10;
+                  const hWind = Math.round(hWinds[i] ?? 10);
+                  const hPrecipPct = hPrecip[i] ?? 0;
+                  const { score: hScore, label: hLabel } = this.calculateAggressiveness(hCond, hWind, Math.round(hWind * 1.3), hPrecipPct, hTC);
+
+                  parsed.push({
+                    timeMs: tMs,
+                    weather: {
+                      condition: hCond,
+                      conditionLabel: this.formatConditionLabel(hCond),
+                      temperatureC: hTC,
+                      temperatureF: hTF,
+                      feelsLikeC: hTC,
+                      feelsLikeF: hTF,
+                      humidityPct: hHumid[i] ?? 50,
+                      cloudCoverPct: hClouds[i] ?? 20,
+                      precipitationPct: hPrecipPct,
+                      windSpeedKmh: hWind,
+                      windDirectionDeg: 180,
+                      windGustKmh: Math.round(hWind * 1.3),
+                      visibilityKm: 16,
+                      uvIndex: 4,
+                      pressureHpa: Math.round(hPress[i] ?? 1013),
+                      aggressivenessIndex: hScore,
+                      aggressivenessLabel: hLabel,
+                      lightningFrequencyPerMin: hCond === 'thunderstorm' ? 5 : 0,
+                      winterFrostLevel: hTC <= 0 ? 30 : 0,
+                      snowAccumulationCm: 0,
+                      dataSource: 'open-meteo',
+                      isSimulated: true,
+                      updatedAt: new Date()
+                    }
+                  });
+                }
+              }
+              this.hourlyForecasts.set(parsed);
+            }
+
           } else {
             this.rawWeather.set(this.generateRealisticWeather(loc));
           }

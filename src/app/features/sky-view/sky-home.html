@@ -1,11 +1,20 @@
-<div class="sky-home-viewport w-full h-full relative overflow-hidden select-none bg-neutral-950 text-white flex flex-col justify-between">
+<div class="sky-home-viewport w-full h-full relative overflow-hidden select-none bg-neutral-950 text-white flex flex-col xl:flex-row justify-between">
+
+  <!-- Weather Particle Overlay System -->
+  @if (showParticles()) {
+    <app-weather-particles></app-weather-particles>
+  }
 
   <!-- ========================================== -->
-  <!-- 1. TOP FLOATING HEADER BAR (Windy Style)   -->
+  <!-- 1. TOP CONTROL & NAVIGATION TOOLBAR        -->
   <!-- ========================================== -->
-  <header class="top-header-bar absolute top-3 left-3 right-3 z-30 pointer-events-none flex items-center justify-between gap-3">
+  <header 
+    class="top-header-bar absolute top-3 left-3 right-3 transition-all duration-300 z-30 pointer-events-none flex items-center justify-between gap-3"
+    [class.xl:right-[400px]]="isInspectorVisible()"
+    [class.2xl:right-[440px]]="isInspectorVisible()"
+    [class.xl:right-3]="!isInspectorVisible()">
     
-    <!-- Top Left: Search & Location Glass Capsule (Windy Recherche Bar) -->
+    <!-- Top Left: Search & Location Capsule -->
     <div class="pointer-events-auto flex items-center gap-2 bg-neutral-950/90 border border-white/15 backdrop-blur-2xl px-3 py-1.5 rounded-full shadow-2xl">
       <mat-icon class="text-amber-400 text-sm w-4 h-4 flex items-center justify-center">search</mat-icon>
       
@@ -28,142 +37,80 @@
       </button>
     </div>
 
-    <!-- Top Center: Brand Identity Pill -->
-    <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-neutral-950/90 border border-white/15 backdrop-blur-2xl px-4 py-1.5 rounded-full shadow-2xl">
-      <div class="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center text-neutral-950 font-black text-[10px] font-mono shadow-md shadow-amber-500/30">
-        2π
-      </div>
-      <span class="text-xs font-black tracking-wider uppercase text-white font-mono">2πClock Observatory</span>
-      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-1" title="NIST Atomic Sync"></span>
-    </div>
-
-    <!-- Top Right: Menu Button (Windy Signature Red Circle Menu) & Quick Actions -->
+    <!-- Top Right: Action Buttons -->
     <div class="pointer-events-auto flex items-center gap-2">
-      <!-- Weather Telemetry Pill -->
+      
+      <!-- Show Data Inspector Toggle (When Hidden) -->
+      @if (!isInspectorVisible()) {
+        <button 
+          type="button"
+          (click)="toggleInspector()"
+          class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-mono text-xs font-bold shadow-xl transition-all cursor-pointer animate-fade-in">
+          <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">visibility</mat-icon>
+          <span>Show Data Pane</span>
+        </button>
+      }
+
+      <!-- Astronomical Events Button -->
       <button 
         type="button"
-        (click)="openDrawerTab('weather')"
-        class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-950/90 border border-white/15 backdrop-blur-2xl text-xs shadow-2xl hover:bg-neutral-900 transition-all cursor-pointer">
-        <mat-icon class="text-amber-400 text-sm w-4 h-4 flex items-center justify-center">air</mat-icon>
-        <span class="font-mono font-bold text-amber-300">
-          {{ isFahrenheit() ? weather().temperatureF + '°F' : weather().temperatureC + '°C' }}
-        </span>
-        <span class="text-neutral-400 text-[11px]">{{ weather().conditionLabel }}</span>
+        (click)="openEventsPanel()"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-950/90 border border-amber-500/40 hover:bg-amber-500/20 text-amber-300 backdrop-blur-2xl text-xs font-mono font-bold shadow-2xl transition-all cursor-pointer">
+        <mat-icon class="text-amber-400 text-sm w-4 h-4 flex items-center justify-center">auto_awesome</mat-icon>
+        <span class="hidden sm:inline">Astro Events</span>
       </button>
 
-      <!-- Red Circle Menu Button (Windy Style) -->
+      <!-- Active Severe Weather Alerts Badge -->
+      @if (activeAlerts().length > 0) {
+        <button 
+          type="button"
+          (click)="openAlertsModal()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white border border-rose-400/50 backdrop-blur-2xl text-xs font-mono font-bold shadow-lg shadow-rose-600/40 transition-all cursor-pointer animate-pulse">
+          <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">warning</mat-icon>
+          <span>{{ activeAlerts().length }} ALERTS</span>
+        </button>
+      }
+
+      <!-- Observatory Settings Gear Button -->
+      <button 
+        type="button"
+        (click)="openSettingsModal()"
+        class="w-9 h-9 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 text-neutral-300 hover:text-amber-400 flex items-center justify-center shadow-xl backdrop-blur-2xl transition-all cursor-pointer"
+        title="Observatory Settings">
+        <mat-icon class="text-base w-4 h-4 flex items-center justify-center">settings</mat-icon>
+      </button>
+
+      <!-- Mobile Inspector Toggle Button -->
       <button 
         type="button"
         (click)="toggleDrawer()"
-        class="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-600/40 transition-all cursor-pointer active:scale-95 border border-red-400/30"
-        title="Open Observatory Inspector Menu">
-        <mat-icon class="text-base w-4 h-4 flex items-center justify-center">menu</mat-icon>
+        class="xl:hidden w-9 h-9 rounded-full bg-amber-500 text-neutral-950 font-bold flex items-center justify-center shadow-lg transition-all cursor-pointer"
+        title="Toggle Mobile Inspector">
+        <mat-icon class="text-base w-4 h-4 flex items-center justify-center">tune</mat-icon>
       </button>
+
     </div>
   </header>
 
 
   <!-- ========================================== -->
-  <!-- 2. RIGHT VERTICAL LAYER DOCK (Windy Style) -->
+  <!-- 2. CENTER OBSERVATORY STAGE                -->
   <!-- ========================================== -->
-  <aside class="right-vertical-dock absolute top-20 right-3 z-30 pointer-events-auto flex flex-col items-end gap-2 max-h-[calc(100vh-220px)] overflow-y-auto pr-0.5">
-    
-    <!-- Layer Item 1: Solar Horizon -->
-    <button 
-      type="button"
-      (click)="openDrawerTab('solar-jump')"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        Solar Jump
-      </span>
-      <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">wb_sunny</mat-icon>
-      </div>
-    </button>
-
-    <!-- Layer Item 2: Lunar Ephemeris -->
-    <button 
-      type="button"
-      (click)="openDrawerTab('ephemeris')"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        Ephemeris
-      </span>
-      <div class="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">nightlight_round</mat-icon>
-      </div>
-    </button>
-
-    <!-- Layer Item 3: Weather Radar & Atmosphere -->
-    <button 
-      type="button"
-      (click)="openDrawerTab('weather')"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        Atmosphere
-      </span>
-      <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">thunderstorm</mat-icon>
-      </div>
-    </button>
-
-    <!-- Layer Item 4: Dial Switcher (2Pi Radian vs Analog) -->
-    <button 
-      type="button"
-      (click)="clockDisplayMode.set(clockDisplayMode() === 'radian' ? 'analog' : 'radian')"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        {{ clockDisplayMode() === 'radian' ? 'Switch to Analog' : 'Switch to 2π Dial' }}
-      </span>
-      <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">
-          {{ clockDisplayMode() === 'radian' ? 'radio_button_checked' : 'schedule' }}
-        </mat-icon>
-      </div>
-    </button>
-
-    <!-- Layer Item 5: Preset Locations Explorer -->
-    <button 
-      type="button"
-      (click)="openDrawerTab('locations')"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        Locations
-      </span>
-      <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">public</mat-icon>
-      </div>
-    </button>
-
-    <!-- Layer Item 6: Infographic Export -->
-    <button 
-      type="button"
-      (click)="showShareModal.set(true)"
-      class="windy-layer-btn group flex items-center gap-2.5 p-1.5 pl-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 border border-white/15 backdrop-blur-2xl shadow-xl transition-all cursor-pointer">
-      <span class="text-xs font-bold text-neutral-300 group-hover:text-amber-400 hidden group-hover:inline font-mono whitespace-nowrap transition-all">
-        Export Card
-      </span>
-      <div class="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30 shadow-md">
-        <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">camera_alt</mat-icon>
-      </div>
-    </button>
-  </aside>
-
-
-  <!-- ========================================== -->
-  <!-- 3. CENTER STAGE: THE RADIAL WATCH          -->
-  <!-- ========================================== -->
-  <main class="center-sky-stage flex-1 flex flex-col items-center justify-center relative z-10 my-16 px-4 pointer-events-auto">
+  <main class="center-sky-stage flex-1 relative z-10 flex items-center justify-center p-4 my-16 xl:my-0">
     
     <!-- Mode 1: 2π Radian Astrolabe Dial -->
     @if (clockDisplayMode() === 'radian') {
       <div 
-        class="polar-clock-container w-full max-w-[420px] sm:max-w-[460px] aspect-square relative flex items-center justify-center p-2 transition-transform duration-300"
+        class="polar-clock-container w-full max-w-[480px] sm:max-w-[540px] aspect-square relative flex items-center justify-center p-2 transition-transform duration-300"
         [style.transform]="'scale(' + (zoomLevel() / 100) + ')'">
         <svg class="w-full h-full select-none overflow-visible" viewBox="-160 -160 320 320" aria-label="2Pi Celestial Polar Clock">
           <defs>
             <filter id="sunGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="moonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
@@ -206,48 +153,45 @@
 
           <!-- Active Moon Pointer -->
           <g [attr.transform]="'rotate(' + (celestial().moon.azimuthDeg) + ')'">
-            <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(251, 191, 36, 0.7)" stroke-width="1.5" />
-            <circle cx="0" cy="-96" r="6" fill="#fbbf24" />
+            <line x1="0" y1="0" x2="0" y2="-96" stroke="rgba(186, 230, 253, 0.85)" stroke-width="1.8" stroke-dasharray="3 2" />
+            <circle cx="0" cy="-96" r="7" fill="#38bdf8" filter="url(#moonGlowFilter)" />
+            <circle cx="0" cy="-96" r="3" fill="#f8fafc" />
           </g>
 
           <!-- Inner Core Glass Dial -->
           <circle cx="0" cy="0" r="78" fill="rgba(8, 8, 8, 0.95)" stroke="rgba(255, 255, 255, 0.18)" stroke-width="1.2" />
         </svg>
 
-        <!-- Core Digital Time Readout inside 2Pi Dial -->
-        <div class="absolute flex flex-col items-center justify-center text-center pointer-events-none select-none">
-          <div class="text-3xl sm:text-4xl lg:text-5xl font-black font-mono text-white tracking-tight leading-none text-shadow-md">
+        <!-- Core Digital Readout -->
+        <div class="absolute flex flex-col items-center justify-center text-center pointer-events-none select-none p-2 max-w-[280px]">
+          <div class="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight leading-none text-shadow-md">
             {{ localTime() }}
           </div>
 
-          <div class="text-xs text-neutral-300 font-sans mt-1.5 font-bold">
-            {{ selectedLocation().name }}, {{ selectedLocation().countryCode }}
+          <div class="text-xs text-neutral-200 font-sans mt-2 font-bold flex items-center justify-center gap-1.5 flex-wrap">
+            <span>{{ selectedLocation().name }}</span>
+            <span class="text-amber-400 font-mono text-[11px] font-extrabold bg-amber-400/15 px-1.5 py-0.5 rounded border border-amber-400/30">
+              {{ isFahrenheit() ? weather().temperatureF + '°F' : weather().temperatureC + '°C' }}
+            </span>
           </div>
 
-          <div class="text-[10px] font-mono text-amber-400 mt-0.5 font-semibold">
-            &phi; {{ (dayFraction() * 2 * 3.14159).toFixed(2) }} rad / 2&pi;
+          <div class="text-[11px] font-semibold text-neutral-300 mt-1 flex items-center justify-center gap-1">
+            <mat-icon class="text-xs w-3.5 h-3.5 text-amber-400 flex items-center justify-center">filter_drama</mat-icon>
+            <span>{{ weather().conditionLabel }}</span>
+            <span class="text-neutral-500 font-mono">·</span>
+            <span class="text-neutral-400 font-mono text-[10px]">{{ weather().windSpeedKmh }} km/h</span>
           </div>
         </div>
       </div>
     }
 
-    <!-- Mode 2: High-Precision Analog Watch -->
+    <!-- Mode 2: Center Stage for Analog view / Map -->
     @if (clockDisplayMode() === 'analog') {
-      <div 
-        class="w-full max-w-[400px] aspect-square p-4 rounded-full bg-neutral-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl flex flex-col items-center justify-center transition-transform duration-300 relative"
-        [style.transform]="'scale(' + (zoomLevel() / 100) + ')'">
-        <app-analog-clock 
-          [timezone]="selectedLocation().timezone" 
-          [activeDate]="activeDate()" 
-          [latitude]="selectedLocation().latitude" 
-          [longitude]="selectedLocation().longitude">
-        </app-analog-clock>
-
-        <div class="mt-3 flex flex-col items-center text-center">
-          <span class="text-2xl font-extrabold font-mono text-white tracking-wider">{{ localTime() }}</span>
-          <span class="text-xs font-semibold text-neutral-300 mt-0.5">{{ selectedLocation().name }} · {{ selectedLocation().country }}</span>
-          <span class="text-[10px] font-mono text-emerald-400 mt-0.5 font-bold">● NIST Synchronized ±0.001s</span>
-        </div>
+      <div class="text-center p-6 rounded-3xl bg-neutral-900/60 border border-white/10 backdrop-blur-xl max-w-lg shadow-2xl">
+        <h2 class="text-xl font-extrabold text-white mb-2 font-mono">Observatory Stage</h2>
+        <p class="text-xs text-neutral-300 leading-relaxed">
+          All weather reports, analog & digital clocks, 12-hour forecasts, and celestial ephemeris are unified on the right data pane.
+        </p>
       </div>
     }
 
@@ -255,107 +199,301 @@
 
 
   <!-- ========================================== -->
-  <!-- 4. FULL 100% WIDTH BOTTOM CONTROL DOCK     -->
+  <!-- 3. UNIFIED RIGHT SIDE DATA INSPECTOR PANE  -->
   <!-- ========================================== -->
-  <footer class="bottom-full-dock absolute inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-stretch w-full">
-    
-    <!-- Floating Sub-Panel Stack (Bottom Right - Windy Style Model, Toggles & Zoom) -->
-    <div class="pointer-events-auto flex items-end justify-between px-3 mb-2 gap-3 flex-wrap">
+  @if (isInspectorVisible()) {
+    <aside class="right-inspector-panel hidden xl:flex w-[380px] 2xl:w-[420px] shrink-0 border-l border-white/15 bg-neutral-950/95 backdrop-blur-2xl flex-col h-full z-20 shadow-2xl relative overflow-hidden animate-slideLeft">
       
-      <!-- Left Sub-Panel: Speed & Quick Transport Shortcuts -->
-      <div class="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-neutral-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl text-[10px] font-mono font-bold">
-        <button type="button" class="px-2 py-1 rounded-lg transition-all" [class.bg-amber-500]="currentSpeed() === 1" [class.text-neutral-950]="currentSpeed() === 1" [class.text-neutral-400]="currentSpeed() !== 1" (click)="setSpeed(1)">1x</button>
-        <button type="button" class="px-2 py-1 rounded-lg transition-all" [class.bg-amber-500]="currentSpeed() === 10" [class.text-neutral-950]="currentSpeed() === 10" [class.text-neutral-400]="currentSpeed() !== 10" (click)="setSpeed(10)">10x</button>
-        <button type="button" class="px-2 py-1 rounded-lg transition-all" [class.bg-amber-500]="currentSpeed() === 60" [class.text-neutral-950]="currentSpeed() === 60" [class.text-neutral-400]="currentSpeed() !== 60" (click)="setSpeed(60)">60x</button>
-        <button type="button" class="px-2 py-1 rounded-lg transition-all" [class.bg-amber-500]="currentSpeed() === 300" [class.text-neutral-950]="currentSpeed() === 300" [class.text-neutral-400]="currentSpeed() !== 300" (click)="setSpeed(300)">300x</button>
-        <button type="button" class="px-2 py-1 rounded-lg transition-all" [class.bg-amber-500]="currentSpeed() === 1200" [class.text-neutral-950]="currentSpeed() === 1200" [class.text-neutral-400]="currentSpeed() !== 1200" (click)="setSpeed(1200)">1200x</button>
+      <!-- Inspector Header Bar (With Hide Button) -->
+      <div class="p-3.5 border-b border-white/10 flex items-center justify-between bg-neutral-900/90 shrink-0">
+        <div class="flex items-center gap-2">
+          <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'w-6 h-4 rounded-xs shadow-md'"></app-country-flag>
+          <div>
+            <h2 class="text-sm font-extrabold text-white font-mono tracking-wide flex items-center gap-1.5">
+              <span>{{ selectedLocation().name }}</span>
+              <span class="text-neutral-500">·</span>
+              <span class="text-xs text-neutral-300 font-sans font-medium">{{ selectedLocation().country }}</span>
+            </h2>
+            <div class="text-[10px] font-mono text-amber-400/90 font-semibold">
+              {{ timezoneDisplay() }} ({{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°)
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button 
+            type="button" 
+            (click)="openDrawerTab('locations')"
+            class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] font-mono font-bold text-amber-300 transition-all cursor-pointer">
+            Change
+          </button>
+
+          <!-- Hide Right Pane Toggle Button -->
+          <button 
+            type="button" 
+            (click)="toggleInspector()"
+            class="p-1 rounded-lg bg-white/5 hover:bg-white/15 text-neutral-400 hover:text-white transition-all cursor-pointer"
+            title="Hide Data Pane">
+            <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">visibility_off</mat-icon>
+          </button>
+        </div>
       </div>
 
-      <!-- Right Sub-Panel Stack (Model Selector, Twilight Scale & Map Projection Controls) -->
-      <div class="flex items-center gap-2 ml-auto flex-wrap justify-end">
+      <!-- Inspector Body Scroll Container (With Bottom Padding pb-36 for Bottom Bar) -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-4 font-sans text-xs pb-36">
         
-        <!-- Astronomical Ephemeris Model Selector Bar (Windy ECMWF/GFS Bar) -->
-        <div class="flex items-center p-1 rounded-xl bg-neutral-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl text-[10px] font-mono font-bold">
+        <!-- SECTION 1: Analog Clock & Digital Terminal Clock -->
+        <div class="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-md">
+          <div class="flex items-center justify-between text-xs font-mono font-bold text-amber-400">
+            <span class="flex items-center gap-1.5 uppercase tracking-wider">
+              <mat-icon class="text-sm">schedule</mat-icon>
+              Local Clock & Timing
+            </span>
+            <span class="text-[10px] text-neutral-400 font-sans font-normal">{{ localDate() }}</span>
+          </div>
+
+          <!-- TimeAndDate Style Pure Circle Analog Clock -->
+          <app-analog-clock 
+            [timezone]="selectedLocation().timezone" 
+            [activeDate]="activeDate()" 
+            [latitude]="selectedLocation().latitude" 
+            [longitude]="selectedLocation().longitude">
+          </app-analog-clock>
+
+          <!-- Digital Terminal Clock (Amber Monospace) -->
+          <div class="p-2.5 rounded-xl bg-[#08090d] border border-amber-500/30 text-center font-mono select-all">
+            <div class="text-xl sm:text-2xl font-black text-amber-400 tracking-widest text-shadow-amber">
+              {{ localTime() }}
+            </div>
+            <div class="text-[10px] text-amber-500/70 uppercase tracking-widest font-bold mt-0.5">
+              NIST Synchronized · {{ selectedLocation().timezone }}
+            </div>
+          </div>
+        </div>
+
+
+        <!-- SECTION 2: Comprehensive Weather Report Card -->
+        <div class="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-md">
+          <div class="flex items-center justify-between text-xs font-mono font-bold text-emerald-400">
+            <span class="flex items-center gap-1.5 uppercase tracking-wider">
+              <mat-icon class="text-sm">thunderstorm</mat-icon>
+              Weather Report
+            </span>
+            <button 
+              type="button" 
+              (click)="toggleTempUnit()"
+              class="text-[10px] px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 text-neutral-300 font-mono transition-all cursor-pointer border border-white/10">
+              {{ isFahrenheit() ? '°F' : '°C' }}
+            </button>
+          </div>
+
+          <!-- Main Temperature Banner -->
+          <div class="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-neutral-900 to-amber-950/30 border border-emerald-500/20 flex items-center justify-between">
+            <div>
+              <div class="text-2xl font-black font-mono text-white tracking-tight">
+                {{ isFahrenheit() ? weather().temperatureF + '°F' : weather().temperatureC + '°C' }}
+              </div>
+              <div class="text-xs font-bold text-amber-300">
+                Feels like {{ isFahrenheit() ? weather().feelsLikeF + '°F' : weather().feelsLikeC + '°C' }}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-extrabold text-white font-sans">{{ weather().conditionLabel }}</div>
+              <div class="text-[10px] text-neutral-400 font-mono">Aggressiveness: {{ weather().aggressivenessIndex }}/100 ({{ weather().aggressivenessLabel }})</div>
+            </div>
+          </div>
+
+          <!-- Natural Language Weather Narrative Report -->
+          <div class="p-2.5 rounded-xl bg-neutral-900/90 border border-white/5 text-[11px] text-neutral-300 leading-relaxed font-sans">
+            <strong class="text-emerald-400 font-mono text-[10px] uppercase block mb-1">Detailed Report Summary:</strong>
+            Current weather in {{ selectedLocation().name }} shows {{ weather().conditionLabel.toLowerCase() }} conditions with {{ weather().humidityPct }}% humidity and {{ weather().windSpeedKmh }} km/h wind velocity. Barometric pressure is {{ weather().pressureHpa }} hPa. UV index is {{ weather().uvIndex }}.
+          </div>
+
+          <!-- Detailed Telemetry Grid -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2 rounded-xl bg-neutral-900/80 border border-white/5">
+              <div class="text-[10px] text-neutral-400 font-mono uppercase">Wind Velocity</div>
+              <div class="text-xs font-bold text-sky-300 font-mono mt-0.5">{{ weather().windSpeedKmh }} km/h</div>
+              <div class="text-[10px] text-neutral-400">Gusts {{ weather().windGustKmh }} km/h</div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-neutral-900/80 border border-white/5">
+              <div class="text-[10px] text-neutral-400 font-mono uppercase">Humidity & Dew</div>
+              <div class="text-xs font-bold text-emerald-300 font-mono mt-0.5">{{ weather().humidityPct }}%</div>
+              <div class="text-[10px] text-neutral-400">Cloud {{ weather().cloudCoverPct }}%</div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-neutral-900/80 border border-white/5">
+              <div class="text-[10px] text-neutral-400 font-mono uppercase">Pressure</div>
+              <div class="text-xs font-bold text-amber-300 font-mono mt-0.5">{{ weather().pressureHpa }} hPa</div>
+              <div class="text-[10px] text-neutral-400">Visibility {{ weather().visibilityKm }} km</div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-neutral-900/80 border border-white/5">
+              <div class="text-[10px] text-neutral-400 font-mono uppercase">UV Exposure</div>
+              <div class="text-xs font-bold text-purple-300 font-mono mt-0.5">UV {{ weather().uvIndex }}</div>
+              <div class="text-[10px] text-neutral-400">Precip {{ weather().precipitationPct }}%</div>
+            </div>
+          </div>
+
+          <!-- 12-Hour Weather & Humidity Trend Chart -->
+          <app-weather-trend-chart [isFahrenheit]="isFahrenheit()"></app-weather-trend-chart>
+        </div>
+
+
+        <!-- SECTION 3: Astronomy & Ephemeris Telemetry -->
+        <div class="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-md">
+          <div class="flex items-center justify-between text-xs font-mono font-bold text-sky-400">
+            <span class="flex items-center gap-1.5 uppercase tracking-wider">
+              <mat-icon class="text-sm">nightlight_round</mat-icon>
+              Celestial Ephemeris
+            </span>
+            <span class="text-[10px] font-mono text-amber-400 font-bold">
+              {{ getTwilightLabel(celestial().twilightState) }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-neutral-900/80 border border-white/5 space-y-1">
+              <div class="flex items-center gap-1 text-[10px] font-mono text-amber-400">
+                <mat-icon class="text-xs w-3 h-3 flex items-center justify-center">wb_sunny</mat-icon>
+                <span>Solar Telemetry</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Altitude</span>
+                <span class="font-mono font-bold text-white">{{ celestial().sun.altitudeDeg.toFixed(1) }}°</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Azimuth</span>
+                <span class="font-mono font-bold text-amber-300">{{ celestial().sun.azimuthDeg.toFixed(1) }}°</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Sunrise</span>
+                <span class="font-mono font-bold text-white">{{ formatTime(celestial().solarEvents.sunrise) }}</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Sunset</span>
+                <span class="font-mono font-bold text-white">{{ formatTime(celestial().solarEvents.sunset) }}</span>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-neutral-900/80 border border-white/5 space-y-1">
+              <div class="flex items-center gap-1 text-[10px] font-mono text-sky-400">
+                <mat-icon class="text-xs w-3 h-3 flex items-center justify-center">bedtime</mat-icon>
+                <span>Lunar Phase</span>
+              </div>
+              <div class="text-xs font-bold text-white truncate">{{ celestial().moon.phaseName }}</div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Illumination</span>
+                <span class="font-mono font-bold text-sky-300">{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}%</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Altitude</span>
+                <span class="font-mono font-bold text-emerald-400">{{ celestial().moon.altitudeDeg.toFixed(1) }}°</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-neutral-400">Distance</span>
+                <span class="font-mono font-bold text-neutral-300 text-[10px]">{{ formatMoonDistance(celestial().moon.distanceKm) }} km</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- SECTION 4: Upcoming Astronomical Events Card -->
+        <div class="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-md">
+          <div class="flex items-center justify-between text-xs font-mono font-bold text-amber-400">
+            <span class="flex items-center gap-1.5 uppercase tracking-wider">
+              <mat-icon class="text-sm">auto_awesome</mat-icon>
+              Upcoming Astro Events
+            </span>
+            <button 
+              type="button" 
+              (click)="openEventsPanel()"
+              class="text-[10px] text-amber-300 hover:text-white font-mono underline transition-colors cursor-pointer">
+              View All
+            </button>
+          </div>
+
+          <p class="text-[11px] text-neutral-300 leading-relaxed">
+            Upcoming perigee lunar transitions, planetary alignments, and meteor shower peaks for {{ selectedLocation().name }}.
+          </p>
+
           <button 
             type="button" 
-            (click)="selectedEphemerisModel.set('vsop87')"
-            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer"
-            [class.bg-amber-500]="selectedEphemerisModel() === 'vsop87'"
-            [class.text-neutral-950]="selectedEphemerisModel() === 'vsop87'"
-            [class.text-neutral-400]="selectedEphemerisModel() !== 'vsop87'">
-            VSOP87<span class="text-[8px] opacity-70 ml-0.5">0.001s</span>
-          </button>
-          <button 
-            type="button" 
-            (click)="selectedEphemerisModel.set('noaa')"
-            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer"
-            [class.bg-amber-500]="selectedEphemerisModel() === 'noaa'"
-            [class.text-neutral-950]="selectedEphemerisModel() === 'noaa'"
-            [class.text-neutral-400]="selectedEphemerisModel() !== 'noaa'">
-            NOAA DE440
-          </button>
-          <button 
-            type="button" 
-            (click)="selectedEphemerisModel.set('nist')"
-            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer"
-            [class.bg-amber-500]="selectedEphemerisModel() === 'nist'"
-            [class.text-neutral-950]="selectedEphemerisModel() === 'nist'"
-            [class.text-neutral-400]="selectedEphemerisModel() !== 'nist'">
-            NIST Sync
+            (click)="openEventsPanel()"
+            class="w-full py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5">
+            <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">auto_awesome</mat-icon>
+            <span>Open Celestial Events Drawer</span>
           </button>
         </div>
 
-        <!-- Map / View Projection Controls (+ / - / 3D / ↺ / ⛶) -->
-        <div class="flex items-center p-1 rounded-xl bg-neutral-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl text-xs">
-          <button type="button" (click)="zoomIn()" class="p-1.5 hover:bg-white/15 rounded-lg text-neutral-300 hover:text-white transition-all cursor-pointer" title="Zoom In">
-            <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">add</mat-icon>
-          </button>
-          <button type="button" (click)="zoomOut()" class="p-1.5 hover:bg-white/15 rounded-lg text-neutral-300 hover:text-white transition-all cursor-pointer" title="Zoom Out">
-            <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">remove</mat-icon>
-          </button>
-          <button type="button" (click)="resetZoom()" class="px-2 py-1 hover:bg-white/15 rounded-lg text-[10px] font-mono font-bold text-amber-400 transition-all cursor-pointer" title="Reset Scale">
-            100%
-          </button>
-          <button type="button" (click)="toggleFullscreen()" class="p-1.5 hover:bg-white/15 rounded-lg text-neutral-300 hover:text-white transition-all cursor-pointer" title="Toggle Fullscreen">
-            <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">{{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
-          </button>
-        </div>
+      </div>
+    </aside>
+  }
 
+
+  <!-- ========================================== -->
+  <!-- 4. BOTTOM TIME CONTROL DOCK                -->
+  <!-- ========================================== -->
+  <footer 
+    class="bottom-full-dock absolute inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-stretch w-full transition-all duration-300"
+    [class.xl:pr-[400px]]="isInspectorVisible()"
+    [class.2xl:pr-[440px]]="isInspectorVisible()"
+    [class.xl:pr-0]="!isInspectorVisible()">
+    
+    <!-- Floating Reset to Live Time & Speed Control Bar -->
+    <div class="pointer-events-auto flex items-center justify-between px-3 mb-2 gap-2 flex-wrap">
+      
+      <!-- Return to Live Local Timing Button -->
+      @if (!isLive()) {
+        <button 
+          type="button" 
+          (click)="setLive()"
+          class="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-extrabold shadow-lg shadow-emerald-600/40 border border-emerald-400/50 flex items-center gap-1.5 transition-all cursor-pointer animate-bounce">
+          <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+          <span>🔴 RESET TO LIVE TIME</span>
+        </button>
+      } @else {
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>LIVE REAL-TIME STREAM</span>
+        </div>
+      }
+
+      <!-- Speed Control Shortcuts -->
+      <div class="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-neutral-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl text-[10px] font-mono font-bold">
+        <span class="text-neutral-400 px-1 font-semibold">Speed:</span>
+        <button type="button" class="px-2 py-0.5 rounded transition-all" [class.bg-amber-500]="currentSpeed() === 1" [class.text-neutral-950]="currentSpeed() === 1" [class.text-neutral-400]="currentSpeed() !== 1" (click)="setSpeed(1)">1x</button>
+        <button type="button" class="px-2 py-0.5 rounded transition-all" [class.bg-amber-500]="currentSpeed() === 10" [class.text-neutral-950]="currentSpeed() === 10" [class.text-neutral-400]="currentSpeed() !== 10" (click)="setSpeed(10)">10x</button>
+        <button type="button" class="px-2 py-0.5 rounded transition-all" [class.bg-amber-500]="currentSpeed() === 60" [class.text-neutral-950]="currentSpeed() === 60" [class.text-neutral-400]="currentSpeed() !== 60" (click)="setSpeed(60)">60x</button>
+        <button type="button" class="px-2 py-0.5 rounded transition-all" [class.bg-amber-500]="currentSpeed() === 300" [class.text-neutral-950]="currentSpeed() === 300" [class.text-neutral-400]="currentSpeed() !== 300" (click)="setSpeed(300)">300x</button>
+        <button type="button" class="px-2 py-0.5 rounded transition-all" [class.bg-amber-500]="currentSpeed() === 1200" [class.text-neutral-950]="currentSpeed() === 1200" [class.text-neutral-400]="currentSpeed() !== 1200" (click)="setSpeed(1200)">1200x</button>
       </div>
     </div>
 
-    <!-- 100% Full-Width Bottom Main Dock Container -->
-    <div class="pointer-events-auto w-full bg-neutral-950/95 border-t border-white/15 backdrop-blur-2xl shadow-2xl px-2 sm:px-4 py-2 flex flex-col gap-1.5">
+    <!-- 100% Full-Width Bottom Time Scrubber Container -->
+    <div class="pointer-events-auto w-full bg-neutral-950/95 border-t border-white/15 backdrop-blur-2xl shadow-2xl px-3 sm:px-4 py-2 flex flex-col gap-1.5">
       
-      <!-- Timeline Top Bar: Red Play Button (Left) + Current Time Bubble + Day Calendar Ribbon -->
+      <!-- Timeline Top Row: Play/Pause Button + Calendar Day Ribbon + Jump Presets -->
       <div class="flex items-center gap-3 w-full min-w-0">
         
-        <!-- Red Circular Play Button (Windy Signature ▶) with Floating Time Bubble -->
-        <div class="relative shrink-0 flex items-center">
-          
-          <!-- Floating Orange Time Bubble above play button (e.g. 13:00) -->
-          <div class="absolute -top-7 left-0 bg-amber-500 text-neutral-950 text-[10px] font-black font-mono px-2 py-0.5 rounded-md shadow-lg shadow-amber-500/30 whitespace-nowrap z-10 flex items-center gap-1 border border-amber-300/40">
-            <span>{{ localTime().slice(0, 5) }}</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-neutral-950 animate-ping"></span>
-          </div>
+        <!-- Play / Pause Simulation Button -->
+        <button 
+          type="button" 
+          (click)="togglePlay()"
+          class="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center shrink-0 shadow-lg shadow-red-600/40 transition-all cursor-pointer active:scale-95 border border-red-400/30"
+          [title]="isPlaying() ? 'Pause Simulation' : 'Play Diurnal Cycle'">
+          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+        </button>
 
-          <!-- Windy Red Play Button -->
-          <button 
-            type="button" 
-            (click)="togglePlay()"
-            class="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center shrink-0 shadow-lg shadow-red-600/40 transition-all cursor-pointer active:scale-95 border border-red-400/30"
-            [title]="isPlaying() ? 'Pause Simulation' : 'Play Diurnal Cycle'">
-            <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
-          </button>
-        </div>
-
-        <!-- 100% Width 12-Day Calendar Ribbon across bottom (Mer. 23, Jeu. 24, Ven. 25...) -->
+        <!-- 12-Day Calendar Day Ribbon -->
         <div class="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
           @for (d of upcomingDays(); track d.label) {
             <button 
               type="button" 
               (click)="selectDay(d.date)"
-              class="windy-day-pill flex-1 min-w-[65px] px-2 py-1.5 rounded-lg text-center font-mono transition-all cursor-pointer border flex flex-col items-center justify-center shrink-0"
+              class="relative flex-1 min-w-[65px] px-2 py-1.5 rounded-lg text-center font-mono transition-all cursor-pointer border flex flex-col items-center justify-center shrink-0"
               [class.bg-amber-500]="d.isSelected"
               [class.text-neutral-950]="d.isSelected"
               [class.border-amber-400]="d.isSelected"
@@ -365,15 +503,15 @@
               [class.text-neutral-300]="!d.isSelected"
               [class.border-white/10]="!d.isSelected"
               [class.hover:bg-white/10]="!d.isSelected">
-              <span class="text-[10px] uppercase font-bold leading-none">{{ d.label }}</span>
               @if (d.isToday) {
-                <span class="text-[8px] opacity-80 leading-none mt-0.5 font-bold uppercase" [class.text-neutral-950]="d.isSelected" [class.text-amber-400]="!d.isSelected">Today</span>
+                <span class="absolute top-0.5 left-2 right-2 h-[2px] rounded-full" [class.bg-neutral-950]="d.isSelected" [class.bg-amber-400]="!d.isSelected"></span>
               }
+              <span class="text-[10px] uppercase font-bold leading-none">{{ d.label }}</span>
             </button>
           }
         </div>
 
-        <!-- Right Quick Jump Presets (Dawn, Sunrise, Noon, Sunset, Night) -->
+        <!-- Solar Jump Shortcuts (Dawn, Sunrise, Noon, Sunset, Night) -->
         <div class="hidden lg:flex items-center gap-1 shrink-0">
           <button type="button" (click)="jumpToSolarEvent('dawn')" class="px-2 py-1 rounded-lg bg-white/[0.05] hover:bg-white/10 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/20 transition-all cursor-pointer whitespace-nowrap">
             Dawn
@@ -394,7 +532,7 @@
 
       </div>
 
-      <!-- 100% Width 24-Hour Slider Scrubber Rail with Diurnal Sky Horizon Gradient -->
+      <!-- 24-Hour Scrubber Rail -->
       <div class="flex flex-col gap-0.5 w-full relative pt-1">
         <div class="timeline-gradient-track absolute top-[8px] left-0 right-0 h-[6px] rounded-full pointer-events-none"></div>
 
@@ -422,185 +560,62 @@
 
 
   <!-- ========================================== -->
-  <!-- 5. INSPECTOR RIGHT DRAWER PANEL            -->
+  <!-- 5. MOBILE / TABLET DRAWER OVERLAY          -->
   <!-- ========================================== -->
   @if (isDrawerOpen()) {
-    <div class="drawer-backdrop absolute inset-0 z-40 bg-black/50 backdrop-blur-xs" (click)="closeDrawer()"></div>
+    <div class="drawer-backdrop xl:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" (click)="closeDrawer()"></div>
     
-    <aside class="ios-full-drawer absolute top-0 right-0 bottom-0 w-full sm:w-[400px] md:w-[440px] z-50 bg-neutral-950/95 border-l border-white/15 backdrop-blur-2xl shadow-2xl flex flex-col animate-slideLeft overflow-hidden">
-      <!-- Drawer Header -->
-      <div class="drawer-header flex items-center justify-between p-3.5 border-b border-white/10">
+    <aside class="xl:hidden fixed top-0 right-0 bottom-0 w-full sm:w-[400px] z-50 bg-neutral-950/95 border-l border-white/15 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden animate-slideLeft">
+      <div class="flex items-center justify-between p-3.5 border-b border-white/10">
         <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold shadow-md shadow-red-600/30">
-            <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">tune</mat-icon>
-          </div>
-          <div>
-            <h2 class="text-xs font-bold text-white font-mono uppercase tracking-wide">Observatory Inspector</h2>
-            <p class="text-[10px] text-neutral-400">{{ selectedLocation().name }} · {{ timezoneDisplay() }}</p>
-          </div>
+          <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
+          <span class="font-bold text-white text-xs font-mono">{{ selectedLocation().name }}</span>
+        </div>
+        <button type="button" class="p-1.5 rounded-lg bg-white/10 text-neutral-400 hover:text-white" (click)="closeDrawer()">
+          <mat-icon class="text-xs">close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4 overflow-y-auto flex-1 pb-28">
+        <!-- Analog Clock -->
+        <app-analog-clock 
+          [timezone]="selectedLocation().timezone" 
+          [activeDate]="activeDate()" 
+          [latitude]="selectedLocation().latitude" 
+          [longitude]="selectedLocation().longitude">
+        </app-analog-clock>
+
+        <!-- Digital Clock -->
+        <div class="p-2.5 rounded-xl bg-[#08090d] border border-amber-500/30 text-center font-mono">
+          <div class="text-xl font-black text-amber-400 tracking-widest">{{ localTime() }}</div>
         </div>
 
-        <button type="button" class="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-neutral-400 hover:text-white transition-all cursor-pointer" (click)="closeDrawer()">
-          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">close</mat-icon>
-        </button>
-      </div>
-
-      <!-- Drawer Tabs Strip -->
-      <div class="grid grid-cols-4 border-b border-white/10 bg-white/[0.02] p-1 gap-1">
-        <button 
-          type="button"
-          class="ios-drawer-tab flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer"
-          [class.active]="activeDrawerTab() === 'weather'"
-          (click)="activeDrawerTab.set('weather')">
-          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">thunderstorm</mat-icon>
-          <span>Weather</span>
-        </button>
-        <button 
-          type="button"
-          class="ios-drawer-tab flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer"
-          [class.active]="activeDrawerTab() === 'ephemeris'"
-          (click)="activeDrawerTab.set('ephemeris')">
-          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">wb_twilight</mat-icon>
-          <span>Ephemeris</span>
-        </button>
-        <button 
-          type="button"
-          class="ios-drawer-tab flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer"
-          [class.active]="activeDrawerTab() === 'solar-jump'"
-          (click)="activeDrawerTab.set('solar-jump')">
-          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">schedule</mat-icon>
-          <span>Solar Jump</span>
-        </button>
-        <button 
-          type="button"
-          class="ios-drawer-tab flex flex-col items-center justify-center py-1.5 px-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer"
-          [class.active]="activeDrawerTab() === 'locations'"
-          (click)="activeDrawerTab.set('locations')">
-          <mat-icon class="text-xs w-3.5 h-3.5 flex items-center justify-center">public</mat-icon>
-          <span>Locations</span>
-        </button>
-      </div>
-
-      <!-- Drawer Body Content -->
-      <div class="drawer-body flex-1 overflow-y-auto p-3.5 space-y-3.5">
-        
-        <!-- Tab 1: Weather Overlay -->
-        @if (activeDrawerTab() === 'weather') {
-          <app-weather-overlay 
-            [locationName]="selectedLocation().name" 
-            [countryCode]="selectedLocation().countryCode"
-            (closeOverlay)="closeDrawer()">
-          </app-weather-overlay>
-        }
-
-        <!-- Tab 2: Ephemeris Details -->
-        @if (activeDrawerTab() === 'ephemeris') {
-          <app-astronomy-details [variant]="'compact'"></app-astronomy-details>
-        }
-
-        <!-- Tab 3: Solar Jump Epoch Triggers -->
-        @if (activeDrawerTab() === 'solar-jump') {
-          <div class="flex flex-col gap-2 text-xs">
-            <p class="text-neutral-400 text-xs mb-1">Instantly jump the solar vector to key astronomical milestones:</p>
-
-            <button type="button" class="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-all cursor-pointer text-left" (click)="jumpToSolarEvent('dawn')">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center">
-                  <mat-icon class="text-xs">wb_twilight</mat-icon>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">Astronomical Dawn</div>
-                  <div class="text-[10px] text-neutral-400">First morning light (-18° to -12°)</div>
-                </div>
-              </div>
-              <mat-icon class="text-neutral-500 text-xs">chevron_right</mat-icon>
-            </button>
-
-            <button type="button" class="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all cursor-pointer text-left" (click)="jumpToSolarEvent('sunrise')">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                  <mat-icon class="text-xs">wb_sunny</mat-icon>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">Sunrise Horizon (0°)</div>
-                  <div class="text-[10px] text-amber-300/80">Sun crosses upper optical limb</div>
-                </div>
-              </div>
-              <mat-icon class="text-amber-400 text-xs">chevron_right</mat-icon>
-            </button>
-
-            <button type="button" class="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-all cursor-pointer text-left" (click)="jumpToSolarEvent('noon')">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                  <mat-icon class="text-xs">wb_sunny</mat-icon>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">Solar Noon (Zenith)</div>
-                  <div class="text-[10px] text-neutral-400">Peak diurnal altitude above horizon</div>
-                </div>
-              </div>
-              <mat-icon class="text-neutral-500 text-xs">chevron_right</mat-icon>
-            </button>
-
-            <button type="button" class="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all cursor-pointer text-left" (click)="jumpToSolarEvent('sunset')">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                  <mat-icon class="text-xs">wb_twilight</mat-icon>
-                </div>
-                <div>
-                  <div class="text-xs font-bold text-white">Sunset Horizon (0°)</div>
-                  <div class="text-[10px] text-amber-300/80">Sun descends below horizon</div>
-                </div>
-              </div>
-              <mat-icon class="text-amber-400 text-xs">chevron_right</mat-icon>
-            </button>
-          </div>
-        }
-
-        <!-- Tab 4: Location Search & Selection -->
-        @if (activeDrawerTab() === 'locations') {
-          <div class="flex flex-col gap-2.5">
-            <div class="relative">
-              <input 
-                type="text" 
-                [ngModel]="drawerSearchQuery()" 
-                (ngModelChange)="drawerSearchQuery.set($event)"
-                placeholder="Filter preset locations..." 
-                class="w-full px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400/50" />
-            </div>
-
-            <div class="flex flex-col gap-1 max-h-[60vh] overflow-y-auto pr-1">
-              @for (loc of filteredDrawerLocations(); track loc.id) {
-                <button 
-                  type="button" 
-                  (click)="selectLocation(loc)"
-                  class="flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer text-left"
-                  [class.bg-amber-500/20]="selectedLocation().id === loc.id"
-                  [class.border]="selectedLocation().id === loc.id"
-                  [class.border-amber-500/40]="selectedLocation().id === loc.id"
-                  [class.bg-white/[0.03]]="selectedLocation().id !== loc.id"
-                  [class.hover:bg-white/[0.08]]="selectedLocation().id !== loc.id">
-                  <div class="flex items-center gap-2.5">
-                    <app-country-flag [countryCode]="loc.countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
-                    <div>
-                      <div class="text-xs font-bold text-white">{{ loc.name }}</div>
-                      <div class="text-[10px] text-neutral-400">{{ loc.country }} · {{ loc.timezone }}</div>
-                    </div>
-                  </div>
-                  @if (selectedLocation().id === loc.id) {
-                    <mat-icon class="text-amber-400 text-xs">check_circle</mat-icon>
-                  }
-                </button>
-              }
-            </div>
-          </div>
-        }
-
+        <app-weather-trend-chart [isFahrenheit]="isFahrenheit()"></app-weather-trend-chart>
       </div>
     </aside>
   }
 
-  <!-- Infographic Exporter Modal -->
+
+  <!-- ========================================== -->
+  <!-- 6. MODAL OVERLAYS                          -->
+  <!-- ========================================== -->
+
+  <!-- Upcoming Astronomical Events Side Panel Overlay -->
+  @if (showEventsPanel()) {
+    <app-astronomy-events-panel (closePanelEvent)="closeEventsPanel()"></app-astronomy-events-panel>
+  }
+
+  <!-- Active Severe Weather Warnings Modal -->
+  @if (showAlertsModal()) {
+    <app-weather-alerts-modal (closeModalEvent)="closeAlertsModal()"></app-weather-alerts-modal>
+  }
+
+  <!-- Unified Observatory Settings Modal -->
+  @if (showSettingsModal()) {
+    <app-settings-modal (closeModalEvent)="closeSettingsModal()"></app-settings-modal>
+  }
+
+  <!-- Share Export Card Modal -->
   @if (showShareModal()) {
     <app-share-export-modal (dismissModal)="showShareModal.set(false)"></app-share-export-modal>
   }

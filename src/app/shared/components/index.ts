@@ -14,3 +14,7 @@ export * from './country-flag/country-flag';
 export * from './asmr-player/asmr-player';
 export * from './weather-overlay/weather-overlay';
 export * from './weather-aggressiveness-visualizer/weather-aggressiveness-visualizer';
+export * from './weather-particles/weather-particles';
+export * from './weather-trend-chart/weather-trend-chart';
+export * from './weather-alerts-modal/weather-alerts-modal';
+export * from './astronomy-events-panel/astronomy-events-panel';

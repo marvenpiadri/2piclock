@@ -211,6 +211,16 @@
         <button 
           type="button" 
           class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showWindVectors()"
+          (click)="toggleWindVectors()"
+          title="Toggle Windy.com style real-time wind speed & direction vector streamlines">
+          <mat-icon class="text-sm text-sky-400">air</mat-icon>
+          <span>Wind Vectors</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
           (click)="resetWorldView()"
           title="Reset to global full Earth view">
           <mat-icon class="text-sm">fit_screen</mat-icon>
@@ -245,6 +255,48 @@
 
     <!-- MapLibre Map Viewport Container -->
     <div #globeContainer class="globe-viewport w-full h-[540px] md:h-[640px] lg:h-[720px] relative z-10"></div>
+
+    <!-- Real-Time Wind Speed & Direction Streamline Canvas Overlay -->
+    <canvas 
+      #windCanvas 
+      class="pointer-events-none absolute inset-0 z-15 w-full h-full transition-opacity duration-300"
+      [class.opacity-0]="!showWindVectors()"
+      [class.opacity-95]="showWindVectors()">
+    </canvas>
+
+    <!-- Windy.com Aesthetic Velocity Scale Legend Overlay -->
+    @if (showWindVectors()) {
+      <div class="absolute bottom-4 left-4 z-20 pointer-events-none bg-slate-950/90 border border-sky-500/30 backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-2xl flex flex-col gap-1.5 text-white max-w-xs w-full">
+        <div class="flex items-center justify-between gap-3 text-[10px] font-mono font-bold">
+          <div class="flex items-center gap-1.5 text-sky-300">
+            <mat-icon class="text-xs">air</mat-icon>
+            <span>WIND VECTORS (KM/H)</span>
+          </div>
+          <span class="text-amber-400">
+            {{ currentWeather().windSpeedKmh }} km/h ({{ currentWeather().windDirectionDeg }}°)
+          </span>
+        </div>
+
+        <!-- Velocity Gradient Scale Bar -->
+        <div class="flex items-center gap-1 text-[9px] font-mono">
+          <div class="flex-1 flex items-center h-2.5 rounded-full overflow-hidden bg-slate-800 border border-white/10 shadow-inner">
+            <div class="h-full w-1/5 bg-sky-400" title="< 15 km/h (Light Breeze)"></div>
+            <div class="h-full w-1/5 bg-emerald-400" title="15 - 30 km/h (Moderate Wind)"></div>
+            <div class="h-full w-1/5 bg-amber-400" title="30 - 50 km/h (Strong Breeze)"></div>
+            <div class="h-full w-1/5 bg-orange-500" title="50 - 70 km/h (Gale Force)"></div>
+            <div class="h-full w-1/5 bg-rose-600" title="> 70 km/h (Severe Storm)"></div>
+          </div>
+        </div>
+
+        <div class="flex justify-between text-[8px] font-mono text-slate-400">
+          <span>0</span>
+          <span>15</span>
+          <span>30</span>
+          <span>50</span>
+          <span>70+ km/h</span>
+        </div>
+      </div>
+    }
 
     <!-- Floating Scientific HUD: Selected / Inspected City Telemetry Card -->
     <div class="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2 max-w-sm w-full">

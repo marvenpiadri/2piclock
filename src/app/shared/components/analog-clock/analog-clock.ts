@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { calculateSolarEvents } from '../../../core/astronomy/astronomy-engine';
 
 @Component({
   selector: 'app-analog-clock',
@@ -8,92 +7,99 @@ import { calculateSolarEvents } from '../../../core/astronomy/astronomy-engine';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="relative w-full aspect-square max-w-[200px] mx-auto rounded-full bg-slate-950 border border-amber-500/30 shadow-xl flex items-center justify-center p-2">
+    <div class="relative w-full aspect-square max-w-[220px] mx-auto rounded-full bg-[#080a0f] border border-white/10 shadow-2xl flex items-center justify-center p-2">
       <svg class="w-full h-full overflow-visible" viewBox="0 0 200 200">
-        <!-- Main Clock Face Background -->
-        <circle cx="100" cy="100" r="90" fill="#090d16" stroke="rgba(245, 158, 11, 0.25)" stroke-width="1.5" />
+        <!-- Pure Outer & Inner Dial Circle -->
+        <circle cx="100" cy="100" r="92" fill="#07090e" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" />
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(245, 158, 11, 0.2)" stroke-width="0.75" />
 
-        <!-- Minimal Arc-Based Twilight & Lighting Phase Overlays (Radius ~72) -->
-        @if (blueHourMorningArc; as path) {
-          <path [attr.d]="path" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" opacity="0.75" />
-        }
-        @if (goldenHourMorningArc; as path) {
-          <path [attr.d]="path" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" opacity="0.85" />
-        }
-        @if (daytimeArc; as path) {
-          <path [attr.d]="path" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.5" />
-        }
-        @if (goldenHourEveningArc; as path) {
-          <path [attr.d]="path" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" opacity="0.85" />
-        }
-        @if (blueHourEveningArc; as path) {
-          <path [attr.d]="path" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" opacity="0.75" />
-        }
-        
-        <!-- Dial Tick Marks (Amber tinted) -->
+        <!-- Dial Tick Marks / Stripes -->
+        <!-- Fine stripes in WHITE, Big hour stripes in AMBER -->
         @for (tick of minuteTicks; track tick.angle) {
           <line
             [attr.x1]="tick.x1"
             [attr.y1]="tick.y1"
             [attr.x2]="tick.x2"
             [attr.y2]="tick.y2"
-            [attr.stroke]="tick.isMajor ? 'rgba(245, 158, 11, 0.7)' : 'rgba(245, 158, 11, 0.3)'"
-            [attr.stroke-width]="tick.isMajor ? '1.5' : '0.75'"
+            [attr.stroke]="tick.isMajor ? '#f59e0b' : 'rgba(255, 255, 255, 0.5)'"
+            [attr.stroke-width]="tick.isMajor ? '2.5' : '1.0'"
+            stroke-linecap="round"
           />
         }
 
-        <!-- Minimalist Amber Numbers with Increased Whitespace (Radius ~56) -->
-        <text x="100" y="34" fill="#f59e0b" font-size="12" font-family="monospace" font-weight="600" text-anchor="middle" dominant-baseline="central">12</text>
-        <text x="166" y="100" fill="#f59e0b" font-size="12" font-family="monospace" font-weight="600" text-anchor="middle" dominant-baseline="central">3</text>
-        <text x="100" y="166" fill="#f59e0b" font-size="12" font-family="monospace" font-weight="600" text-anchor="middle" dominant-baseline="central">6</text>
-        <text x="34" y="100" fill="#f59e0b" font-size="12" font-family="monospace" font-weight="600" text-anchor="middle" dominant-baseline="central">9</text>
+        <!-- Dial Numbers (Clean TimeAndDate Style) -->
+        <text x="100" y="32" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">12</text>
+        <text x="168" y="100" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">3</text>
+        <text x="100" y="168" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">6</text>
+        <text x="32" y="100" fill="#f59e0b" font-size="13" font-family="monospace" font-weight="800" text-anchor="middle" dominant-baseline="central">9</text>
 
-        <!-- Hour Hand (Amber/Gold) -->
-        <line
-          [attr.x1]="100"
-          [attr.y1]="100"
-          [attr.x2]="hourHandCoords().x"
-          [attr.y2]="hourHandCoords().y"
-          stroke="#f59e0b"
-          stroke-width="3.5"
-          stroke-linecap="round"
-        />
+        <!-- Hour Hand (WHITE Arrow) -->
+        <g>
+          <line
+            [attr.x1]="100"
+            [attr.y1]="100"
+            [attr.x2]="hourHandCoords().x"
+            [attr.y2]="hourHandCoords().y"
+            stroke="#ffffff"
+            stroke-width="4.5"
+            stroke-linecap="round"
+          />
+          <!-- Hour Hand Arrow Head -->
+          <polygon
+            [attr.points]="hourArrowHead()"
+            fill="#ffffff"
+          />
+        </g>
 
-        <!-- Minute Hand (Amber/Gold) -->
-        <line
-          [attr.x1]="100"
-          [attr.y1]="100"
-          [attr.x2]="minuteHandCoords().x"
-          [attr.y2]="minuteHandCoords().y"
-          stroke="#fcd34d"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
+        <!-- Minute Hand (AMBER Color Arrow) -->
+        <g>
+          <line
+            [attr.x1]="100"
+            [attr.y1]="100"
+            [attr.x2]="minuteHandCoords().x"
+            [attr.y2]="minuteHandCoords().y"
+            stroke="#f59e0b"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+          <!-- Minute Hand Arrow Head -->
+          <polygon
+            [attr.points]="minuteArrowHead()"
+            fill="#f59e0b"
+          />
+        </g>
 
-        <!-- Second Hand -->
-        <line
-          [attr.x1]="100"
-          [attr.y1]="100"
-          [attr.x2]="secondHandCoords().x"
-          [attr.y2]="secondHandCoords().y"
-          stroke="#ef4444"
-          stroke-width="1"
-          stroke-linecap="round"
-        />
-        <!-- Second hand tail -->
-        <line
-          [attr.x1]="100"
-          [attr.y1]="100"
-          [attr.x2]="secondTailCoords().x"
-          [attr.y2]="secondTailCoords().y"
-          stroke="#ef4444"
-          stroke-width="1"
-          stroke-linecap="round"
-        />
+        <!-- Second Hand (Rotating RED Arrow Hand) -->
+        <g>
+          <line
+            [attr.x1]="100"
+            [attr.y1]="100"
+            [attr.x2]="secondHandCoords().x"
+            [attr.y2]="secondHandCoords().y"
+            stroke="#ef4444"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+          <!-- Counter-weight tail -->
+          <line
+            [attr.x1]="100"
+            [attr.y1]="100"
+            [attr.x2]="secondTailCoords().x"
+            [attr.y2]="secondTailCoords().y"
+            stroke="#ef4444"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+          <!-- Rotating Red Arrow Pointer -->
+          <polygon
+            [attr.points]="secondArrowHead()"
+            fill="#ef4444"
+          />
+        </g>
 
         <!-- Center Pin -->
-        <circle cx="100" cy="100" r="3" fill="#f59e0b" />
-        <circle cx="100" cy="100" r="1.2" fill="#090d16" />
+        <circle cx="100" cy="100" r="4" fill="#ef4444" />
+        <circle cx="100" cy="100" r="1.5" fill="#ffffff" />
       </svg>
     </div>
   `,
@@ -109,83 +115,13 @@ export class AnalogClockComponent {
   @Input() latitude = 0;
   @Input() longitude = 0;
 
-  readonly solarEvents = computed(() => {
-    return calculateSolarEvents(this.activeDate, this.latitude, this.longitude);
-  });
-
-  getArcPath(start: Date | null, end: Date | null, radius: number): string {
-    if (!start || !end) return '';
-    const getFraction = (d: Date) => {
-      try {
-        const formatter = new Intl.DateTimeFormat('en-US', {
-          timeZone: this.timezone,
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: false
-        });
-        const parts = formatter.formatToParts(d);
-        let h = 0, m = 0, s = 0;
-        for (const p of parts) {
-          if (p.type === 'hour') h = parseInt(p.value, 10);
-          if (p.type === 'minute') m = parseInt(p.value, 10);
-          if (p.type === 'second') s = parseInt(p.value, 10);
-        }
-        return ((h % 12) + m / 60 + s / 3600) / 12;
-      } catch {
-        const h = d.getHours();
-        const m = d.getMinutes();
-        const s = d.getSeconds();
-        return ((h % 12) + m / 60 + s / 3600) / 12;
-      }
-    };
-
-    const f1 = getFraction(start);
-    const f2 = getFraction(end);
-    let diff = f2 - f1;
-    if (diff <= 0) diff += 1;
-
-    const angle1 = f1 * Math.PI * 2;
-    const angle2 = (f1 + diff) * Math.PI * 2;
-
-    const x1 = 100 + Math.sin(angle1) * radius;
-    const y1 = 100 - Math.cos(angle1) * radius;
-    const x2 = 100 + Math.sin(angle2) * radius;
-    const y2 = 100 - Math.cos(angle2) * radius;
-
-    const largeArcFlag = diff > 0.5 ? 1 : 0;
-
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
-  }
-
-  get blueHourMorningArc(): string {
-    const ev = this.solarEvents().blueHourMorning;
-    return this.getArcPath(ev?.start || null, ev?.end || null, 72);
-  }
-  get goldenHourMorningArc(): string {
-    const ev = this.solarEvents().goldenHourMorning;
-    return this.getArcPath(ev?.start || null, ev?.end || null, 72);
-  }
-  get daytimeArc(): string {
-    const ev = this.solarEvents();
-    return this.getArcPath(ev.sunrise, ev.sunset, 72);
-  }
-  get goldenHourEveningArc(): string {
-    const ev = this.solarEvents().goldenHourEvening;
-    return this.getArcPath(ev?.start || null, ev?.end || null, 72);
-  }
-  get blueHourEveningArc(): string {
-    const ev = this.solarEvents().blueHourEvening;
-    return this.getArcPath(ev?.start || null, ev?.end || null, 72);
-  }
-
   readonly minuteTicks = (() => {
     const ticks = [];
     for (let i = 0; i < 60; i++) {
       const angle = (i / 60) * Math.PI * 2;
       const isMajor = i % 5 === 0;
       const rOuter = 88;
-      const rInner = isMajor ? 80 : 84;
+      const rInner = isMajor ? 76 : 82;
       ticks.push({
         angle: i,
         isMajor,
@@ -228,29 +164,56 @@ export class AnalogClockComponent {
     const t = this.parsedTime();
     const totalHours = t.hours + t.minutes / 60 + t.seconds / 3600;
     const angle = (totalHours / 12) * Math.PI * 2;
-    const length = 42;
+    const length = 46;
     return {
+      angle,
       x: 100 + Math.sin(angle) * length,
       y: 100 - Math.cos(angle) * length
     };
+  });
+
+  readonly hourArrowHead = computed(() => {
+    const { angle, x, y } = this.hourHandCoords();
+    const size = 7;
+    const p1x = x + Math.sin(angle) * size;
+    const p1y = y - Math.cos(angle) * size;
+    const p2x = x + Math.sin(angle + (Math.PI * 0.75)) * size;
+    const p2y = y - Math.cos(angle + (Math.PI * 0.75)) * size;
+    const p3x = x + Math.sin(angle - (Math.PI * 0.75)) * size;
+    const p3y = y - Math.cos(angle - (Math.PI * 0.75)) * size;
+    return `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`;
   });
 
   readonly minuteHandCoords = computed(() => {
     const t = this.parsedTime();
     const totalMinutes = t.minutes + t.seconds / 60;
     const angle = (totalMinutes / 60) * Math.PI * 2;
-    const length = 60;
+    const length = 62;
     return {
+      angle,
       x: 100 + Math.sin(angle) * length,
       y: 100 - Math.cos(angle) * length
     };
   });
 
+  readonly minuteArrowHead = computed(() => {
+    const { angle, x, y } = this.minuteHandCoords();
+    const size = 6;
+    const p1x = x + Math.sin(angle) * size;
+    const p1y = y - Math.cos(angle) * size;
+    const p2x = x + Math.sin(angle + (Math.PI * 0.75)) * size;
+    const p2y = y - Math.cos(angle + (Math.PI * 0.75)) * size;
+    const p3x = x + Math.sin(angle - (Math.PI * 0.75)) * size;
+    const p3y = y - Math.cos(angle - (Math.PI * 0.75)) * size;
+    return `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`;
+  });
+
   readonly secondHandCoords = computed(() => {
     const t = this.parsedTime();
     const angle = (t.seconds / 60) * Math.PI * 2;
-    const length = 68;
+    const length = 72;
     return {
+      angle,
       x: 100 + Math.sin(angle) * length,
       y: 100 - Math.cos(angle) * length
     };
@@ -259,10 +222,23 @@ export class AnalogClockComponent {
   readonly secondTailCoords = computed(() => {
     const t = this.parsedTime();
     const angle = (t.seconds / 60) * Math.PI * 2;
-    const length = -12;
+    const length = -14;
     return {
       x: 100 + Math.sin(angle) * length,
       y: 100 - Math.cos(angle) * length
     };
   });
+
+  readonly secondArrowHead = computed(() => {
+    const { angle, x, y } = this.secondHandCoords();
+    const size = 5;
+    const p1x = x + Math.sin(angle) * size;
+    const p1y = y - Math.cos(angle) * size;
+    const p2x = x + Math.sin(angle + (Math.PI * 0.8)) * size;
+    const p2y = y - Math.cos(angle + (Math.PI * 0.8)) * size;
+    const p3x = x + Math.sin(angle - (Math.PI * 0.8)) * size;
+    const p3y = y - Math.cos(angle - (Math.PI * 0.8)) * size;
+    return `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`;
+  });
 }
+

@@ -132,8 +132,8 @@
 .windy-layer-btn { padding: 3px 4px 3px 7px !important; gap: 5px !important; border-radius: 999px !important; box-shadow: 0 4px 12px rgba(0,0,0,.28) !important; }
 .windy-layer-btn > div { width: 26px !important; height: 26px !important; }
 .windy-layer-btn mat-icon { width: 13px !important; height: 13px !important; font-size: 13px !important; }
-.center-sky-stage { margin-top: 54px !important; margin-bottom: 94px !important; padding-left: 12px !important; padding-right: 12px !important; }
-.polar-clock-container { max-width: 360px !important; max-height: calc(100vh - 250px) !important; }
+.center-sky-stage { margin-top: 48px !important; margin-bottom: 88px !important; padding-left: 12px !important; padding-right: 12px !important; }
+.polar-clock-container { max-width: 540px !important; max-height: calc(100vh - 170px) !important; }
 .bottom-full-dock { }
 .bottom-full-dock > div:first-child { margin-bottom: 4px !important; padding-left: 8px !important; padding-right: 8px !important; gap: 5px !important; }
 .bottom-full-dock .windy-day-pill { min-width: 50px !important; padding: 4px 5px !important; border-radius: 6px !important; }
@@ -147,10 +147,10 @@
 @media (max-width: 900px) {
   .top-header-bar .hidden.md\:flex { display: none !important; }
   .right-vertical-dock { top: 70px !important; }
-  .polar-clock-container { max-width: 320px !important; }
+  .polar-clock-container { max-width: 440px !important; }
 }
 @media (max-height: 760px) {
-  .center-sky-stage { margin-top: 44px !important; margin-bottom: 82px !important; }
-  .polar-clock-container { max-width: 300px !important; }
+  .center-sky-stage { margin-top: 40px !important; margin-bottom: 78px !important; }
+  .polar-clock-container { max-width: 380px !important; }
   .right-vertical-dock { max-height: calc(100vh - 150px) !important; }
 }

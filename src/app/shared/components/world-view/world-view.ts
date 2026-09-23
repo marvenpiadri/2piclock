@@ -331,8 +331,14 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly showCelestialGrid = signal<boolean>(true);
   readonly showSolarTrack = signal<boolean>(true);
   readonly showMoonZenith = signal<boolean>(true);
+  readonly showWindVectors = signal<boolean>(true);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
+
+  @ViewChild('windCanvas', { static: false }) windCanvasRef?: ElementRef<HTMLCanvasElement>;
+
+  private windParticles: { lat: number; lng: number; age: number; maxAge: number }[] = [];
+  private windAnimFrameId: number | null = null;
 
   // Search & Inspection State
   readonly searchQuery = signal<string>('');
@@ -504,11 +510,17 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.isBrowser) {
-      setTimeout(() => this.initMapLibreMap(), 40);
+      setTimeout(() => {
+        this.initMapLibreMap();
+        this.startWindParticleLoop();
+      }, 40);
     }
   }
 
   ngOnDestroy(): void {
+    if (this.windAnimFrameId !== null && this.isBrowser) {
+      cancelAnimationFrame(this.windAnimFrameId);
+    }
     if (this.map) {
       this.cityMarkers.forEach(m => m.remove());
       this.cityMarkers.clear();
@@ -1601,6 +1613,135 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     if (this.sublunarMarker) {
       const el = this.sublunarMarker.getElement();
       el.style.display = this.showMoonZenith() ? 'block' : 'none';
+    }
+  }
+
+  toggleWindVectors(): void {
+    this.showWindVectors.update(v => !v);
+  }
+
+  private startWindParticleLoop(): void {
+    const loop = () => {
+      this.renderWindFrame();
+      this.windAnimFrameId = requestAnimationFrame(loop);
+    };
+    this.windAnimFrameId = requestAnimationFrame(loop);
+  }
+
+  private initWindParticles(west: number, east: number, south: number, north: number): void {
+    this.windParticles = [];
+    const particleCount = 280;
+    for (let i = 0; i < particleCount; i++) {
+      this.windParticles.push({
+        lng: west + Math.random() * (east - west),
+        lat: south + Math.random() * (north - south),
+        age: Math.floor(Math.random() * 80),
+        maxAge: 50 + Math.floor(Math.random() * 60)
+      });
+    }
+  }
+
+  private renderWindFrame(): void {
+    const canvas = this.windCanvasRef?.nativeElement;
+    if (!canvas || !this.map || !this.showWindVectors() || !this.isMapLoaded()) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      const bounds = this.map.getBounds();
+      this.initWindParticles(bounds.getWest(), bounds.getEast(), bounds.getSouth(), bounds.getNorth());
+    }
+
+    // Fading background fill creates Windy.com motion trail streamlines
+    ctx.fillStyle = 'rgba(10, 22, 40, 0.2)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const bounds = this.map.getBounds();
+    const west = bounds.getWest();
+    const east = bounds.getEast();
+    const south = bounds.getSouth();
+    const north = bounds.getNorth();
+
+    if (this.windParticles.length === 0) {
+      this.initWindParticles(west, east, south, north);
+    }
+
+    const currentW = this.currentWeather();
+    const baseSpeed = currentW.windSpeedKmh || 18;
+    const baseDeg = currentW.windDirectionDeg || 210;
+    const zoom = this.map.getZoom();
+
+    for (let i = 0; i < this.windParticles.length; i++) {
+      const p = this.windParticles[i];
+      p.age++;
+
+      if (p.age > p.maxAge || p.lng < west || p.lng > east || p.lat < south || p.lat > north) {
+        p.lng = west + Math.random() * (east - west);
+        p.lat = south + Math.random() * (north - south);
+        p.age = 0;
+        p.maxAge = 50 + Math.floor(Math.random() * 60);
+        continue;
+      }
+
+      // Convert Lat/Lng to Canvas pixel screen coordinates
+      const pxCurr = this.map.project([p.lng, p.lat]);
+
+      // Local regional wave modulation across lat/lng for realistic Windy.com fluid flow
+      const waveDeg = Math.sin(p.lat * 0.12 + p.lng * 0.08) * 20 + Math.cos(p.lat * 0.05) * 15;
+      const localDeg = (baseDeg + waveDeg + 360) % 360;
+      const localSpeed = Math.max(6, baseSpeed + Math.sin(p.lng * 0.1) * 8);
+
+      // Meteorology wind direction is "coming FROM". Flow is towards (deg + 180)
+      const flowRad = ((localDeg + 180) % 360) * (Math.PI / 180);
+
+      // Scale geographic step for map zoom level
+      const stepScale = 0.012 / Math.pow(1.4, Math.max(0, zoom - 2));
+      const dLng = localSpeed * Math.sin(flowRad) * stepScale;
+      const dLat = localSpeed * Math.cos(flowRad) * stepScale;
+
+      p.lng += dLng;
+      p.lat += dLat;
+
+      const pxNext = this.map.project([p.lng, p.lat]);
+
+      // Render vector streamline
+      ctx.beginPath();
+      ctx.moveTo(pxCurr.x, pxCurr.y);
+      ctx.lineTo(pxNext.x, pxNext.y);
+
+      // Windy.com Color Palette according to velocity
+      if (localSpeed >= 70) {
+        ctx.strokeStyle = 'rgba(225, 29, 72, 0.9)'; // Crimson (> 70 km/h)
+        ctx.lineWidth = 2.4;
+      } else if (localSpeed >= 50) {
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.85)'; // Orange (50 - 70 km/h)
+        ctx.lineWidth = 2.0;
+      } else if (localSpeed >= 30) {
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; // Amber (30 - 50 km/h)
+        ctx.lineWidth = 1.6;
+      } else if (localSpeed >= 15) {
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.75)'; // Emerald (15 - 30 km/h)
+        ctx.lineWidth = 1.4;
+      } else {
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // Sky Blue (< 15 km/h)
+        ctx.lineWidth = 1.2;
+      }
+
+      ctx.stroke();
+
+      // Vector head dot
+      if (p.age % 10 === 0) {
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.arc(pxNext.x, pxNext.y, ctx.lineWidth * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 

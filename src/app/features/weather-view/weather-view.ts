@@ -153,7 +153,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       style: 'https://tiles.openfreemap.org/styles/dark',
       center: [loc.longitude, loc.latitude],
       zoom: 6,
-      attributionControl: true
+      attributionControl: { compact: true }
     });
 
     this.map.addControl(new NavigationControl({ showCompass: false, showZoom: true }), 'bottom-right');
@@ -201,8 +201,10 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     this.isPlaying.update(value => !value);
   }
 
-  setParticleSpeed(speed: 1 | 2 | 4): void {
-    this.particleSpeed.set(speed);
+  setParticleSpeed(speed: number): void {
+    if (speed === 1 || speed === 2 || speed === 4) {
+      this.particleSpeed.set(speed);
+    }
   }
 
   onForecastInput(event: Event): void {

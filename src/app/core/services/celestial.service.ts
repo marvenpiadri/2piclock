@@ -17,7 +17,11 @@ export class CelestialService {
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
-  readonly currentWeather = this.weatherService.currentWeather;
+  readonly currentWeather = computed(() => {
+    const d = this.activeDate();
+    const loc = this.selectedLocation();
+    return this.weatherService.getWeatherForInstant(d, loc);
+  });
   readonly isWeatherLoading = this.weatherService.isLoading;
 
   constructor() {

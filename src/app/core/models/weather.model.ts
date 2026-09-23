@@ -22,6 +22,16 @@ export type WeatherAggressivenessLevel =
   | 'Severe Storm'
   | 'Violent Blizzard';
 
+export interface WeatherAlert {
+  id: string;
+  severity: 'warning' | 'advisory' | 'watch';
+  title: string;
+  category: 'storm' | 'wind' | 'rain' | 'snow' | 'fog' | 'heat' | 'cold';
+  description: string;
+  issuedAt: Date;
+  metricLabel?: string;
+}
+
 export interface WeatherData {
   condition: WeatherCondition;
   conditionLabel: string;

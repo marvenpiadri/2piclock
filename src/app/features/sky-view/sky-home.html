@@ -191,7 +191,7 @@
         <div class="forecast-block">
           <div class="forecast-heading"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h3>Hourly forecast</h3></div><span>Swipe / scroll</span></div>
           <div class="hourly-forecast">
-            @for (item of weatherService.hourlyForecasts().slice(0, 24); track item.timeMs) {
+            @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
               <div class="hour-item">
                 <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
                 <mat-icon>{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>

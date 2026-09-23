@@ -123,3 +123,34 @@
 .text-shadow-md {
   text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
 }
+
+
+/* 2PiClock compact instrument pass: controls stay subordinate to the sky. */
+.top-header-bar { top: 10px !important; left: 10px !important; right: 10px !important; gap: 8px !important; }
+.top-header-bar > * { box-shadow: 0 6px 18px rgba(0,0,0,.28) !important; }
+.right-vertical-dock { top: 76px !important; right: 10px !important; gap: 5px !important; max-height: calc(100vh - 190px) !important; }
+.windy-layer-btn { padding: 3px 4px 3px 7px !important; gap: 5px !important; border-radius: 999px !important; box-shadow: 0 4px 12px rgba(0,0,0,.28) !important; }
+.windy-layer-btn > div { width: 26px !important; height: 26px !important; }
+.windy-layer-btn mat-icon { width: 13px !important; height: 13px !important; font-size: 13px !important; }
+.center-sky-stage { margin-top: 54px !important; margin-bottom: 94px !important; padding-left: 12px !important; padding-right: 12px !important; }
+.polar-clock-container { max-width: 360px !important; max-height: calc(100vh - 250px) !important; }
+.bottom-full-dock { }
+.bottom-full-dock > div:first-child { margin-bottom: 4px !important; padding-left: 8px !important; padding-right: 8px !important; gap: 5px !important; }
+.bottom-full-dock .windy-day-pill { min-width: 50px !important; padding: 4px 5px !important; border-radius: 6px !important; }
+.bottom-full-dock .windy-day-pill span { font-size: 8px !important; }
+.bottom-full-dock .ios-time-slider { height: 4px !important; }
+.bottom-full-dock .ios-time-slider::-webkit-slider-thumb { width: 12px !important; height: 12px !important; border-width: 1px !important; }
+.bottom-full-dock .ios-time-slider::-moz-range-thumb { width: 12px !important; height: 12px !important; border-width: 1px !important; }
+.bottom-full-dock > div:last-child { padding: 5px 8px !important; gap: 4px !important; }
+.bottom-full-dock .timeline-gradient-track { top: 7px !important; height: 4px !important; }
+.bottom-full-dock button { min-height: 26px; }
+@media (max-width: 900px) {
+  .top-header-bar .hidden.md\:flex { display: none !important; }
+  .right-vertical-dock { top: 70px !important; }
+  .polar-clock-container { max-width: 320px !important; }
+}
+@media (max-height: 760px) {
+  .center-sky-stage { margin-top: 44px !important; margin-bottom: 82px !important; }
+  .polar-clock-container { max-width: 300px !important; }
+  .right-vertical-dock { max-height: calc(100vh - 150px) !important; }
+}

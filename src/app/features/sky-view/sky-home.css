@@ -95,3 +95,11 @@ button{font-family:inherit}
 .home-heading p { margin:7px 0 0; color:#777; font:10px monospace; }
 @media(max-width:900px){.home-info-panel{margin:0 auto}.analog-clock-row{grid-template-columns:130px 1fr}.analog-clock-row app-analog-clock{width:130px}}
 @media(max-width:620px){.home-info-panel{padding:15px}.analog-clock-row{grid-template-columns:112px 1fr;gap:13px}.analog-clock-row app-analog-clock{width:112px}.country-facts{grid-template-columns:1fr}.info-panel-top h2{font-size:19px}}
+
+.settings-action{height:32px;display:flex;align-items:center;gap:6px;padding:0 9px;border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(255,255,255,.035);color:#888;cursor:pointer;font:700 8px monospace;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.settings-action:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.16);color:#f5f5f5}
+.settings-action mat-icon{width:14px;height:14px;font-size:14px}
+.sky-drawer{width:min(380px,92vw);background:rgba(11,13,17,.98);border-left:1px solid rgba(255,255,255,.07);box-shadow:-30px 0 80px rgba(0,0,0,.35)}
+.drawer-header{padding:18px 19px}.drawer-header strong{font-size:13px}.drawer-content{padding:16px}.drawer-location{padding:12px;border-radius:11px;background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.07)}.drawer-tabs{margin:16px 0 12px;padding:3px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.02)}.drawer-tabs button{padding:8px;border-radius:7px}.location-list{gap:2px}.location-list button{padding:10px 11px;border-radius:8px}.location-list button:hover{background:rgba(255,255,255,.045)}
+.glass-off .home-info-panel,.glass-off .weather-main-card,.glass-off .weather-stat,.glass-off .weather-explanation,.glass-off .astro-report-grid,.glass-off .world-clock,.glass-off .today-card,.glass-off .today-event-strip,.glass-off .next-list,.glass-off .next-note,.glass-off .drawer-location,.glass-off .drawer-report{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important}
+@media(max-width:620px){.settings-action{width:32px;padding:0;justify-content:center}.settings-action span{display:none}}

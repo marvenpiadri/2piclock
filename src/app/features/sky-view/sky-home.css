@@ -568,3 +568,8 @@
   .sky-report-scroll { scroll-behavior:auto; }
   .starfield { animation:none; }
 }
+
+
+/* Weather particles belong to the terrestrial layers; astronomy owns the night sky. */
+.sky-report > app-weather-particles { transition: opacity .6s ease; }
+.sky-report.astronomy-active > app-weather-particles { opacity: 0; pointer-events: none; }

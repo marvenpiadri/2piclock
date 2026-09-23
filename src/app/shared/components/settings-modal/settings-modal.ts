@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
-  Input,
   Output,
   inject,
   signal
@@ -37,10 +36,6 @@ import { WeatherService } from '../../../core/services/weather.service';
           <div class="settings-row">
             <div class="settings-copy"><span class="settings-icon"><mat-icon>grain</mat-icon></span><div><strong>Weather particles</strong><small>Rain, snow and atmospheric motion</small></div></div>
             <button type="button" class="settings-toggle" [class.active]="showParticles()" (click)="toggleParticles()">{{ showParticles() ? 'On' : 'Off' }}</button>
-          </div>
-          <div class="settings-row">
-            <div class="settings-copy"><span class="settings-icon"><mat-icon>blur_on</mat-icon></span><div><strong>Glass material</strong><small>Use translucent surfaces over the atmosphere</small></div></div>
-            <button type="button" class="settings-toggle" [class.active]="isGlassEnabled()" (click)="toggleGlassMode()">{{ isGlassEnabled() ? 'On' : 'Off' }}</button>
           </div>
           <div class="settings-row">
             <div class="settings-copy"><span class="settings-icon"><mat-icon>schedule</mat-icon></span><div><strong>Clock interface</strong><small>Switch between the polar and analog clock</small></div></div>
@@ -83,28 +78,16 @@ import { WeatherService } from '../../../core/services/weather.service';
 })
 export class SettingsModalComponent {
   @Output() closeModalEvent = new EventEmitter<void>();
-  @Output() glassModeChange = new EventEmitter<boolean>();
-
-  @Input() set glassEnabled(value: boolean) {
-    this.isGlassEnabled.set(!!value);
-  }
-
   private weatherService = inject(WeatherService);
 
   readonly isFahrenheit = this.weatherService.isFahrenheit;
   readonly showParticles = signal<boolean>(true);
   readonly showWindVectors = signal<boolean>(false);
   readonly clockDisplayMode = signal<'analog' | 'radian'>('radian');
-  readonly isGlassEnabled = signal<boolean>(false);
 
   toggleTemperatureUnit(): void { this.weatherService.toggleFahrenheit(); }
   toggleParticles(): void { this.showParticles.update(v => !v); }
   toggleWindVectors(): void { this.showWindVectors.update(v => !v); }
   toggleClockMode(): void { this.clockDisplayMode.update(m => m === 'analog' ? 'radian' : 'analog'); }
-  toggleGlassMode(): void {
-    const next = !this.isGlassEnabled();
-    this.isGlassEnabled.set(next);
-    this.glassModeChange.emit(next);
-  }
   closeModal(): void { this.closeModalEvent.emit(); }
 }

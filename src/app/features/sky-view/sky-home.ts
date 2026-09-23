@@ -82,14 +82,12 @@ export class SkyHomeComponent {
   readonly isGlassEnabled = signal<boolean>(false);
 
   // /sky is a scroll-driven report: one full-screen section per subject.
-  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer'>('time');
+  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
   readonly skySections = [
     { id: 'time', label: 'Time', icon: 'schedule' },
     { id: 'weather', label: 'Weather', icon: 'cloud' },
     { id: 'astronomy', label: 'Astronomy', icon: 'auto_awesome' },
     { id: 'world', label: 'World Time', icon: 'public' },
-    { id: 'today', label: 'Today', icon: 'today' },
-    { id: 'next', label: 'Coming Up', icon: 'event' },
     { id: 'footer', label: 'About', icon: 'info' }
   ] as const;
 
@@ -139,7 +137,7 @@ export class SkyHomeComponent {
       }
     }
 
-    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next' | 'footer');
+    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'footer');
   }
 
   scrollToSection(id: string): void {
@@ -179,6 +177,49 @@ export class SkyHomeComponent {
 
   // Calendar ribbon follows the selected location's local civil date.
   // The Date objects here are UTC calendar carriers, not instants to display.
+  readonly weeklyForecast = computed(() => {
+    const hourly = this.weatherService.hourlyForecasts();
+    const zone = this.selectedLocation().timezone;
+    const active = this.activeDate();
+    const base = this.getLocalDateParts(active, zone);
+    const days: { key: string; label: string; condition: string; temperatureC: number; temperatureF: number; highC: number; highF: number; lowC: number; lowF: number; precipitationPct: number; windKmh: number }[] = [];
+
+    for (let offset = 0; offset < 7; offset++) {
+      const d = new Date(Date.UTC(base.year, base.month - 1, base.day + offset));
+      const key = d.toISOString().slice(0, 10);
+      const entries = hourly.filter(item => {
+        const p = this.getLocalDateParts(new Date(item.timeMs), zone);
+        return `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}` === key;
+      });
+      if (!entries.length) continue;
+
+      const values = entries.map(e => e.weather);
+      const highC = Math.max(...values.map(v => v.temperatureC));
+      const lowC = Math.min(...values.map(v => v.temperatureC));
+      const avg = values.reduce((sum,v) => sum + v.temperatureC, 0) / values.length;
+      const representative = values.reduce((best,v) => Math.abs(v.temperatureC-avg) < Math.abs(best.temperatureC-avg) ? v : best, values[0]);
+      const precip = Math.max(...values.map(v => v.precipitationPct));
+      const wind = Math.max(...values.map(v => v.windSpeedKmh));
+      const dayName = offset === 0 ? 'Today' : new Intl.DateTimeFormat('en-US', { timeZone: zone, weekday: 'short' }).format(d);
+
+      days.push({
+        key,
+        label: dayName,
+        condition: representative.conditionLabel,
+        temperatureC: representative.temperatureC,
+        temperatureF: representative.temperatureF,
+        highC,
+        highF: Math.round((highC * 9 / 5 + 32) * 10) / 10,
+        lowC,
+        lowF: Math.round((lowC * 9 / 5 + 32) * 10) / 10,
+        precipitationPct: precip,
+        windKmh: wind
+      });
+    }
+
+    return days;
+  });
+
   readonly upcomingDays = computed(() => {
     const days: { date: Date; label: string; isToday: boolean; isSelected: boolean }[] = [];
     const active = this.activeDate();

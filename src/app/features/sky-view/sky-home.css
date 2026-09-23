@@ -1,173 +1,36 @@
-.sky-home-viewport {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.sky-window-stage {
-  position: relative;
-  z-index: 10;
-}
-
-/* Glass HUD floaters */
-.glass-floater {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Polar clock container */
-.polar-clock-container {
-  max-height: calc(100vh - 220px);
-}
-
-/* Twilight Badges */
-.twilight-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.twilight-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-}
-
-.badge-day {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-.badge-day .twilight-dot {
-  background: #f59e0b;
-  box-shadow: 0 0 6px #f59e0b;
-}
-
-.badge-golden {
-  background: rgba(251, 146, 60, 0.2);
-  color: #fdba74;
-  border: 1px solid rgba(251, 146, 60, 0.4);
-}
-.badge-golden .twilight-dot {
-  background: #fb923c;
-  box-shadow: 0 0 8px #fb923c;
-}
-
-.badge-civil {
-  background: rgba(168, 85, 247, 0.2);
-  color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.35);
-}
-.badge-civil .twilight-dot {
-  background: #c084fc;
-}
-
-.badge-nautical {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.35);
-}
-.badge-nautical .twilight-dot {
-  background: #60a5fa;
-}
-
-.badge-astro {
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.35);
-}
-.badge-astro .twilight-dot {
-  background: #818cf8;
-}
-
-.badge-night {
-  background: rgba(15, 23, 42, 0.6);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.badge-night .twilight-dot {
-  background: #64748b;
-}
-
-/* Time Scrubber Slider */
-.ios-time-slider {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-  outline: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.ios-time-slider:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.ios-time-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 9999px;
-  background: #f59e0b;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
-  border: 2px solid #ffffff;
-  cursor: grab;
-  transition: transform 0.15s ease;
-}
-
-.ios-time-slider::-webkit-slider-thumb:active {
-  cursor: grabbing;
-  transform: scale(1.25);
-}
-
-.ios-live-btn {
-  background: rgba(255, 255, 255, 0.06);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.ios-live-btn.is-live {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.35);
-}
-
-/* Drawer Tabs */
-.ios-drawer-tab {
-  color: #94a3b8;
-  background: transparent;
-}
-
-.ios-drawer-tab.active {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-/* Drawer Slide-in Animation */
-@keyframes slideLeft {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.animate-slideLeft {
-  animation: slideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.text-shadow-sm {
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-}
-
-.text-shadow-md {
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
-}
+.sky-home-viewport{position:relative;width:100%;height:100%;background:transparent}
+.sky-window-stage{position:relative;z-index:10}
+.glass-floater{background:rgba(9,9,9,.78)!important;border-color:rgba(255,255,255,.10)!important;box-shadow:0 14px 42px rgba(0,0,0,.30)!important;transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.glass-floater:hover{border-color:rgba(255,255,255,.15)!important}
+.polar-clock-container{max-height:calc(100vh - 220px)}
+.twilight-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:9999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+.twilight-dot{width:6px;height:6px;border-radius:9999px}
+.badge-day{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.30)}
+.badge-day .twilight-dot{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
+.badge-golden{background:rgba(251,146,60,.15);color:#fdba74;border:1px solid rgba(251,146,60,.30)}
+.badge-golden .twilight-dot{background:#fb923c;box-shadow:0 0 8px #fb923c}
+.badge-civil{background:rgba(245,158,11,.10);color:#fbbf24;border:1px solid rgba(245,158,11,.25)}
+.badge-civil .twilight-dot{background:#f59e0b}
+.badge-nautical{background:rgba(255,255,255,.07);color:#d4d4d4;border:1px solid rgba(255,255,255,.13)}
+.badge-nautical .twilight-dot{background:#a3a3a3}
+.badge-astro{background:rgba(255,255,255,.055);color:#bdbdbd;border:1px solid rgba(255,255,255,.12)}
+.badge-astro .twilight-dot{background:#737373}
+.badge-night{background:rgba(0,0,0,.38);color:#9ca3af;border:1px solid rgba(255,255,255,.10)}
+.badge-night .twilight-dot{background:#737373}
+.ios-time-slider{appearance:none;-webkit-appearance:none;width:100%;height:6px;background:rgba(255,255,255,.12);border-radius:9999px;outline:none;cursor:pointer}
+.ios-time-slider:hover{background:rgba(255,255,255,.19)}
+.ios-time-slider::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:9999px;background:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.55),0 2px 5px rgba(0,0,0,.45);border:2px solid #fff;cursor:grab;transition:transform .15s ease}
+.ios-time-slider::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.22)}
+.ios-time-slider::-moz-range-thumb{width:17px;height:17px;border-radius:9999px;background:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.55);border:2px solid #fff;cursor:grab}
+.ios-live-btn{background:rgba(255,255,255,.055);color:#aaa;border:1px solid rgba(255,255,255,.10)}
+.ios-live-btn.is-live{background:rgba(34,197,94,.12);color:#4ade80;border-color:rgba(34,197,94,.28)}
+.ios-drawer-tab{color:#888;background:transparent}
+.ios-drawer-tab.active{background:rgba(245,158,11,.12);color:#fbbf24}
+.ios-full-drawer{background:rgba(8,8,8,.96)!important;border-color:rgba(255,255,255,.10)!important}
+.drawer-header{background:rgba(255,255,255,.02)}
+.bottom-dock-bar .glass-floater{max-width:1100px}
+.center-sky-stage{min-height:0}
+@keyframes slideLeft{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.animate-slideLeft{animation:slideLeft .25s cubic-bezier(.16,1,.3,1) forwards}
+.text-shadow-sm{text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.text-shadow-md{text-shadow:0 4px 16px rgba(0,0,0,.8)}

@@ -46,6 +46,18 @@ export class SkyHomeComponent {
   readonly currentSpeed = this.timeControlService.simulationSpeed;
   readonly dayFraction = this.timeControlService.dayFraction;
 
+  readonly localDayFraction = computed(() => {
+    const d = this.activeDate();
+    const zone = this.selectedLocation().timezone;
+    const parts = this.getLocalDateParts(d, zone);
+    return (
+      (parts.hour * 3600000 +
+        parts.minute * 60000 +
+        parts.second * 1000 +
+        d.getMilliseconds()) / 86400000
+    );
+  });
+
   readonly localTime = this.celestialService.formattedLocalTime;
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
@@ -71,19 +83,26 @@ export class SkyHomeComponent {
   readonly isFullscreen = signal<boolean>(false);
   readonly zoomLevel = signal<number>(100);
 
-  // Computed 10-day calendar ribbon starting from today (Windy style bottom day selector)
+  // Calendar ribbon follows the selected location's local civil date.
+  // The Date objects here are UTC calendar carriers, not instants to display.
   readonly upcomingDays = computed(() => {
     const days: { date: Date; label: string; isToday: boolean; isSelected: boolean }[] = [];
     const active = this.activeDate();
-    const now = new Date();
-    
+    const timeZone = this.selectedLocation().timezone;
+    const activeParts = this.getLocalDateParts(active, timeZone);
+    const activeKey = `${activeParts.year}-${String(activeParts.month).padStart(2, '0')}-${String(activeParts.day).padStart(2, '0')}`;
+    const base = new Date(Date.UTC(activeParts.year, activeParts.month - 1, activeParts.day));
+
     for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayNum = d.getDate();
+      const d = new Date(base.getTime() + i * 86400000);
+      const dayName = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        weekday: 'short'
+      }).format(d);
+      const dayNum = d.getUTCDate();
       const isToday = i === 0;
-      const isSelected = d.toDateString() === active.toDateString();
-      
+      const isSelected = d.toISOString().slice(0, 10) === activeKey;
+
       days.push({
         date: d,
         label: `${dayName} ${dayNum}`,
@@ -95,10 +114,11 @@ export class SkyHomeComponent {
   });
 
   selectDay(d: Date): void {
-    this.timeControlService.setSpecificDate(
-      d.getFullYear(),
-      d.getMonth() + 1,
-      d.getDate()
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth() + 1;
+    const day = d.getUTCDate();
+    this.timeControlService.setSpecificInstant(
+      this.getZonedDateTime(year, month, day, 0, 0, 0, this.selectedLocation().timezone)
     );
   }
 
@@ -158,7 +178,7 @@ export class SkyHomeComponent {
     return Math.round(dist).toLocaleString();
   }
 
-  // Quick jump time presets
+  // Quick jump time presets operate on the exact selected-location instant.
   jumpToSolarEvent(event: 'dawn' | 'sunrise' | 'noon' | 'golden' | 'sunset' | 'blue' | 'night'): void {
     const events = this.celestial().solarEvents;
     let targetDate: Date | null = null;
@@ -171,24 +191,103 @@ export class SkyHomeComponent {
       case 'sunset': targetDate = events.sunset; break;
       case 'blue': targetDate = events.blueHourEvening.start; break;
       case 'night': {
-        const d = this.activeDate();
-        targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+        targetDate = this.getZonedDateTime(
+          localDate.year,
+          localDate.month,
+          localDate.day,
+          0, 0, 0,
+          this.selectedLocation().timezone
+        );
         break;
       }
     }
 
     if (targetDate) {
-      const hours = targetDate.getHours();
-      const minutes = targetDate.getMinutes();
-      const seconds = targetDate.getSeconds();
-      this.timeControlService.setTimeHoursMinutes(hours, minutes, seconds);
+      this.timeControlService.setSpecificInstant(targetDate);
     }
   }
 
   onScrubberInput(event: Event): void {
     const target = event.target as HTMLInputElement;
-    const val = parseFloat(target.value);
-    this.timeControlService.setTimeOfDayFraction(val);
+    const fraction = Math.max(0, Math.min(0.999999, parseFloat(target.value)));
+    const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+    const totalMs = fraction * 86400000;
+    const hours = Math.floor(totalMs / 3600000);
+    const minutes = Math.floor((totalMs % 3600000) / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const milliseconds = Math.floor(totalMs % 1000);
+
+    this.timeControlService.setSpecificInstant(
+      this.getZonedDateTime(
+        localDate.year,
+        localDate.month,
+        localDate.day,
+        hours,
+        minutes,
+        seconds,
+        this.selectedLocation().timezone,
+        milliseconds
+      )
+    );
+  }
+
+  private getLocalDateParts(date: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number; second: number } {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(date);
+
+    const value = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
+    return {
+      year: value('year'),
+      month: value('month'),
+      day: value('day'),
+      hour: value('hour'),
+      minute: value('minute'),
+      second: value('second')
+    };
+  }
+
+  private getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
+    const zone = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'longOffset',
+      hour: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(date).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+
+    const match = zone.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+    if (!match) return 0;
+    const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
+    return match[1] === '+' ? minutes : -minutes;
+  }
+
+  private getZonedDateTime(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    timeZone: string,
+    millisecond = 0
+  ): Date {
+    const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+    let instant = new Date(wallClockUtc - this.getTimeZoneOffsetMinutes(new Date(wallClockUtc), timeZone) * 60000);
+
+    // Re-check after applying the first offset so DST transitions are handled correctly.
+    const correctedOffset = this.getTimeZoneOffsetMinutes(instant, timeZone);
+    if (correctedOffset !== this.getTimeZoneOffsetMinutes(new Date(wallClockUtc), timeZone)) {
+      instant = new Date(wallClockUtc - correctedOffset * 60000);
+    }
+    return instant;
   }
 
   setLive(): void {

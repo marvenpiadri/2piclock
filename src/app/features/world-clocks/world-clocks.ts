@@ -9,7 +9,7 @@ import { calculateSolarPosition, calculateSolarEvents } from '../../core/astrono
 import { TerminatorRibbonComponent } from '../../shared/components/terminator-ribbon/terminator-ribbon';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
 import { AnalogClockComponent } from '../../shared/components/analog-clock/analog-clock';
-import { CountryFlagPipe } from '../../core/pipes/country-flag.pipe';
+import { CountryFlagComponent } from '../../shared/components/country-flag/country-flag';
 
 interface WorldCitySkyData {
   location: GeoLocation;
@@ -33,7 +33,7 @@ interface WorldCitySkyData {
     TerminatorRibbonComponent,
     ShareExportModalComponent,
     AnalogClockComponent,
-    CountryFlagPipe
+    CountryFlagComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './world-clocks.html',

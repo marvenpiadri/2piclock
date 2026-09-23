@@ -79,6 +79,10 @@ export class SeoService {
       '/atmosphere': {
         title: 'Atmosphere Studio — 2PiClock',
         description: 'See how live weather conditions interact with solar and lunar geometry to shape the 2PiClock atmosphere.'
+      },
+      '/deep-space-observatory': {
+        title: '3D Celestial Sphere & Keplerian Ephemeris Engine | 2piClock',
+        description: 'Explore the night sky from any global coordinate vector. Track local horizons, the ecliptic plane, and solar system trajectories using a reactive 3D mathematical space engine.'
       }
     };
 

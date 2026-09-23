@@ -1,0 +1,153 @@
+<div class="flex flex-col items-center gap-3" [class.p-3]="!compact()" [class.p-1]="compact()">
+  <!-- Moon Visual SVG Container -->
+  <div class="relative flex items-center justify-center select-none" [style.width.px]="size()" [style.height.px]="size()">
+    <!-- Subtle Ambient Lunar Glow -->
+    <div 
+      class="absolute inset-0 rounded-full transition-all duration-700 pointer-events-none"
+      [class.opacity-40]="illuminationFraction() > 0.4"
+      [class.opacity-15]="illuminationFraction() <= 0.4"
+      [style.background]="'radial-gradient(circle, rgba(254, 240, 138, ' + (illuminationFraction() * 0.45) + ') 0%, rgba(217, 249, 157, 0) 70%)'">
+    </div>
+
+    <svg 
+      class="w-full h-full drop-shadow-[0_0_12px_rgba(254,240,138,0.2)]" 
+      viewBox="-50 -50 100 100" 
+      role="img" 
+      [attr.aria-label]="phaseName() + ', ' + illuminationPercentage() + '% illuminated'">
+      <defs>
+        <!-- Lunar Dark Shadow Surface Gradient (Earthshine / Unlit Side) -->
+        <radialGradient id="darkLunarSurface" cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="#1e293b"/>
+          <stop offset="70%" stop-color="#0f172a"/>
+          <stop offset="100%" stop-color="#020617"/>
+        </radialGradient>
+
+        <!-- Illuminated Lunar Surface Gradient (Sunlit Side) -->
+        <radialGradient id="litLunarSurface" cx="30%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="35%" stop-color="#fef08a"/>
+          <stop offset="75%" stop-color="#e2e8f0"/>
+          <stop offset="100%" stop-color="#cbd5e1"/>
+        </radialGradient>
+
+        <!-- Soft Crater Filter for Natural Topography -->
+        <filter id="lunarCraterFaint" x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="0.4" result="blur"/>
+        </filter>
+
+        <!-- Clip to Lunar Circle Disc (r = 44) -->
+        <clipPath id="lunarDiscClip">
+          <circle cx="0" cy="0" r="44"/>
+        </clipPath>
+
+        <!-- Dynamic Mask for Illuminated Phase Region -->
+        <mask id="phaseMask">
+          <rect x="-50" y="-50" width="100" height="100" fill="#000000"/>
+          @if (svgLitPath()) {
+            <path [attr.d]="svgLitPath()" fill="#ffffff"/>
+          }
+        </mask>
+      </defs>
+
+      <!-- 1. BASE: Dark Lunar Body (Earthshine Disk) -->
+      <circle cx="0" cy="0" r="44" fill="url(#darkLunarSurface)" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+
+      <!-- Faint Mare Basalt Patches on Dark Disk (Subtle maria) -->
+      <g clip-path="url(#lunarDiscClip)" opacity="0.25">
+        <ellipse cx="-12" cy="-14" rx="14" ry="11" fill="#0b1120" filter="url(#lunarCraterFaint)"/>
+        <ellipse cx="14" cy="-12" rx="12" ry="10" fill="#0b1120" filter="url(#lunarCraterFaint)"/>
+        <ellipse cx="-4" cy="12" rx="16" ry="12" fill="#0b1120" filter="url(#lunarCraterFaint)"/>
+        <ellipse cx="16" cy="14" rx="10" ry="8" fill="#0b1120" filter="url(#lunarCraterFaint)"/>
+      </g>
+
+      <!-- 2. SUNLIT MOON SURFACE (Masked by Terminator Calculation) -->
+      @if (svgLitPath()) {
+        <g mask="url(#phaseMask)">
+          <!-- Base bright surface fill -->
+          <circle cx="0" cy="0" r="44" fill="url(#litLunarSurface)"/>
+
+          <!-- Textured Maria Patches on illuminated side (Oceanus Procellarum, Sea of Tranquility, etc.) -->
+          <g opacity="0.32" filter="url(#lunarCraterFaint)">
+            <ellipse cx="-12" cy="-14" rx="14" ry="11" fill="#94a3b8"/>
+            <ellipse cx="14" cy="-12" rx="12" ry="10" fill="#94a3b8"/>
+            <ellipse cx="-4" cy="12" rx="16" ry="12" fill="#94a3b8"/>
+            <ellipse cx="16" cy="14" rx="10" ry="8" fill="#94a3b8"/>
+            <!-- Famous Craters (Tycho, Copernicus, Kepler) -->
+            <circle cx="10" cy="26" r="3.2" fill="#ffffff" opacity="0.8"/>
+            <circle cx="-16" cy="4" r="2.8" fill="#ffffff" opacity="0.75"/>
+            <circle cx="2" cy="-6" r="2.4" fill="#ffffff" opacity="0.7"/>
+          </g>
+
+          <!-- Crisp bright limb glow border -->
+          <path [attr.d]="svgLitPath()" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.75"/>
+        </g>
+      }
+
+      <!-- 3. Outer Rim Ring -->
+      <circle cx="0" cy="0" r="44" fill="none" stroke="rgba(254,240,138,0.25)" stroke-width="0.5"/>
+    </svg>
+
+    <!-- Horizon Status Badge in Compact Mode -->
+    @if (compact()) {
+      <div 
+        class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border border-slate-900"
+        [class.bg-emerald-400]="moonState().isAboveHorizon"
+        [class.bg-slate-600]="!moonState().isAboveHorizon"
+        [title]="moonState().isAboveHorizon ? 'Moon is above horizon' : 'Moon is below horizon'">
+      </div>
+    }
+  </div>
+
+  <!-- Textual Readout & Labels -->
+  @if (showLabels()) {
+    <div class="flex flex-col items-center text-center">
+      <div class="flex items-center gap-1.5">
+        <span class="text-xs font-bold text-amber-200 tracking-wide font-sans">{{ phaseName() }}</span>
+        <span 
+          class="w-1.5 h-1.5 rounded-full"
+          [class.bg-emerald-400]="moonState().isAboveHorizon"
+          [class.bg-slate-600]="!moonState().isAboveHorizon"
+          [title]="moonState().isAboveHorizon ? 'Visible above horizon' : 'Below horizon'">
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2 mt-0.5">
+        <span class="text-xs font-mono font-semibold text-white">{{ illuminationPercentage() }}%</span>
+        <span class="text-[10px] text-slate-400 font-mono">({{ isWaxing() ? 'Waxing' : 'Waning' }})</span>
+      </div>
+
+      <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+        Age {{ ageDays().toFixed(1) }}d / 29.5d
+      </div>
+    </div>
+  }
+
+  <!-- Extended Astronomy Details (Altitude, Azimuth, Distance, Next Phase) -->
+  @if (showDetails()) {
+    <div class="w-full grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-800/80 text-[10px] font-mono">
+      <div class="flex flex-col bg-slate-900/60 rounded-lg p-1.5 border border-white/5">
+        <span class="text-slate-400 text-[9px] uppercase tracking-wider">Altitude</span>
+        <span class="font-semibold" [class.text-amber-300]="moonState().isAboveHorizon" [class.text-slate-400]="!moonState().isAboveHorizon">
+          {{ moonState().altitudeDeg >= 0 ? '+' : '' }}{{ moonState().altitudeDeg.toFixed(1) }}°
+        </span>
+      </div>
+
+      <div class="flex flex-col bg-slate-900/60 rounded-lg p-1.5 border border-white/5">
+        <span class="text-slate-400 text-[9px] uppercase tracking-wider">Azimuth</span>
+        <span class="text-slate-200 font-semibold">{{ moonState().azimuthDeg.toFixed(0) }}°</span>
+      </div>
+
+      <div class="flex flex-col bg-slate-900/60 rounded-lg p-1.5 border border-white/5">
+        <span class="text-slate-400 text-[9px] uppercase tracking-wider">Distance</span>
+        <span class="text-slate-200 font-semibold">{{ formatDistance(moonState().distanceKm) }} km</span>
+      </div>
+
+      <div class="flex flex-col bg-slate-900/60 rounded-lg p-1.5 border border-white/5">
+        <span class="text-slate-400 text-[9px] uppercase tracking-wider">Next Milestone</span>
+        <span class="text-amber-300 font-semibold truncate" [title]="nextPhaseMilestone().target + ' in ' + nextPhaseMilestone().inDays + 'd'">
+          {{ nextPhaseMilestone().target }} ({{ nextPhaseMilestone().inDays }}d)
+        </span>
+      </div>
+    </div>
+  }
+</div>

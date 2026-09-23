@@ -100,10 +100,14 @@ export class TimeControlService {
         this.advanceSimulation(advancement);
       }
 
-      this.animationFrameId = requestAnimationFrame(tick);
+      if (typeof requestAnimationFrame !== 'undefined') {
+        this.animationFrameId = requestAnimationFrame(tick);
+      }
     };
 
-    this.animationFrameId = requestAnimationFrame(tick);
+    if (typeof requestAnimationFrame !== 'undefined') {
+      this.animationFrameId = requestAnimationFrame(tick);
+    }
   }
 
   private reanchorLiveClock(performanceTime: number): void {

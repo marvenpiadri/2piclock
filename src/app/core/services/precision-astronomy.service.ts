@@ -2,7 +2,17 @@ import { Injectable } from '@angular/core';
 import * as Astronomy from 'astronomy-engine';
 import * as SunCalc from 'suncalc';
 
-export interface SolarCrossCheck {\n  astronomyEngineAltitudeDeg: number;\n  astronomyEngineAzimuthDeg: number;\n  sunCalcAltitudeDeg: number;\n  sunCalcAzimuthDeg: number;\n  altitudeDeltaDeg: number;\n  azimuthDeltaDeg: number;\n}\n\nexport interface PlanetaryPosition {
+export interface SolarCrossCheck {
+  astronomyEngineAltitudeDeg: number;
+  astronomyEngineAzimuthDeg: number;
+  sunCalcAltitudeDeg: number;
+  sunCalcAzimuthDeg: number;
+  altitudeDeltaDeg: number;
+  azimuthDeltaDeg: number;
+  isValidated: boolean;
+}
+
+export interface PlanetaryPosition {
   body: Astronomy.Body;
   name: string;
   altitudeDeg: number;
@@ -31,17 +41,20 @@ export class PrecisionAstronomyService {
     const equator = Astronomy.Equator(Astronomy.Body.Sun, date, observer, true, true);
     const astronomyEngine = Astronomy.Horizon(date, observer, equator.ra, equator.dec, 'normal');
     const sunCalc = SunCalc.getPosition(date, latitude, longitude);
-    const sunCalcAltitudeDeg = sunCalc.altitude * 180 / Math.PI;
-    const sunCalcAzimuthDeg = (sunCalc.azimuth * 180 / Math.PI + 180 + 360) % 360;
+    const sunCalcAltitudeDeg = sunCalc.altitude;
+    const sunCalcAzimuthDeg = sunCalc.azimuth;
     const azimuthDeltaDeg = Math.abs(((astronomyEngine.azimuth - sunCalcAzimuthDeg + 540) % 360) - 180);
+
+    const altitudeDeltaDeg = Math.abs(astronomyEngine.altitude - sunCalcAltitudeDeg);
 
     return {
       astronomyEngineAltitudeDeg: astronomyEngine.altitude,
       astronomyEngineAzimuthDeg: astronomyEngine.azimuth,
       sunCalcAltitudeDeg,
       sunCalcAzimuthDeg,
-      altitudeDeltaDeg: Math.abs(astronomyEngine.altitude - sunCalcAltitudeDeg),
-      azimuthDeltaDeg
+      altitudeDeltaDeg,
+      azimuthDeltaDeg,
+      isValidated: altitudeDeltaDeg < 0.25
     };
   }
 

@@ -2,6 +2,7 @@ import { Injectable, inject, computed, effect } from '@angular/core';
 import { LocationService } from './location.service';
 import { TimeControlService } from './time-control.service';
 import { WeatherService } from './weather.service';
+import { PrecisionAstronomyService, SolarCrossCheck, PlanetaryPosition } from './precision-astronomy.service';
 import { getCelestialState, get24HourSolarCurve } from '../astronomy/astronomy-engine';
 import { CelestialState } from '../models/celestial.model';
 
@@ -12,6 +13,7 @@ export class CelestialService {
   private locationService = inject(LocationService);
   private timeControlService = inject(TimeControlService);
   private weatherService = inject(WeatherService);
+  private precisionAstronomy = inject(PrecisionAstronomyService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
@@ -20,10 +22,14 @@ export class CelestialService {
 
   constructor() {
     // Automatically fetch weather when location changes
-    effect(() => {
-      const loc = this.selectedLocation();
-      this.weatherService.fetchWeatherForLocation(loc);
-    });
+    try {
+      effect(() => {
+        const loc = this.selectedLocation();
+        this.weatherService.fetchWeatherForLocation(loc);
+      });
+    } catch {
+      // In testing contexts without an effect scheduler
+    }
   }
 
   // Active Astronomical & Celestial State computed from Date + Location
@@ -31,6 +37,20 @@ export class CelestialService {
     const loc = this.selectedLocation();
     const date = this.activeDate();
     return getCelestialState(date, loc.latitude, loc.longitude, loc.timezone);
+  });
+
+  // Dual-Engine Solar Validation Cross-Check (NOAA/Meeus/AstronomyEngine vs SunCalc)
+  readonly solarCrossCheck = computed<SolarCrossCheck>(() => {
+    const loc = this.selectedLocation();
+    const date = this.activeDate();
+    return this.precisionAstronomy.crossCheckSun(date, loc.latitude, loc.longitude);
+  });
+
+  // Ephemeris planetary positions (Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune)
+  readonly planetaryPositions = computed<PlanetaryPosition[]>(() => {
+    const loc = this.selectedLocation();
+    const date = this.activeDate();
+    return this.precisionAstronomy.getPlanetaryPositions(date, loc.latitude, loc.longitude, loc.elevationMeters ?? 0);
   });
 
   // 24-hour Solar Elevation curve for the active day/location

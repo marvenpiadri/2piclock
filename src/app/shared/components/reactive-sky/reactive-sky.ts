@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CelestialService } from '../../../core/services/celestial.service';
-import { WeatherService } from '../../../core/services/weather.service';
 import { CelestialState } from '../../../core/models/celestial.model';
 import { WeatherData } from '../../../core/models/weather.model';
 
@@ -25,13 +24,13 @@ interface Star {
 }
 
 interface CloudParticle {
-  x: number; // 0 to 1 normalized
-  y: number; // 0 to 1 normalized
+  x: number;
+  y: number;
   radiusX: number;
   radiusY: number;
   opacity: number;
   speed: number;
-  layer: number; // 0 = high/cirrus, 1 = mid/cumulus, 2 = low/stratus
+  layer: number;
 }
 
 interface PrecipParticle {
@@ -41,9 +40,14 @@ interface PrecipParticle {
   speedX: number;
   size: number;
   opacity: number;
+  wobblePhase: number;
 }
 
-
+interface LightningBolt {
+  points: { x: number; y: number }[];
+  alpha: number;
+  branches: { points: { x: number; y: number }[]; alpha: number }[];
+}
 
 @Component({
   selector: 'app-reactive-sky',
@@ -58,7 +62,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   private celestialService = inject(CelestialService);
-  private weatherService = inject(WeatherService);
 
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
@@ -69,20 +72,18 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   private height = 0;
   private dpr = 1;
 
-  // Star catalog (deterministic 250 stars)
+  // Star catalog
   private stars: Star[] = [];
-
   // Procedural Clouds
   private clouds: CloudParticle[] = [];
-
-  // Precipitation Particles
+  // Precipitation & Blizzard Particles
   private precipParticles: PrecipParticle[] = [];
 
-  // Lightning state for thunderstorms
+  // Lightning system for thunderstorms
   private lightningTimer = 0;
   private lightningFlashAlpha = 0;
+  private activeLightningBolt: LightningBolt | null = null;
 
-  // Motion preference
   private reducedMotion = false;
 
   constructor() {
@@ -131,10 +132,9 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   }
 
   private initStars(): void {
-    const starCount = 220;
+    const starCount = 280;
     this.stars = [];
 
-    // Deterministic pseudo-random seed
     let seed = 42;
     const rnd = () => {
       seed = (seed * 9301 + 49297) % 233280;
@@ -145,14 +145,13 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       'rgba(255, 255, 255,',
       'rgba(235, 245, 255,', // Blue-white
       'rgba(255, 240, 220,', // Warm gold
-      'rgba(255, 250, 240,'  // White
+      'rgba(255, 250, 240,'  // Crisp white
     ];
 
     for (let i = 0; i < starCount; i++) {
       const x = rnd();
-      // Stars concentrate higher in the sky (top 75%)
-      const y = Math.pow(rnd(), 1.4) * 0.78;
-      const radius = 0.6 + rnd() * 1.4;
+      const y = Math.pow(rnd(), 1.3) * 0.88;
+      const radius = 0.5 + rnd() * 1.5;
       const baseBrightness = 0.35 + rnd() * 0.65;
       const flickerSpeed = 0.001 + rnd() * 0.004;
       const flickerPhase = rnd() * Math.PI * 2;
@@ -172,15 +171,15 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private initClouds(): void {
     this.clouds = [];
-    const count = 35;
+    const count = 40;
     for (let i = 0; i < count; i++) {
       this.clouds.push({
         x: Math.random(),
-        y: 0.05 + Math.random() * 0.65,
-        radiusX: 70 + Math.random() * 160,
-        radiusY: 30 + Math.random() * 70,
-        opacity: 0.15 + Math.random() * 0.35,
-        speed: 0.00004 + Math.random() * 0.00012,
+        y: 0.04 + Math.random() * 0.72,
+        radiusX: 80 + Math.random() * 180,
+        radiusY: 35 + Math.random() * 80,
+        opacity: 0.12 + Math.random() * 0.38,
+        speed: 0.00003 + Math.random() * 0.0001,
         layer: Math.floor(Math.random() * 3)
       });
     }
@@ -188,20 +187,19 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private initPrecipParticles(): void {
     this.precipParticles = [];
-    const count = 180;
+    const count = 260;
     for (let i = 0; i < count; i++) {
       this.precipParticles.push({
         x: Math.random(),
         y: Math.random(),
-        speedY: 0.008 + Math.random() * 0.012,
-        speedX: -0.002 + Math.random() * 0.001,
-        size: 1 + Math.random() * 2,
-        opacity: 0.2 + Math.random() * 0.6
+        speedY: 0.007 + Math.random() * 0.015,
+        speedX: -0.003 + Math.random() * 0.002,
+        size: 1 + Math.random() * 2.5,
+        opacity: 0.25 + Math.random() * 0.65,
+        wobblePhase: Math.random() * Math.PI * 2
       });
     }
   }
-
-
 
   private startRenderLoop(): void {
     let lastTime = performance.now();
@@ -230,40 +228,40 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const sunAz = celestial.sun.azimuthDeg;
     const moonAlt = celestial.moon.altitudeDeg;
 
-    // 1. Draw Multi-Stop Atmospheric Twilight & Sky Gradient
+    // 1. Draw Full Pure Sky Atmospheric Gradient
     this.drawSkyGradient(ctx, w, h, sunAlt, sunAz, weather);
 
     // 2. Astrolabe & Equinoctial Coordinate Vector Grid
     this.drawAstrolabeGrid(ctx, w, h, sunAlt, celestial);
 
-    // 3. Draw Stars (modulated by Solar Altitude and Cloud Coverage)
+    // 3. Draw Stars
     this.drawStars(ctx, w, h, sunAlt, celestial.starVisibilityFraction, weather, time);
 
-    // 4. Draw Solar Horizon Flare / Glow
+    // 4. Draw Solar Horizon Flare / Twilight Glow
     this.drawSolarGlow(ctx, w, h, sunAlt, sunAz, weather);
 
-    // 6. Draw Moon with Real Lunar Phase Disc and Position Angle
-    if (moonAlt > -8) {
+    // 5. Draw Moon with Geometric Phase Terminator
+    if (moonAlt > -10) {
       this.drawMoon(ctx, w, h, celestial, weather);
     }
 
-    // 7. Draw Sun Disc, UV Radiation Pulse & Corona
-    if (sunAlt > -8) {
+    // 6. Draw Sun Disc, UV Corona & Glow
+    if (sunAlt > -10) {
       this.drawSun(ctx, w, h, sunAlt, sunAz, weather, time);
     }
 
-    // 8. Draw Layered Procedural Atmosphere Clouds
+    // 7. Draw Procedural Atmospheric Clouds
     this.drawClouds(ctx, w, h, sunAlt, weather, delta);
 
-    // 9. Draw Weather Precipitation (Rain / Snow / Fog / Thunderstorm)
+    // 8. Draw Weather Storm, Lightning & Winter Snow/Blizzard Effects
     this.drawWeatherEffects(ctx, w, h, weather, delta, time);
 
-    // 10. Draw Clean Horizon Line Silhouette
-    this.drawHorizon(ctx, w, h, sunAlt, weather);
+    // 9. Draw Pure Minimalist Horizon Baseline (No hills, pure celestial boundary)
+    this.drawHorizonLine(ctx, w, h, sunAlt, weather);
   }
 
   /**
-   * Astrolabe Celestial Coordinates & Marine Chronometer Vector Grid
+   * Astrolabe Celestial Coordinates & Cardinal Compass Datum Lines
    */
   private drawAstrolabeGrid(
     ctx: CanvasRenderingContext2D,
@@ -272,17 +270,17 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     sunAlt: number,
     celestial: CelestialState
   ): void {
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
     const isNight = sunAlt < -6;
-    const gridAlpha = isNight ? 0.08 : 0.04;
+    const gridAlpha = isNight ? 0.07 : 0.035;
 
     ctx.save();
     ctx.strokeStyle = `rgba(245, 158, 11, ${gridAlpha})`;
     ctx.lineWidth = 0.75;
-    ctx.setLineDash([3, 5]);
+    ctx.setLineDash([3, 6]);
 
     // Altitude Circles (15°, 30°, 45°, 60°, 75°)
-    const maxZenithY = horizonY * 0.08;
+    const maxZenithY = horizonY * 0.05;
     const altSteps = [15, 30, 45, 60, 75];
     for (const alt of altSteps) {
       const normAlt = alt / 90;
@@ -293,7 +291,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.stroke();
     }
 
-    // Azimuth Meridian Arcs (every 45°: N, NE, E, SE, S, SW, W, NW)
+    // Azimuth Meridian Lines (every 45°: N, NE, E, SE, S, SW, W, NW)
     for (let az = 0; az < 360; az += 45) {
       const x = this.projectAzimuthToScreenX(az, w);
       ctx.beginPath();
@@ -302,9 +300,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.stroke();
     }
 
-    // Seasonal Solar Declination Curve arc
+    // Declination curve
     const declination = celestial.sun.declinationDeg;
-    // Map declination (-23.44° to +23.44°)
     const declRatio = (declination + 23.44) / 46.88;
     const declY = horizonY * 0.35 + (1 - declRatio) * horizonY * 0.3;
 
@@ -312,13 +309,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     ctx.setLineDash([6, 6]);
     ctx.beginPath();
     ctx.moveTo(0, declY);
-    ctx.bezierCurveTo(w * 0.25, declY - 25, w * 0.75, declY - 25, w, declY);
+    ctx.bezierCurveTo(w * 0.25, declY - 20, w * 0.75, declY - 20, w, declY);
     ctx.stroke();
 
     ctx.restore();
   }
-
-
 
   /**
    * Continuous physics-based Sky Gradient interpolation based on Solar Altitude & Weather
@@ -331,48 +326,18 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     _sunAz: number,
     weather: WeatherData
   ): void {
-    // Base color palettes [Zenith, Mid, Horizon] in RGB
-    // 1. Deep Night (alt <= -18)
-    const night = {
-      zenith: [2, 6, 23],
-      mid: [8, 14, 34],
-      horizon: [15, 23, 46]
-    };
-
-    // 2. Astronomical Twilight (-18 < alt <= -12)
-    const astro = {
-      zenith: [6, 12, 38],
-      mid: [14, 22, 58],
-      horizon: [28, 38, 76]
-    };
-
-    // 3. Nautical Twilight (-12 < alt <= -6)
-    const nautical = {
-      zenith: [12, 22, 65],
-      mid: [30, 42, 98],
-      horizon: [65, 68, 125]
-    };
-
-    // 4. Civil Twilight / Blue Hour (-6 < alt <= 0)
-    const civil = {
-      zenith: [22, 48, 110],
-      mid: [75, 78, 145],
-      horizon: [190, 115, 95]
-    };
-
-    // 5. Golden Hour / Sunrise-Sunset (0 < alt <= 6)
-    const golden = {
-      zenith: [38, 92, 170],
-      mid: [115, 145, 210],
-      horizon: [245, 175, 95]
-    };
-
-    // 6. Daytime (alt > 6)
-    const day = {
-      zenith: [24, 96, 192],
-      mid: [70, 148, 228],
-      horizon: [175, 215, 245]
-    };
+    // 1. Deep Night
+    const night = { zenith: [2, 6, 20], mid: [6, 12, 30], horizon: [12, 20, 42] };
+    // 2. Astronomical Twilight
+    const astro = { zenith: [5, 10, 32], mid: [12, 18, 50], horizon: [24, 32, 68] };
+    // 3. Nautical Twilight
+    const nautical = { zenith: [10, 18, 55], mid: [25, 36, 85], horizon: [55, 60, 110] };
+    // 4. Civil Twilight
+    const civil = { zenith: [18, 42, 95], mid: [65, 68, 130], horizon: [180, 105, 88] };
+    // 5. Golden Hour
+    const golden = { zenith: [32, 80, 155], mid: [105, 135, 195], horizon: [240, 165, 90] };
+    // 6. Daytime
+    const day = { zenith: [20, 90, 185], mid: [65, 140, 220], horizon: [165, 210, 240] };
 
     let zRGB: number[];
     let mRGB: number[];
@@ -388,9 +353,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     };
 
     if (sunAlt <= -18) {
-      zRGB = night.zenith;
-      mRGB = night.mid;
-      hRGB = night.horizon;
+      zRGB = night.zenith; mRGB = night.mid; hRGB = night.horizon;
     } else if (sunAlt <= -12) {
       const f = (sunAlt + 18) / 6;
       zRGB = lerpColor(night.zenith, astro.zenith, f);
@@ -418,58 +381,49 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       hRGB = lerpColor(golden.horizon, day.horizon, f);
     }
 
-    // Atmospheric Weather Blending (Overcast / Rain desaturation & darkening)
-    const overcastFactor = (weather.cloudCoverPct / 100) * (weather.condition === 'overcast' || weather.condition === 'heavy_rain' || weather.condition === 'thunderstorm' ? 0.75 : 0.4);
+    // Weather overcast & storm desaturation
+    const overcastFactor = (weather.cloudCoverPct / 100) * (weather.condition === 'overcast' || weather.condition === 'heavy_rain' || weather.condition === 'thunderstorm' || weather.condition === 'blizzard' ? 0.8 : 0.35);
     if (overcastFactor > 0) {
       const isNight = sunAlt < -6;
-      const grayZenith = isNight ? [10, 14, 22] : [75, 85, 100];
-      const grayMid = isNight ? [18, 24, 36] : [105, 118, 135];
-      const grayHorizon = isNight ? [28, 36, 50] : [145, 158, 175];
+      const grayZenith = isNight ? [8, 12, 18] : [65, 75, 90];
+      const grayMid = isNight ? [14, 20, 30] : [90, 105, 122];
+      const grayHorizon = isNight ? [22, 30, 42] : [130, 145, 160];
 
       zRGB = lerpColor(zRGB, grayZenith, overcastFactor);
       mRGB = lerpColor(mRGB, grayMid, overcastFactor);
       hRGB = lerpColor(hRGB, grayHorizon, overcastFactor);
     }
 
-    // Create vertical linear gradient
     const grad = ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, `rgb(${zRGB.join(',')})`);
     grad.addColorStop(0.55, `rgb(${mRGB.join(',')})`);
-    grad.addColorStop(0.82, `rgb(${hRGB.join(',')})`);
-    // Sub-horizon ground ambient
-    const groundRGB = lerpColor(hRGB, [5, 8, 15], 0.65);
-    grad.addColorStop(1, `rgb(${groundRGB.join(',')})`);
+    grad.addColorStop(0.90, `rgb(${hRGB.join(',')})`);
+    grad.addColorStop(1, `rgb(${Math.round(hRGB[0] * 0.7)},${Math.round(hRGB[1] * 0.7)},${Math.round(hRGB[2] * 0.7)})`);
 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
   }
 
-  /**
-   * Deterministic Astronomical Stars
-   */
   private drawStars(
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
-    sunAlt: number,
+    _sunAlt: number,
     starVis: number,
     weather: WeatherData,
     time: number
   ): void {
     if (starVis <= 0.01) return;
 
-    // Weather cloud occlusion on stars
     const cloudOcclusion = 1 - (weather.cloudCoverPct / 100) * 0.95;
     const finalAlpha = starVis * cloudOcclusion;
     if (finalAlpha <= 0.01) return;
 
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
 
     for (const star of this.stars) {
       const sx = star.x * w;
       const sy = star.y * horizonY;
-
-      // Subtle atmospheric scintillation
       const twinkle = 0.85 + Math.sin(time * star.flickerSpeed + star.flickerPhase) * 0.15;
       const alpha = star.baseBrightness * finalAlpha * twinkle;
 
@@ -480,9 +434,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Atmospheric Horizon Glow / Sunset Light spreading horizontally
-   */
   private drawSolarGlow(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -493,28 +444,24 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ): void {
     if (sunAlt < -14 || sunAlt > 25) return;
 
-    const horizonY = h * 0.82;
-    // Map Sun Azimuth to screen X: assuming viewing roughly south/equator, or 0-360 wrapped
+    const horizonY = h * 0.90;
     const sunX = this.projectAzimuthToScreenX(sunAz, w);
-    const glowRadius = Math.max(w * 0.4, 250);
+    const glowRadius = Math.max(w * 0.45, 280);
 
-    // Glow intensity peaks around sunset/sunrise (alt between -4 and +4)
     let intensity = 0;
     if (sunAlt <= 0) {
-      intensity = Math.max(0, (sunAlt + 14) / 14) * 0.6;
+      intensity = Math.max(0, (sunAlt + 14) / 14) * 0.65;
     } else {
-      intensity = Math.max(0, (25 - sunAlt) / 25) * 0.7;
+      intensity = Math.max(0, (25 - sunAlt) / 25) * 0.75;
     }
 
-    // Cloud suppression
     intensity *= (1 - (weather.cloudCoverPct / 100) * 0.5);
-
     if (intensity <= 0.01) return;
 
     const radial = ctx.createRadialGradient(sunX, horizonY, 5, sunX, horizonY, glowRadius);
     const color = sunAlt < 2 ? '255, 125, 45,' : '255, 185, 75,';
 
-    radial.addColorStop(0, `rgba(${color} ${(intensity * 0.75).toFixed(3)})`);
+    radial.addColorStop(0, `rgba(${color} ${(intensity * 0.8).toFixed(3)})`);
     radial.addColorStop(0.4, `rgba(${color} ${(intensity * 0.3).toFixed(3)})`);
     radial.addColorStop(1, `rgba(${color} 0)`);
 
@@ -522,9 +469,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     ctx.fillRect(0, horizonY - glowRadius, w, glowRadius * 2);
   }
 
-  /**
-   * Realistic Sun with Solar Corona
-   */
   private drawSun(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -534,35 +478,25 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     weather: WeatherData,
     time: number
   ): void {
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
     const sunPos = this.projectCelestialToScreen(sunAlt, sunAz, w, horizonY);
-
     if (sunPos.y > h + 50) return;
 
-    // Sun disc size
-    const sunRadius = Math.max(14, Math.min(26, w * 0.022));
-
-    // Sun temperature colors: midday bright white-gold, sunset warm amber/vermilion
+    const sunRadius = Math.max(16, Math.min(28, w * 0.024));
     let coreColor = '255, 255, 255';
     let coronaColor = '255, 215, 120';
     let coronaAlpha = 0.5;
 
     if (sunAlt < 4) {
-      coreColor = '255, 220, 150';
-      coronaColor = '255, 100, 30';
-      coronaAlpha = 0.7;
+      coreColor = '255, 220, 150'; coronaColor = '255, 100, 30'; coronaAlpha = 0.75;
     } else if (sunAlt < 12) {
-      coreColor = '255, 245, 200';
-      coronaColor = '255, 170, 60';
-      coronaAlpha = 0.6;
+      coreColor = '255, 245, 200'; coronaColor = '255, 170, 60'; coronaAlpha = 0.6;
     }
 
-    // Weather diffusion / overcast occlusion
     const cloudCover = weather.cloudCoverPct / 100;
     const sunDiscAlpha = Math.max(0.15, 1 - cloudCover * 0.85);
 
-    // Multi-layer Corona
-    const coronaRad = sunRadius * (3.5 + Math.max(0, sunAlt / 15));
+    const coronaRad = sunRadius * (3.8 + Math.max(0, sunAlt / 15));
     const corona = ctx.createRadialGradient(sunPos.x, sunPos.y, sunRadius * 0.8, sunPos.x, sunPos.y, coronaRad);
     corona.addColorStop(0, `rgba(${coronaColor}, ${(coronaAlpha * sunDiscAlpha).toFixed(3)})`);
     corona.addColorStop(0.5, `rgba(${coronaColor}, ${(coronaAlpha * 0.3 * sunDiscAlpha).toFixed(3)})`);
@@ -573,7 +507,6 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     ctx.arc(sunPos.x, sunPos.y, coronaRad, 0, Math.PI * 2);
     ctx.fill();
 
-    // UV Index pulse ring if UV index is high (> 6)
     if (weather.uvIndex >= 6 && sunAlt > 10) {
       const uvPulse = (Math.sin(time * 0.004) + 1) * 0.5;
       const ringRad = sunRadius * (1.8 + uvPulse * 0.8);
@@ -584,19 +517,15 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.stroke();
     }
 
-    // Solid Sun Disc
     ctx.beginPath();
     ctx.arc(sunPos.x, sunPos.y, sunRadius, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(${coreColor}, ${sunDiscAlpha.toFixed(3)})`;
     ctx.shadowColor = `rgba(${coronaColor}, 0.8)`;
     ctx.shadowBlur = sunRadius * 1.5;
     ctx.fill();
-    ctx.shadowBlur = 0; // reset
+    ctx.shadowBlur = 0;
   }
 
-  /**
-   * Realistic Moon with Accurate Geometric Phase Terminator & Limb Tilt
-   */
   private drawMoon(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -604,24 +533,21 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     celestial: CelestialState,
     weather: WeatherData
   ): void {
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
     const moon = celestial.moon;
     const moonPos = this.projectCelestialToScreen(moon.altitudeDeg, moon.azimuthDeg, w, horizonY);
-
     if (moonPos.y > h + 50) return;
 
-    const moonRadius = Math.max(12, Math.min(22, w * 0.018));
+    const moonRadius = Math.max(14, Math.min(24, w * 0.02));
     const cloudCover = weather.cloudCoverPct / 100;
     const moonAlpha = Math.max(0.2, (1 - cloudCover * 0.8) * (celestial.sun.altitudeDeg < 0 ? 1 : 0.65));
 
     ctx.save();
     ctx.translate(moonPos.x, moonPos.y);
 
-    // Rotate to position angle of bright limb (chi) relative to zenith
     const tiltRad = (moon.brightLimbAngleDeg - 90) * (Math.PI / 180);
     ctx.rotate(tiltRad);
 
-    // 1. Soft Lunar Glow (prominent at night)
     if (celestial.sun.altitudeDeg < -4 && moon.illuminationFraction > 0.15) {
       const glowRad = moonRadius * (2.2 + moon.illuminationFraction * 1.8);
       const glow = ctx.createRadialGradient(0, 0, moonRadius * 0.9, 0, 0, glowRad);
@@ -634,30 +560,21 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       ctx.fill();
     }
 
-    // 2. Earthshine (faint dark disc background)
     ctx.beginPath();
     ctx.arc(0, 0, moonRadius, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(30, 42, 65, ${(0.45 * moonAlpha).toFixed(3)})`;
     ctx.fill();
 
-    // 3. Mathematical Phase Terminator Rendering
-    // Fraction k in [0, 1]. Phase angle phi in [0, 180].
-    // If k > 0.02 (not New Moon), render lit portion
     if (moon.illuminationFraction > 0.02) {
       const k = moon.illuminationFraction;
-
       ctx.beginPath();
-      // Right hemisphere (bright limb)
       ctx.arc(0, 0, moonRadius, -Math.PI / 2, Math.PI / 2, false);
 
-      // Terminator curve: ellipse with x-radius = moonRadius * (2k - 1)
       const terminatorRx = Math.abs((2 * k - 1) * moonRadius);
       const anticlockwise = k < 0.5;
-
       ctx.ellipse(0, 0, terminatorRx, moonRadius, 0, Math.PI / 2, -Math.PI / 2, anticlockwise);
       ctx.closePath();
 
-      // Lunar disc surface texture / color
       const moonGrad = ctx.createLinearGradient(-moonRadius, -moonRadius, moonRadius, moonRadius);
       moonGrad.addColorStop(0, `rgba(255, 255, 245, ${moonAlpha.toFixed(3)})`);
       moonGrad.addColorStop(0.7, `rgba(235, 240, 250, ${moonAlpha.toFixed(3)})`);
@@ -665,23 +582,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
       ctx.fillStyle = moonGrad;
       ctx.fill();
-
-      // Subtle lunar maria crater hints
-      if (moonRadius > 14) {
-        ctx.fillStyle = `rgba(180, 190, 205, ${(0.25 * moonAlpha).toFixed(3)})`;
-        ctx.beginPath();
-        ctx.arc(moonRadius * 0.2, -moonRadius * 0.25, moonRadius * 0.28, 0, Math.PI * 2);
-        ctx.arc(-moonRadius * 0.1, moonRadius * 0.15, moonRadius * 0.22, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
 
     ctx.restore();
   }
 
-  /**
-   * Procedural Layered Drift Clouds
-   */
   private drawClouds(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -693,13 +598,12 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     const cloudCover = weather.cloudCoverPct / 100;
     if (cloudCover <= 0.05) return;
 
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
     const isNight = sunAlt < -6;
     const isSunset = sunAlt >= -6 && sunAlt <= 6;
 
-    // Cloud lighting: Sunlit gold/pink during sunset, crisp white at day, deep charcoal at night
     let cloudRGB = isNight ? [25, 35, 52] : (isSunset ? [240, 160, 130] : [245, 250, 255]);
-    if (weather.condition === 'overcast' || weather.condition === 'thunderstorm') {
+    if (weather.condition === 'overcast' || weather.condition === 'thunderstorm' || weather.condition === 'blizzard') {
       cloudRGB = isNight ? [12, 16, 25] : [110, 120, 135];
     }
 
@@ -709,10 +613,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
       const cloud = this.clouds[i];
 
       if (!this.reducedMotion) {
-        const windFactor = 0.35 + Math.min(2.5, weather.windSpeedKmh / 12);
+        const windFactor = 0.4 + Math.min(3.0, weather.windSpeedKmh / 12);
         const windDirection = Math.cos((weather.windDirectionDeg * Math.PI) / 180);
         cloud.x += cloud.speed * delta * windFactor * (windDirection >= 0 ? 1 : -1);
-        if (cloud.x > 1.2) cloud.x = -0.2;
+        if (cloud.x > 1.25) cloud.x = -0.25;
+        if (cloud.x < -0.25) cloud.x = 1.25;
       }
 
       const cx = cloud.x * w;
@@ -735,7 +640,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Precipitation & Atmospheric Weather (Rain / Snow / Fog / Thunderstorm)
+   * Weather Precipitation, Thunderstorm Lightning Bolts & Blizzard Storm
    */
   private drawWeatherEffects(
     ctx: CanvasRenderingContext2D,
@@ -743,143 +648,228 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     h: number,
     weather: WeatherData,
     delta: number,
-    _time: number
+    time: number
   ): void {
     const cond = weather.condition;
-    const horizonY = h * 0.82;
+    const horizonY = h * 0.90;
 
     // 1. Fog / Mist Haze Layer
     if (cond === 'fog' || weather.visibilityKm < 5) {
-      const fogGrad = ctx.createLinearGradient(0, horizonY - 140, 0, h);
+      const fogGrad = ctx.createLinearGradient(0, horizonY - 180, 0, h);
       fogGrad.addColorStop(0, 'rgba(210, 220, 235, 0)');
       fogGrad.addColorStop(0.6, 'rgba(210, 220, 235, 0.45)');
-      fogGrad.addColorStop(1, 'rgba(190, 205, 225, 0.65)');
+      fogGrad.addColorStop(1, 'rgba(190, 205, 225, 0.7)');
       ctx.fillStyle = fogGrad;
-      ctx.fillRect(0, horizonY - 140, w, h - (horizonY - 140));
+      ctx.fillRect(0, horizonY - 180, w, h - (horizonY - 180));
     }
 
-    // 2. Thunderstorm Lightning Flash
+    // 2. Thunderstorm: Sheet & Fork Lightning
     if (cond === 'thunderstorm') {
       this.lightningTimer += delta;
-      if (this.lightningTimer > 4500 && Math.random() < 0.015) {
-        this.lightningFlashAlpha = 0.75 + Math.random() * 0.2;
+      if (this.lightningTimer > 2800 && Math.random() < 0.04) {
+        this.lightningFlashAlpha = 0.85 + Math.random() * 0.15;
+        this.generateLightningBolt(w, horizonY);
         this.lightningTimer = 0;
       }
 
+      // Flash background illumination
       if (this.lightningFlashAlpha > 0) {
         ctx.fillStyle = `rgba(235, 245, 255, ${this.lightningFlashAlpha.toFixed(3)})`;
         ctx.fillRect(0, 0, w, h);
-        this.lightningFlashAlpha -= delta * 0.003;
+        this.lightningFlashAlpha -= delta * 0.0035;
+      }
+
+      // Draw branching lightning bolt
+      if (this.activeLightningBolt && this.activeLightningBolt.alpha > 0.05) {
+        this.drawLightningBolt(ctx, this.activeLightningBolt);
+        this.activeLightningBolt.alpha -= delta * 0.004;
       }
     }
 
-    // 3. Precipitation Particles (Rain / Snow)
+    // 3. Precipitation Particles (Rain, Heavy Downpour, Snow, Winter Blizzard)
     const isRain = cond === 'rain' || cond === 'heavy_rain' || cond === 'thunderstorm';
-    const isSnow = cond === 'snow';
+    const isSnow = cond === 'snow' || cond === 'blizzard';
 
     if (!isRain && !isSnow) return;
 
-    const particleCount = cond === 'heavy_rain' || cond === 'thunderstorm' ? 160 : (isRain ? 90 : 80);
+    const isBlizzard = cond === 'blizzard';
+    const particleCount = isBlizzard ? 240 : (cond === 'heavy_rain' || cond === 'thunderstorm' ? 200 : (isRain ? 110 : 100));
 
     for (let i = 0; i < particleCount; i++) {
       const p = this.precipParticles[i];
 
       if (!this.reducedMotion) {
-        p.y += p.speedY * (isRain ? (cond === 'heavy_rain' ? 1.8 : 1.2) : 0.4);
-        p.x += p.speedX;
+        if (isRain) {
+          const rainSpeedMult = cond === 'heavy_rain' || cond === 'thunderstorm' ? 2.2 : 1.3;
+          p.y += p.speedY * rainSpeedMult;
+          p.x += p.speedX * (weather.windSpeedKmh / 20);
+        } else if (isSnow) {
+          if (isBlizzard) {
+            p.y += p.speedY * 0.9;
+            p.x += -0.012 - (weather.windSpeedKmh / 80) * 0.015;
+          } else {
+            p.y += p.speedY * 0.45;
+            p.x += Math.sin(time * 0.002 + p.wobblePhase) * 0.001;
+          }
+        }
 
         if (p.y > 1) {
           p.y = -0.05;
           p.x = Math.random();
         }
         if (p.x < -0.1) p.x = 1.1;
+        if (p.x > 1.1) p.x = -0.1;
       }
 
       const px = p.x * w;
       const py = p.y * h;
 
       if (isRain) {
-        const len = cond === 'heavy_rain' ? 22 : 14;
-        ctx.strokeStyle = `rgba(195, 220, 250, ${(p.opacity * 0.65).toFixed(3)})`;
-        ctx.lineWidth = cond === 'heavy_rain' ? 1.5 : 1;
+        const len = cond === 'heavy_rain' || cond === 'thunderstorm' ? 28 : 16;
+        ctx.strokeStyle = `rgba(195, 225, 255, ${(p.opacity * 0.75).toFixed(3)})`;
+        ctx.lineWidth = cond === 'heavy_rain' ? 1.75 : 1.2;
         ctx.beginPath();
         ctx.moveTo(px, py);
-        ctx.lineTo(px + p.speedX * w * 0.05, py + len);
+        ctx.lineTo(px + p.speedX * w * 0.08, py + len);
         ctx.stroke();
       } else if (isSnow) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${(p.opacity * 0.85).toFixed(3)})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${(p.opacity * (isBlizzard ? 0.95 : 0.8)).toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        const snowSize = isBlizzard ? p.size * 1.3 : p.size;
+        ctx.arc(px, py, snowSize, 0, Math.PI * 2);
         ctx.fill();
       }
     }
   }
 
+  private generateLightningBolt(w: number, horizonY: number): void {
+    const startX = w * (0.2 + Math.random() * 0.6);
+    const startY = 10;
+    const points: { x: number; y: number }[] = [{ x: startX, y: startY }];
+
+    let currX = startX;
+    let currY = startY;
+    const segments = 12;
+    const stepY = (horizonY * 0.8) / segments;
+
+    for (let i = 0; i < segments; i++) {
+      currX += (Math.random() - 0.5) * 55;
+      currY += stepY + (Math.random() - 0.5) * 15;
+      points.push({ x: currX, y: currY });
+    }
+
+    const branches: { points: { x: number; y: number }[]; alpha: number }[] = [];
+    if (points.length > 5) {
+      const branchOrigin = points[Math.floor(points.length / 2)];
+      let bx = branchOrigin.x;
+      let by = branchOrigin.y;
+      const bPoints: { x: number; y: number }[] = [{ x: bx, y: by }];
+      for (let j = 0; j < 5; j++) {
+        bx += (Math.random() - 0.3) * 45;
+        by += stepY * 0.7;
+        bPoints.push({ x: bx, y: by });
+      }
+      branches.push({ points: bPoints, alpha: 0.8 });
+    }
+
+    this.activeLightningBolt = {
+      points,
+      alpha: 1.0,
+      branches
+    };
+  }
+
+  private drawLightningBolt(ctx: CanvasRenderingContext2D, bolt: LightningBolt): void {
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${bolt.alpha.toFixed(3)})`;
+    ctx.shadowColor = 'rgba(160, 210, 255, 0.9)';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2.5;
+
+    // Main bolt
+    ctx.beginPath();
+    ctx.moveTo(bolt.points[0].x, bolt.points[0].y);
+    for (let i = 1; i < bolt.points.length; i++) {
+      ctx.lineTo(bolt.points[i].x, bolt.points[i].y);
+    }
+    ctx.stroke();
+
+    // Branches
+    ctx.lineWidth = 1.2;
+    for (const br of bolt.branches) {
+      ctx.beginPath();
+      ctx.moveTo(br.points[0].x, br.points[0].y);
+      for (let i = 1; i < br.points.length; i++) {
+        ctx.lineTo(br.points[i].x, br.points[i].y);
+      }
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   /**
-   * Minimalist Ground Horizon Silhouette
+   * Minimalist Pure Horizon Datum Baseline (No Hills, Clean Sky Horizon)
    */
-  private drawHorizon(
+  private drawHorizonLine(
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
     sunAlt: number,
     _weather: WeatherData
   ): void {
-    const horizonY = h * 0.82;
-    const isNight = sunAlt < -6;
+    const horizonY = h * 0.90;
     const isSunset = sunAlt >= -6 && sunAlt <= 6;
 
-    // Subtle atmospheric ridge terrain line
+    // Clean, crisp datum stroke line
+    ctx.strokeStyle = isSunset ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
-
-    // Subtle gentle rolling curvature
-    const segments = 8;
-    const step = w / segments;
-    for (let i = 1; i <= segments; i++) {
-      const x = i * step;
-      const yOffset = Math.sin((i / segments) * Math.PI) * 12 + ((i % 2 === 0) ? -4 : 4);
-      ctx.lineTo(x, horizonY + yOffset);
-    }
-
-    ctx.lineTo(w, h);
-    ctx.lineTo(0, h);
-    ctx.closePath();
-
-    const groundBaseColor = isNight ? 'rgb(6, 10, 18)' : (isSunset ? 'rgb(18, 24, 38)' : 'rgb(12, 18, 30)');
-    ctx.fillStyle = groundBaseColor;
-    ctx.fill();
-
-    // Subtle horizon ambient line
-    ctx.strokeStyle = isSunset ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
+    ctx.lineTo(w, horizonY);
     ctx.stroke();
+
+    // Cardinal Azimuth Compass marks along horizon
+    const cardinalLabels: { text: string; az: number }[] = [
+      { text: 'N', az: 0 },
+      { text: 'NE', az: 45 },
+      { text: 'E', az: 90 },
+      { text: 'SE', az: 135 },
+      { text: 'S', az: 180 },
+      { text: 'SW', az: 225 },
+      { text: 'W', az: 270 },
+      { text: 'NW', az: 315 },
+      { text: 'N', az: 360 }
+    ];
+
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+
+    for (const card of cardinalLabels) {
+      const x = this.projectAzimuthToScreenX(card.az, w);
+      ctx.beginPath();
+      ctx.moveTo(x, horizonY - 4);
+      ctx.lineTo(x, horizonY + 4);
+      ctx.stroke();
+      ctx.fillText(card.text, x, horizonY + 16);
+    }
   }
 
-  /**
-   * Projects 3D celestial coordinates (altitude & azimuth) onto 2D viewport
-   */
   private projectCelestialToScreen(
     altitudeDeg: number,
     azimuthDeg: number,
     w: number,
     horizonY: number
   ): { x: number; y: number } {
-    // X is projected based on Azimuth (compass direction)
     const x = this.projectAzimuthToScreenX(azimuthDeg, w);
-
-    // Y is projected based on Altitude above horizon
-    // altitude 0° = horizonY, altitude 90° (zenith) = 0.08 * horizonY, altitude < 0 = below horizon
-    const maxZenithY = horizonY * 0.08;
-    const normalizedAlt = altitudeDeg / 90; // 0 to 1 (or negative)
+    const maxZenithY = horizonY * 0.05;
+    const normalizedAlt = altitudeDeg / 90;
     const y = horizonY - (normalizedAlt * (horizonY - maxZenithY));
-
     return { x, y };
   }
 
   private projectAzimuthToScreenX(azimuthDeg: number, w: number): number {
-    // Center viewport on South (180° in Northern Hemisphere) or smoothly sweep
-    // Standard mapping: 0° (North) -> Left/Right edge, 90° (East) -> 25%, 180° (South) -> 50%, 270° (West) -> 75%
     const norm = (azimuthDeg % 360) / 360;
     return norm * w;
   }

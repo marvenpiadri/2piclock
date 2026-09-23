@@ -54,7 +54,7 @@
         <!-- Mini Sky Header Banner -->
         <div class="city-sky-header p-4 relative overflow-hidden" [style.background]="city.bgGradient">
           <div class="header-top flex justify-between items-center relative z-10">
-            <span class="city-flag text-2xl shadow-sm">{{ city.location.countryCode | countryFlag }}</span>
+            <app-country-flag [countryCode]="city.location.countryCode" [customClass]="'w-7 h-5 rounded shadow-sm'"></app-country-flag>
             <span class="city-twilight-badge font-mono text-[10px] bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-amber-300 border border-amber-500/30">
               {{ city.twilightState }}
             </span>

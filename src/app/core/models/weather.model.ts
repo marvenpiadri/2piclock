@@ -7,7 +7,16 @@ export type WeatherCondition =
   | 'heavy_rain'
   | 'thunderstorm'
   | 'snow'
+  | 'blizzard'
   | 'fog';
+
+export type WeatherAggressivenessLevel =
+  | 'Calm'
+  | 'Gentle'
+  | 'Active'
+  | 'Vigorous'
+  | 'Severe Storm'
+  | 'Violent Blizzard';
 
 export interface WeatherData {
   condition: WeatherCondition;
@@ -25,6 +34,11 @@ export interface WeatherData {
   visibilityKm: number;
   uvIndex: number;
   pressureHpa: number;
+  aggressivenessIndex: number; // 0 to 100 severity rating
+  aggressivenessLabel: WeatherAggressivenessLevel;
+  lightningFrequencyPerMin?: number;
+  winterFrostLevel?: number; // 0 to 100
+  snowAccumulationCm?: number;
   dataSource?: 'open-meteo' | 'fallback' | 'simulation';
   isSimulated: boolean;
   updatedAt: Date;
@@ -35,5 +49,7 @@ export interface WeatherOverrideConfig {
   condition?: WeatherCondition;
   cloudCoverPct?: number;
   precipitationPct?: number;
+  windSpeedKmh?: number;
+  aggressivenessBoost?: number;
   fogDensity?: number;
 }

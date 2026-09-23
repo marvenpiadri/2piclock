@@ -4,11 +4,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { WeatherService } from '../../core/services/weather.service';
 import { CelestialService } from '../../core/services/celestial.service';
 import { WeatherCondition } from '../../core/models/weather.model';
+import { WeatherAggressivenessVisualizerComponent, CountryFlagComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-weather-atmosphere',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [
+    CommonModule, 
+    MatIconModule, 
+    WeatherAggressivenessVisualizerComponent,
+    CountryFlagComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './weather-atmosphere.html',
   styleUrl: './weather-atmosphere.css'
@@ -44,8 +50,21 @@ export class WeatherAtmosphereComponent {
     this.weatherService.setOverride({ cloudCoverPct });
   }
 
+  setPrecipitation(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const precipitationPct = parseInt(target.value, 10);
+    this.weatherService.setOverride({ precipitationPct });
+  }
+
+  setWindSpeed(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const windSpeedKmh = parseInt(target.value, 10);
+    this.weatherService.setOverride({ windSpeedKmh });
+  }
+
   resetToLiveWeather(): void {
     this.weatherService.clearOverride();
     this.weatherService.fetchWeatherForLocation(this.selectedLocation());
   }
 }
+

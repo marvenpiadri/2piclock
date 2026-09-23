@@ -4,11 +4,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { CelestialService } from '../../core/services/celestial.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { LocationService } from '../../core/services/location.service';
+import { AstronomyDetails } from '../../shared/components';
 
 @Component({
   selector: 'app-celestial-ephemeris',
-  standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, AstronomyDetails],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './celestial-ephemeris.html',
   styleUrl: './celestial-ephemeris.css'
@@ -22,6 +22,8 @@ export class CelestialEphemerisComponent {
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly activeDate = this.timeControlService.currentActiveDate;
   readonly solarCurve = this.celestialService.solarCurve;
+  readonly solarCrossCheck = this.celestialService.solarCrossCheck;
+  readonly planetaryPositions = this.celestialService.planetaryPositions;
 
   // Key Astronomical Milestones (Solstices & Equinoxes for the current year)
   readonly astronomicalSeasons = computed(() => {

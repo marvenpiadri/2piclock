@@ -1,0 +1,194 @@
+<div class="meeting-planner-page space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+  <!-- Top Observatory Header -->
+  <div class="planner-header glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-5 rounded-2xl bg-slate-900/80 border border-amber-500/25">
+    <div>
+      <h1 class="page-title text-xl font-bold text-amber-400 font-mono flex items-center gap-2">
+        <mat-icon class="text-amber-500">schedule</mat-icon>
+        2π Universal Meeting & Time-Overlap Planner
+      </h1>
+      <p class="page-subtitle text-xs text-slate-400 mt-1">
+        Coordinate global teams without cognitive timezone translation. Powered by 2PiClock astronomical instant authority.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button 
+        type="button" 
+        (click)="copyScheduleSummary()" 
+        class="copy-btn px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
+        <mat-icon class="text-sm">content_copy</mat-icon>
+        <span>Copy Coordinate Summary</span>
+      </button>
+    </div>
+  </div>
+
+  @if (copyNotification()) {
+    <div class="copy-alert bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-4 py-2.5 rounded-xl font-mono text-xs flex items-center gap-2">
+      <mat-icon class="text-emerald-400 text-sm">check_circle</mat-icon>
+      <span>{{ copyNotification() }}</span>
+    </div>
+  }
+
+  <!-- 1. The 2π Polar Radian Overlap Matrix Visualizer -->
+  <app-radian-overlap-tunnel 
+    [activeDate]="synchronizedDate()" 
+    [cities]="selectedCities()">
+  </app-radian-overlap-tunnel>
+
+  <!-- 2. Universal Synchronized UTC Time Scrubber Bar -->
+  <div class="scrubber-card glass-panel p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-amber-400 text-lg">tune</mat-icon>
+        <span class="font-mono text-xs uppercase tracking-wider text-amber-300 font-bold">Synchronized Universal Instant</span>
+      </div>
+      <div class="font-mono text-sm font-bold text-amber-400 bg-slate-950 px-3 py-1 rounded-lg border border-amber-500/30">
+        {{ formatUtcH(scrubbedUtcHour()) }} · {{ synchronizedDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+      </div>
+    </div>
+
+    <!-- Scrubber Slider Range -->
+    <div class="range-container relative">
+      <input 
+        type="range" 
+        min="0" 
+        max="23.75" 
+        step="0.25" 
+        [value]="scrubbedUtcHour()" 
+        (input)="onScrubberInput($event)"
+        class="w-full accent-amber-500 cursor-pointer h-2 bg-slate-950 rounded-lg appearance-none border border-slate-700 focus:outline-none" />
+      
+      <div class="scrubber-ticks flex justify-between text-[10px] font-mono text-slate-500 mt-1 px-1">
+        <span>00:00 UTC</span>
+        <span>06:00</span>
+        <span>12:00</span>
+        <span>18:00</span>
+        <span>23:45 UTC</span>
+      </div>
+    </div>
+
+    <!-- Quick Jump UTC Presets -->
+    <div class="flex items-center gap-2 flex-wrap pt-1">
+      <span class="text-[11px] font-mono text-slate-400">Jump to UTC:</span>
+      <button type="button" (click)="setScrubbedHour(9)" class="quick-utc-btn" [class.active]="scrubbedUtcHour() === 9">09:00 (EU Morning / US Dawn)</button>
+      <button type="button" (click)="setScrubbedHour(14)" class="quick-utc-btn" [class.active]="scrubbedUtcHour() === 14">14:00 (US East / EU Midday)</button>
+      <button type="button" (click)="setScrubbedHour(16)" class="quick-utc-btn" [class.active]="scrubbedUtcHour() === 16">16:00 (US West / EU Evening)</button>
+      <button type="button" (click)="setScrubbedHour(23)" class="quick-utc-btn" [class.active]="scrubbedUtcHour() === 23">23:00 (APAC Morning / US Afternoon)</button>
+    </div>
+  </div>
+
+  <!-- 3. Synchronized Multi-Meridian Participant Matrix -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (slot of citySlots(); track slot.location.id) {
+      <div class="city-slot-card glass-panel rounded-2xl p-4 border border-slate-800 bg-slate-900/80 space-y-3 relative overflow-hidden transition-all duration-200"
+        [class.status-work]="slot.statusType === 'work'"
+        [class.status-extended]="slot.statusType === 'extended'"
+        [class.status-sleep]="slot.statusType === 'sleep'">
+        
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">{{ slot.location.countryCode | countryFlag }}</span>
+            <div>
+              <div class="font-bold text-white text-sm">{{ slot.location.name }}</div>
+              <div class="text-[10px] font-mono text-slate-400">{{ slot.location.timezone }}</div>
+            </div>
+          </div>
+          @if (selectedCities().length > 2) {
+            <button 
+              type="button" 
+              (click)="removeCity(slot.location.id)" 
+              class="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+              title="Remove city from comparison">
+              <mat-icon class="text-sm">close</mat-icon>
+            </button>
+          }
+        </div>
+
+        <!-- Local Instantaneous Time -->
+        <div class="local-time-block bg-slate-950/70 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+          <div>
+            <div class="text-2xl font-bold font-mono text-amber-400 tracking-tight">{{ slot.localTime }}</div>
+            <div class="text-[11px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+              <span>{{ slot.localDate }}</span>
+              @if (slot.isDifferentDate) {
+                <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-bold">±1 DAY</span>
+              }
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] font-mono flex items-center gap-1 justify-end text-slate-300">
+              <mat-icon class="text-amber-400 text-sm">{{ slot.isDay ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
+              <span>{{ slot.sunElevationDeg >= 0 ? '+' : '' }}{{ slot.sunElevationDeg }}°</span>
+            </div>
+            <div class="text-[9px] font-mono text-slate-500 uppercase mt-0.5">Solar Alt</div>
+          </div>
+        </div>
+
+        <!-- Human Status Badge -->
+        <div class="status-indicator-badge flex items-center justify-between text-xs font-mono px-3 py-1.5 rounded-lg"
+          [ngClass]="{
+            'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30': slot.statusType === 'work',
+            'bg-amber-500/20 text-amber-300 border border-amber-500/30': slot.statusType === 'extended',
+            'bg-indigo-950/60 text-indigo-300 border border-indigo-800/40': slot.statusType === 'sleep',
+            'bg-slate-800/50 text-slate-400 border border-slate-700/30': slot.statusType === 'personal'
+          }">
+          <span class="flex items-center gap-1.5">
+            @if (slot.statusType === 'work') { <mat-icon class="text-xs">work</mat-icon> }
+            @else if (slot.statusType === 'extended') { <mat-icon class="text-xs">hourglass_top</mat-icon> }
+            @else if (slot.statusType === 'sleep') { <mat-icon class="text-xs">bedtime</mat-icon> }
+            @else { <mat-icon class="text-xs">home</mat-icon> }
+            <span>{{ slot.statusLabel }}</span>
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- 4. Add Participant City Selector -->
+  @if (availableCities().length > 0 && selectedCities().length < 6) {
+    <div class="add-cities-section glass-panel p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+      <div class="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <mat-icon class="text-sm text-amber-500">add_location_alt</mat-icon>
+        <span>Add Participant City (Max 6)</span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        @for (preset of availableCities(); track preset.id) {
+          <button 
+            type="button" 
+            (click)="addCity(preset)"
+            class="add-city-pill px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300 hover:text-amber-400 flex items-center gap-1.5 transition-all">
+            <span>{{ preset.countryCode | countryFlag }}</span>
+            <span>{{ preset.name }}</span>
+            <mat-icon class="text-xs text-amber-500">add</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- 5. Optimal Sweet Spot Summary Card -->
+  @if (overlapMatrix().bestWindow; as best) {
+    <div class="best-window-card glass-panel p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900/80 to-slate-900/80 border border-amber-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <div class="flex items-center gap-2 text-amber-400 font-mono text-sm font-bold uppercase tracking-wider">
+          <mat-icon class="text-amber-400">stars</mat-icon>
+          <span>Recommended Global Overlap Sweet Spot</span>
+        </div>
+        <div class="text-xs text-slate-300 mt-1">
+          Universal meeting window where attendees share maximum waking productive overlap:
+        </div>
+        <div class="text-lg font-mono font-bold text-white mt-1">
+          {{ formatUtcH(best.startUtcH) }} — {{ formatUtcH(best.endUtcH) }} ({{ best.durationHours }} Hours Duration)
+        </div>
+      </div>
+
+      <button 
+        type="button" 
+        (click)="setScrubbedHour(best.startUtcH)" 
+        class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center gap-2">
+        <mat-icon class="text-sm">play_arrow</mat-icon>
+        <span>Jump Scrubber to Window</span>
+      </button>
+    </div>
+  }
+</div>

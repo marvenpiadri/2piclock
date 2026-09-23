@@ -1,17 +1,29 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { CelestialService } from '../../core/services/celestial.service';
 import { TimeControlService, SimulationSpeed } from '../../core/services/time-control.service';
 import { LocationService } from '../../core/services/location.service';
 import { WeatherService } from '../../core/services/weather.service';
+import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
+import { AstronomyDetails, CountryFlagComponent, AnalogClockComponent, WeatherOverlayComponent } from '../../shared/components';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-sky-home',
   standalone: true,
-  imports: [CommonModule, MatIconModule, ShareExportModalComponent],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    MatIconModule, 
+    ShareExportModalComponent, 
+    AstronomyDetails,
+    CountryFlagComponent,
+    AnalogClockComponent,
+    WeatherOverlayComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
   styleUrl: './sky-home.css'
@@ -21,7 +33,9 @@ export class SkyHomeComponent {
   private timeControlService = inject(TimeControlService);
   private locationService = inject(LocationService);
   private weatherService = inject(WeatherService);
+  private observatoryViewService = inject(ObservatoryViewService);
 
+  readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
   readonly weather = this.celestialService.currentWeather;
   readonly selectedLocation = this.locationService.selectedLocation;
@@ -37,17 +51,49 @@ export class SkyHomeComponent {
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
   readonly polarAngles = this.celestialService.polarClockAngles;
 
+  // Clock Display Mode: Radian 2Pi Dial vs Analog Clock (Digital option removed as requested)
+  readonly clockDisplayMode = signal<'radian' | 'analog'>('radian');
+
   readonly showShareModal = signal<boolean>(false);
+  
+  // Right Inspector Panel 100% Drawer state
+  readonly isDrawerOpen = signal<boolean>(false);
+  readonly activeDrawerTab = signal<'weather' | 'ephemeris' | 'solar-jump' | 'locations'>('weather');
 
   // Temperature unit toggle
   readonly isFahrenheit = signal<boolean>(false);
 
+  // Drawer location search filter
+  readonly drawerSearchQuery = signal<string>('');
+
+  readonly filteredDrawerLocations = computed(() => {
+    const q = this.drawerSearchQuery().toLowerCase().trim();
+    if (!q) return this.allPresets;
+    return this.allPresets.filter(
+      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
+    );
+  });
+
+  setView(view: ObservatoryView): void {
+    this.observatoryViewService.setView(view);
+  }
+
+  toggleDrawer(): void {
+    this.isDrawerOpen.update(v => !v);
+  }
+
+  closeDrawer(): void {
+    this.isDrawerOpen.set(false);
+  }
+
+  openDrawerTab(tab: 'weather' | 'ephemeris' | 'solar-jump' | 'locations'): void {
+    this.activeDrawerTab.set(tab);
+    this.isDrawerOpen.set(true);
+  }
+
   formatMoonDistance(dist: number): string {
     return Math.round(dist).toLocaleString();
   }
-
-  // Active panel tab
-  readonly activeDrawerTab = signal<'telemetry' | 'weather' | 'controls'>('telemetry');
 
   // Quick jump time presets
   jumpToSolarEvent(event: 'dawn' | 'sunrise' | 'noon' | 'golden' | 'sunset' | 'blue' | 'night'): void {
@@ -62,7 +108,6 @@ export class SkyHomeComponent {
       case 'sunset': targetDate = events.sunset; break;
       case 'blue': targetDate = events.blueHourEvening.start; break;
       case 'night': {
-        // Midnight
         const d = this.activeDate();
         targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
         break;

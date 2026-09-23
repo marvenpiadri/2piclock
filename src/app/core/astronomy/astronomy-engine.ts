@@ -264,8 +264,9 @@ export function calculateLunarPosition(
   date: Date,
   lat: number,
   lng: number,
-  sunPos: SolarPosition
+  sunPos?: SolarPosition
 ): LunarPosition {
+  const actualSun = sunPos ?? calculateSolarPosition(date, lat, lng);
   const jd = getJulianDate(date);
   const t = getJulianCenturies(jd);
 
@@ -364,7 +365,7 @@ export function calculateLunarPosition(
 
   // Lunar Phase Angle (i) & Illuminated Fraction (k)
   // cos(i) = -cos(lambdaMoon - lambdaSun) * cos(betaMoon)
-  const sunLambda = sunPos.rightAscensionDeg; // approximate ecliptic long
+  const sunLambda = actualSun.rightAscensionDeg; // approximate ecliptic long
   const elongRad = Math.abs(lambdaMoonRad - (sunLambda * DEG2RAD));
   const cosPhaseAngle = -Math.cos(elongRad) * Math.cos(betaMoonRad);
   const phaseAngleDeg = Math.acos(Math.max(-1, Math.min(1, cosPhaseAngle))) * RAD2DEG;
@@ -397,8 +398,8 @@ export function calculateLunarPosition(
   }
 
   // Position Angle of Bright Limb (chi): Tilt orientation of illuminated crescent
-  const sunDecRad = sunPos.declinationDeg * DEG2RAD;
-  const deltaRA = (sunPos.rightAscensionDeg - raMoonDeg) * DEG2RAD;
+  const sunDecRad = actualSun.declinationDeg * DEG2RAD;
+  const deltaRA = (actualSun.rightAscensionDeg - raMoonDeg) * DEG2RAD;
   const yLimb = Math.cos(sunDecRad) * Math.sin(deltaRA);
   const xLimb = Math.sin(sunDecRad) * Math.cos(declMoonRad) - Math.cos(sunDecRad) * Math.sin(declMoonRad) * Math.cos(deltaRA);
   const brightLimbAngleDeg = normalizeDeg(Math.atan2(yLimb, xLimb) * RAD2DEG);
@@ -585,6 +586,35 @@ export function calculateSubsolarPoint(date: Date): {
     longitude: subsolarLng,
     declinationDeg: sunPos.declinationDeg,
     equationOfTimeMin: sunPos.equationOfTimeMinutes
+  };
+}
+
+/**
+ * Calculates the Sublunar point (where the Moon is directly overhead at zenith)
+ * Latitude = Moon Declination
+ * Longitude = Greenwich Hour Angle of Moon (-180° to +180°)
+ */
+export function calculateSublunarPoint(date: Date): {
+  latitude: number;
+  longitude: number;
+  phaseName: MoonPhaseName;
+  illuminationFraction: number;
+  distanceKm: number;
+} {
+  const moonPos = calculateLunarPosition(date, 0, 0);
+
+  // Greenwich Hour Angle: Moon longitude on Earth
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  let moonLng = -((utcHours - (moonPos.azimuthDeg / 15)) * 15);
+  while (moonLng > 180) moonLng -= 360;
+  while (moonLng < -180) moonLng += 360;
+
+  return {
+    latitude: Math.max(-28.5, Math.min(28.5, moonPos.altitudeDeg)),
+    longitude: moonLng,
+    phaseName: moonPos.phaseName,
+    illuminationFraction: moonPos.illuminationFraction,
+    distanceKm: moonPos.distanceKm
   };
 }
 

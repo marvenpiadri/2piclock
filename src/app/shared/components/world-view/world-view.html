@@ -1,0 +1,476 @@
+<div class="world-view-container flex flex-col gap-5 w-full">
+  <!-- Top Scientific NASA Observatory Telemetry & Map Controls Bar -->
+  <div class="glass-panel p-4 flex flex-wrap items-center justify-between gap-4 border border-white/10 rounded-2xl bg-slate-900/90 backdrop-blur-xl shadow-2xl">
+    <!-- View Perspective Title & Scientific Identifier -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400 shadow-lg shadow-sky-500/10">
+        <mat-icon>public</mat-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-white tracking-wide uppercase font-mono">2PiClock Earth Observatory</h2>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20 font-semibold">
+            NASA Scientific 2D Projection
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Continuous analytical solar terminator, 4-stage twilight gradients, celestial grid, subsolar zenith, and global IANA clocks.
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Telemetry & Control Actions -->
+    <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+      <!-- Theme Switcher -->
+      <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-white/10">
+        <button 
+          type="button" 
+          (click)="setTheme('nasa')"
+          class="px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer"
+          [class.bg-sky-500/20]="currentMapTheme() === 'nasa'"
+          [class.text-sky-300]="currentMapTheme() === 'nasa'"
+          [class.text-slate-400]="currentMapTheme() !== 'nasa'"
+          title="NASA Scientific Slate & Deep Ocean Theme">
+          NASA
+        </button>
+        <button 
+          type="button" 
+          (click)="setTheme('midnight')"
+          class="px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer"
+          [class.bg-indigo-500/20]="currentMapTheme() === 'midnight'"
+          [class.text-indigo-300]="currentMapTheme() === 'midnight'"
+          [class.text-slate-400]="currentMapTheme() !== 'midnight'"
+          title="Cosmic Midnight Ultra Dark Theme">
+          Midnight
+        </button>
+        <button 
+          type="button" 
+          (click)="setTheme('blueprint')"
+          class="px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer"
+          [class.bg-cyan-500/20]="currentMapTheme() === 'blueprint'"
+          [class.text-cyan-300]="currentMapTheme() === 'blueprint'"
+          [class.text-slate-400]="currentMapTheme() !== 'blueprint'"
+          title="Astro Cyan Blueprint Theme">
+          Blueprint
+        </button>
+      </div>
+
+      <!-- Subsolar Point Live Coordinates -->
+      <button 
+        type="button"
+        (click)="flyToSubsolar()"
+        class="px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-amber-500/30 text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer"
+        title="Center on point where Sun is directly overhead at zenith">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span class="text-amber-400 font-bold">☉ Sun:</span>
+        <span class="font-bold">
+          {{ subsolarPoint().latitude >= 0 ? subsolarPoint().latitude.toFixed(1) + '°N' : (-subsolarPoint().latitude).toFixed(1) + '°S' }},
+          {{ subsolarPoint().longitude >= 0 ? subsolarPoint().longitude.toFixed(1) + '°E' : (-subsolarPoint().longitude).toFixed(1) + '°W' }}
+        </span>
+      </button>
+
+      <!-- Sublunar Point Live Coordinates -->
+      <button 
+        type="button"
+        (click)="flyToSublunar()"
+        class="px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-sky-500/30 text-sky-200 flex items-center gap-1.5 transition-all cursor-pointer"
+        title="Center on point where Moon is directly overhead at zenith">
+        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+        <span class="text-sky-300 font-bold">☽ Moon:</span>
+        <span class="font-bold">
+          {{ sublunarPoint().phaseName }} ({{ (sublunarPoint().illuminationFraction * 100).toFixed(0) }}%)
+        </span>
+      </button>
+
+      <!-- Quick Search Bar -->
+      <div class="relative">
+        <button 
+          type="button" 
+          (click)="isSearchOpen.set(!isSearchOpen())"
+          class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer"
+          title="Search Global Cities & Coordinates">
+          <mat-icon class="text-sm text-sky-400">search</mat-icon>
+          <span>Find City</span>
+        </button>
+
+        <!-- Search Autocomplete Dropdown -->
+        @if (isSearchOpen()) {
+          <div class="absolute right-0 top-full mt-2 w-80 p-2.5 rounded-2xl bg-slate-950/95 border border-sky-500/30 backdrop-blur-xl shadow-2xl z-50 flex flex-col gap-2">
+            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-white/10">
+              <mat-icon class="text-sm text-slate-400">search</mat-icon>
+              <input 
+                type="text" 
+                [ngModel]="searchQuery()" 
+                (ngModelChange)="searchQuery.set($event)"
+                placeholder="Search city, capital, country..."
+                class="w-full bg-transparent text-xs text-white placeholder-slate-500 outline-none font-sans" />
+              @if (searchQuery()) {
+                <button type="button" (click)="searchQuery.set('')" class="text-slate-400 hover:text-white cursor-pointer">
+                  <mat-icon class="text-xs">close</mat-icon>
+                </button>
+              }
+            </div>
+
+            <div class="flex flex-col max-h-60 overflow-y-auto divide-y divide-white/5">
+              @for (res of searchResults(); track res.id) {
+                <button 
+                  type="button" 
+                  (click)="selectLocation(res)"
+                  class="flex items-center justify-between p-2 hover:bg-sky-500/10 text-left rounded-lg transition-all cursor-pointer group">
+                  <div class="flex items-center gap-2">
+                    <app-country-flag [countryCode]="res.countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
+                    <div>
+                      <div class="text-xs font-bold text-white group-hover:text-sky-300">{{ res.name }}</div>
+                      <div class="text-[10px] text-slate-400">{{ res.country }}</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-mono text-slate-400">{{ res.timezone.split('/')[1] || res.timezone }}</span>
+                </button>
+              }
+              @if (searchResults().length === 0 && searchQuery()) {
+                <div class="p-3 text-center text-xs text-slate-500 font-sans">
+                  No locations found matching "{{ searchQuery() }}"
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Scientific Layer Controls -->
+      <div class="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/10">
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+          (click)="flyToObserver()"
+          title="Center map on selected observer location">
+          <mat-icon class="text-sm text-emerald-400">my_location</mat-icon>
+          <span>Observer</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showNightTerminator()"
+          (click)="toggleTerminator()"
+          title="Toggle real-time solar terminator shadow">
+          <mat-icon class="text-sm">brightness_medium</mat-icon>
+          <span>Terminator</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showTwilightBands()"
+          (click)="toggleTwilight()"
+          title="Toggle Civil, Nautical, and Astronomical twilight atmospheric layers">
+          <mat-icon class="text-sm">gradient</mat-icon>
+          <span>Twilight</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showCelestialGrid()"
+          (click)="toggleCelestialGrid()"
+          title="Toggle Equator, Tropics of Cancer/Capricorn, and Polar Circles">
+          <mat-icon class="text-sm">language</mat-icon>
+          <span>Tropics</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showSolarTrack()"
+          (click)="toggleSolarTrack()"
+          title="Toggle Sun's ground track / declination parallel">
+          <mat-icon class="text-sm">track_changes</mat-icon>
+          <span>Sun Track</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showCityLabels()"
+          (click)="toggleCityLabels()"
+          title="Toggle city pins and local times on the map">
+          <mat-icon class="text-sm">schedule</mat-icon>
+          <span>Clocks</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          [class.active]="showTimezoneGrid()"
+          (click)="toggleTimezoneGrid()"
+          title="Toggle UTC timezone meridians across the map">
+          <mat-icon class="text-sm">grid_on</mat-icon>
+          <span>UTC Grid</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="globe-tool-btn px-2.5 py-1 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+          (click)="resetWorldView()"
+          title="Reset to global full Earth view">
+          <mat-icon class="text-sm">fit_screen</mat-icon>
+          <span>Fit All</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Famous Observatories Quick Teleport Bar -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono no-scrollbar">
+    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 shrink-0 px-1">
+      <mat-icon class="text-sm text-sky-400">visibility</mat-icon>
+      Observatories:
+    </span>
+    @for (obs of observatories; track obs.id) {
+      <button 
+        type="button" 
+        (click)="selectObservatory(obs)"
+        class="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-sky-950/60 border border-white/10 hover:border-sky-500/40 text-slate-300 hover:text-white flex items-center gap-2 transition-all cursor-pointer shrink-0">
+        <mat-icon class="text-xs text-amber-400">{{ obs.icon }}</mat-icon>
+        <span class="font-bold font-sans text-xs">{{ obs.name }}</span>
+        <span class="text-[10px] text-slate-400 font-mono">{{ obs.elevationM }}m</span>
+      </button>
+    }
+  </div>
+
+  <!-- Primary MapLibre NASA Scientific World Clock Map Stage -->
+  <div class="relative w-full rounded-3xl overflow-hidden border border-white/10 bg-slate-950 shadow-2xl">
+    <!-- Cosmic Backing Grid -->
+    <div class="absolute inset-0 pointer-events-none cosmic-stars-backdrop z-0 opacity-30"></div>
+
+    <!-- MapLibre Map Viewport Container -->
+    <div #globeContainer class="globe-viewport w-full h-[540px] md:h-[640px] lg:h-[720px] relative z-10"></div>
+
+    <!-- Floating Scientific HUD: Selected / Inspected City Telemetry Card -->
+    <div class="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2 max-w-sm w-full">
+      <div class="glass-panel p-4 rounded-2xl bg-slate-950/95 border border-sky-500/30 backdrop-blur-xl shadow-2xl pointer-events-auto">
+        <!-- City Header & Status Badge -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <div class="flex items-center gap-2.5">
+            <app-country-flag [countryCode]="activeCardLocation().countryCode" [customClass]="'w-6 h-4 rounded-xs shadow-xs'"></app-country-flag>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider">{{ activeCardLocation().name }}</h3>
+                @if (selectedLocation().id === activeCardLocation().id) {
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                    OBSERVER
+                  </span>
+                }
+              </div>
+              <div class="text-[11px] text-slate-400">{{ activeCardLocation().country }} &bull; {{ activeCardLocation().timezone }}</div>
+            </div>
+          </div>
+
+          <!-- Astronomical Status Badge -->
+          <div class="flex flex-col items-end">
+            <span class="text-xs font-mono font-bold"
+              [class.text-amber-300]="activeCardStatus().isDaylight"
+              [class.text-sky-300]="!activeCardStatus().isDaylight">
+              {{ activeCardStatus().statusLabel }}
+            </span>
+            <span class="text-[10px] font-mono text-slate-400">Alt {{ activeCardStatus().solarAltitude > 0 ? '+' : '' }}{{ activeCardStatus().solarAltitude }}°</span>
+          </div>
+        </div>
+
+        <!-- Live Clock & 2Pi Phase Telemetry -->
+        <div class="grid grid-cols-2 gap-2 my-3">
+          <!-- Live Time Display -->
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 flex flex-col justify-center">
+            <span class="text-[10px] font-mono text-slate-400 uppercase">Local Time</span>
+            <div class="text-lg font-mono font-bold text-white tracking-tight">
+              {{ activeCardStatus().localTimeWithSeconds }}
+            </div>
+            <span class="text-[10px] font-mono text-sky-400">{{ activeCardStatus().utcOffset }}</span>
+          </div>
+
+          <!-- 2Pi Diurnal Phase Dial -->
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 flex flex-col justify-center">
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <span>2π Diurnal Phase</span>
+              <span class="text-amber-400 font-bold">&phi; {{ activeCardStatus().twoPiPhaseRad }} rad</span>
+            </div>
+            <!-- 2Pi Progress Bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full mt-2 overflow-hidden border border-white/5">
+              <div 
+                class="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-indigo-500 rounded-full transition-all duration-300"
+                [style.width.%]="activeCardStatus().twoPiPhasePercent">
+              </div>
+            </div>
+            <span class="text-[9px] font-mono text-slate-500 mt-1">Cycle {{ activeCardStatus().twoPiPhasePercent }}% of 24h</span>
+          </div>
+        </div>
+
+        <!-- Ephemeris Sun & Moon Details -->
+        <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono mb-3">
+          <div class="p-2 rounded-lg bg-slate-900/60 border border-white/5">
+            <span class="text-amber-400/80 block">Sunrise</span>
+            <span class="text-white font-bold">{{ activeCardStatus().sunriseTime }}</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-900/60 border border-white/5">
+            <span class="text-amber-300 block">Solar Noon</span>
+            <span class="text-white font-bold">{{ activeCardStatus().solarNoonTime }}</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-900/60 border border-white/5">
+            <span class="text-rose-400/80 block">Sunset</span>
+            <span class="text-white font-bold">{{ activeCardStatus().sunsetTime }}</span>
+          </div>
+        </div>
+
+        <!-- Weather Summary if Available -->
+        @if (currentWeather() && selectedLocation().id === activeCardLocation().id) {
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between text-xs font-mono mb-3">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-base text-sky-400">cloud</mat-icon>
+              <div>
+                <span class="text-white font-bold">{{ currentWeather()!.temperatureC }}°C</span>
+                <span class="text-[10px] text-slate-400 ml-1.5">{{ currentWeather()!.conditionLabel }}</span>
+              </div>
+            </div>
+            <div class="text-[10px] text-slate-400 text-right">
+              <div>Wind {{ currentWeather()!.windSpeedKmh }} km/h</div>
+              <div>Humidity {{ currentWeather()!.humidityPct }}%</div>
+            </div>
+          </div>
+        }
+
+        <!-- Actions -->
+        @if (selectedLocation().id !== activeCardLocation().id) {
+          <button 
+            type="button" 
+            (click)="selectLocation(activeCardLocation())"
+            class="w-full py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-mono text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
+            <mat-icon class="text-sm">my_location</mat-icon>
+            <span>Set as Active Observer</span>
+          </button>
+        }
+      </div>
+
+      <!-- Interactive Map Coordinate Probe Card -->
+      @if (probePoint()) {
+        <div class="glass-panel p-3.5 rounded-2xl bg-slate-950/95 border border-amber-500/40 backdrop-blur-xl shadow-2xl pointer-events-auto flex flex-col gap-2">
+          <div class="flex items-center justify-between pb-2 border-b border-white/10">
+            <div class="flex items-center gap-2">
+              <span class="text-amber-400 font-mono font-bold text-sm">⊕</span>
+              <div>
+                <div class="text-xs font-bold text-white font-mono">{{ probePoint()!.name }}</div>
+                <div class="text-[10px] text-slate-400">
+                  {{ probePoint()!.distanceFromObserverKm }} km from observer (bearing {{ probePoint()!.bearingFromObserverDeg }}°)
+                </div>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              (click)="dismissProbe()" 
+              class="text-slate-400 hover:text-white cursor-pointer p-1">
+              <mat-icon class="text-xs">close</mat-icon>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+            <div class="p-1.5 rounded-lg bg-slate-900/80 border border-white/5">
+              <span class="text-slate-400">Solar Elevation:</span>
+              <span class="font-bold text-amber-300 ml-1">{{ probePoint()!.solarAltitude }}° ({{ probePoint()!.statusLabel }})</span>
+            </div>
+            <div class="p-1.5 rounded-lg bg-slate-900/80 border border-white/5">
+              <span class="text-slate-400">Solar Azimuth:</span>
+              <span class="font-bold text-sky-300 ml-1">{{ probePoint()!.solarAzimuth }}°</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 text-center text-[9px] font-mono">
+            <div class="p-1 rounded bg-slate-900/60 border border-white/5">
+              <span class="text-amber-400 block">Rise</span>
+              <span class="text-white">{{ probePoint()!.sunrise }}</span>
+            </div>
+            <div class="p-1 rounded bg-slate-900/60 border border-white/5">
+              <span class="text-amber-300 block">Noon</span>
+              <span class="text-white">{{ probePoint()!.solarNoon }}</span>
+            </div>
+            <div class="p-1 rounded bg-slate-900/60 border border-white/5">
+              <span class="text-rose-400 block">Set</span>
+              <span class="text-white">{{ probePoint()!.sunset }}</span>
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            (click)="setProbeAsObserver()" 
+            class="py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+            <mat-icon class="text-xs">pin_drop</mat-icon>
+            <span>Set Point as Observer</span>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Floating Map Quick Legend -->
+    <div class="absolute bottom-4 right-4 z-20 pointer-events-none hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-white/10 text-[10px] font-mono text-slate-300 backdrop-blur-md shadow-xl">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span>Daylight</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+        <span>Civil (-6°)</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+        <span>Nautical (-12°)</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+        <span>Astro / Night</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>Observer</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Cities Comparison Grid (Tier 1 & Major Capitals) -->
+  <div class="glass-panel p-5 rounded-2xl bg-slate-900/85 border border-white/10 backdrop-blur-xl shadow-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-sky-400">public</mat-icon>
+        <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wide">Global Observatory Clocks</h3>
+      </div>
+      <span class="text-xs font-mono text-slate-400">{{ allPresets.length }} Registered Observatories</span>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+      @for (status of worldHubStatuses().slice(0, 18); track status.location.id) {
+        <button 
+          type="button" 
+          (click)="selectLocation(status.location)"
+          class="hub-card p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 group"
+          [class.active-hub]="selectedLocation().id === status.location.id">
+          <div class="flex items-center justify-between">
+            <app-country-flag [countryCode]="status.location.countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
+            <span class="w-1.5 h-1.5 rounded-full"
+              [class.bg-amber-400]="status.astroState === 'day'"
+              [class.bg-purple-400]="status.astroState === 'civil-twilight'"
+              [class.bg-indigo-400]="status.astroState === 'nautical-twilight'"
+              [class.bg-sky-400]="status.astroState === 'night'"></span>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white group-hover:text-sky-300 transition-colors truncate">
+              {{ status.location.name }}
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono">{{ status.utcOffset }}</div>
+          </div>
+          <div class="text-sm font-mono font-bold mt-1"
+            [class.text-amber-300]="status.astroState === 'day'"
+            [class.text-sky-300]="status.astroState !== 'day'">
+            {{ status.localTime }}
+          </div>
+        </button>
+      }
+    </div>
+  </div>
+</div>

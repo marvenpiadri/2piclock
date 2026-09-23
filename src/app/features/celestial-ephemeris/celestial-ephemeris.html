@@ -6,6 +6,9 @@
     </div>
   </div>
 
+  <!-- Real-Time Astronomy Details & Visual Moon Phase Indicator -->
+  <app-astronomy-details></app-astronomy-details>
+
   <!-- 24-Hour Solar Altitude Curve Chart -->
   <section class="chart-section glass-panel">
     <div class="section-title-row">
@@ -168,5 +171,126 @@
         }
       </div>
     </div>
+  </div>
+
+  <!-- Dual-Engine Solar Validation & Planetary Ephemeris Section -->
+  <div class="space-y-6 mt-6">
+    <!-- Dual-Engine Scientific Cross-Check Card -->
+    <section class="glass-panel p-5 rounded-2xl bg-slate-900/80 border border-amber-500/30">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-amber-500">verified</mat-icon>
+          <div>
+            <h2 class="font-mono text-sm font-bold text-amber-400 uppercase tracking-wider">
+              Dual-Engine Solar Validation (Observatory Quality Control)
+            </h2>
+            <p class="text-xs text-slate-400">
+              Cross-validating high-precision Astronomy Engine (NOAA / Meeus) against SunCalc algorithm in real time.
+            </p>
+          </div>
+        </div>
+        <div class="validation-badge flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs"
+          [class.bg-emerald-500/10]="solarCrossCheck().isValidated"
+          [class.border-emerald-500/30]="solarCrossCheck().isValidated"
+          [class.text-emerald-300]="solarCrossCheck().isValidated"
+          [class.bg-amber-500/10]="!solarCrossCheck().isValidated"
+          [class.border-amber-500/30]="!solarCrossCheck().isValidated"
+          [class.text-amber-300]="!solarCrossCheck().isValidated">
+          <mat-icon class="text-sm">{{ solarCrossCheck().isValidated ? 'check_circle' : 'warning' }}</mat-icon>
+          <span>{{ solarCrossCheck().isValidated ? 'SCIENTIFIC CONSENSUS (Δ < 0.2°)' : 'SUB-ARC MINUTE VARIANCE' }}</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-amber-500 font-bold mb-1">Primary Engine: Astronomy Engine</div>
+          <div class="text-slate-300">Altitude: <span class="font-bold text-white">{{ solarCrossCheck().astronomyEngineAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().astronomyEngineAltitudeDeg.toFixed(3) }}°</span></div>
+          <div class="text-slate-300">Azimuth: <span class="font-bold text-white">{{ solarCrossCheck().astronomyEngineAzimuthDeg.toFixed(3) }}°</span></div>
+        </div>
+
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-amber-500 font-bold mb-1">Cross-Check Engine: SunCalc</div>
+          <div class="text-slate-300">Altitude: <span class="font-bold text-white">{{ solarCrossCheck().sunCalcAltitudeDeg >= 0 ? '+' : '' }}{{ solarCrossCheck().sunCalcAltitudeDeg.toFixed(3) }}°</span></div>
+          <div class="text-slate-300">Azimuth: <span class="font-bold text-white">{{ solarCrossCheck().sunCalcAzimuthDeg.toFixed(3) }}°</span></div>
+        </div>
+
+        <div class="engine-box bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div class="text-[10px] uppercase text-emerald-400 font-bold mb-1">Consensus Delta Variance</div>
+          <div class="text-slate-300">Δ Altitude: <span class="font-bold text-emerald-300">{{ solarCrossCheck().altitudeDeltaDeg.toFixed(4) }}°</span></div>
+          <div class="text-slate-300">Δ Azimuth: <span class="font-bold text-emerald-300">{{ solarCrossCheck().azimuthDeltaDeg.toFixed(4) }}°</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planetary Horizons Ephemeris Table -->
+    <section class="glass-panel p-5 rounded-2xl bg-slate-900/80 border border-amber-500/25">
+      <div class="flex items-center gap-2 mb-4">
+        <mat-icon class="text-amber-500">planets</mat-icon>
+        <div>
+          <h2 class="font-mono text-sm font-bold text-amber-400 uppercase tracking-wider">
+            Planetary Horizons & Ephemeris Table
+          </h2>
+          <p class="text-xs text-slate-400">
+            Real-time planetary coordinates, apparent magnitudes, and horizon visibility for {{ selectedLocation().name }}
+          </p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left font-mono text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-[10px] uppercase text-slate-400">
+              <th class="py-2.5 px-3">Celestial Body</th>
+              <th class="py-2.5 px-3">Altitude</th>
+              <th class="py-2.5 px-3">Azimuth</th>
+              <th class="py-2.5 px-3">Right Ascension</th>
+              <th class="py-2.5 px-3">Declination</th>
+              <th class="py-2.5 px-3">Distance (AU)</th>
+              <th class="py-2.5 px-3">Magnitude</th>
+              <th class="py-2.5 px-3 text-right">Visibility</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            @for (planet of planetaryPositions(); track planet.name) {
+              <tr class="hover:bg-slate-800/30 transition-colors">
+                <td class="py-3 px-3 font-bold text-white flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full" [class.bg-amber-400]="planet.visible" [class.bg-slate-600]="!planet.visible"></span>
+                  <span>{{ planet.name }}</span>
+                </td>
+                <td class="py-3 px-3" [class.text-amber-300]="planet.visible" [class.text-slate-500]="!planet.visible">
+                  {{ planet.altitudeDeg >= 0 ? '+' : '' }}{{ planet.altitudeDeg.toFixed(1) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.azimuthDeg.toFixed(1) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-400">
+                  {{ planet.rightAscensionHours.toFixed(2) }}h
+                </td>
+                <td class="py-3 px-3 text-slate-400">
+                  {{ planet.declinationDeg >= 0 ? '+' : '' }}{{ planet.declinationDeg.toFixed(2) }}°
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.distanceAu.toFixed(3) }}
+                </td>
+                <td class="py-3 px-3 text-slate-300">
+                  {{ planet.magnitude >= 0 ? '+' : '' }}{{ planet.magnitude.toFixed(1) }}
+                </td>
+                <td class="py-3 px-3 text-right">
+                  <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold"
+                    [class.bg-emerald-500/20]="planet.visible"
+                    [class.text-emerald-300]="planet.visible"
+                    [class.border]="planet.visible"
+                    [class.border-emerald-500/30]="planet.visible"
+                    [class.bg-slate-800]="!planet.visible"
+                    [class.text-slate-500]="!planet.visible">
+                    {{ planet.visible ? 'Visible Above Horizon' : 'Below Horizon' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>

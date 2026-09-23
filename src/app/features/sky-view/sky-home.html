@@ -1,47 +1,63 @@
-<div class="sky-report" [class.glass-off]="!isGlassEnabled()" [class.astronomy-active]="activeSection() === 'astronomy'">
-  @if (showParticles()) { <app-weather-particles></app-weather-particles> }
+<div class="sky-report" [class.glass-off]="!isGlassEnabled()">
+  <div class="sky-planet-backdrop" aria-hidden="true">
+    <span class="planet-star planet-star-1"></span>
+    <span class="planet-star planet-star-2"></span>
+    <span class="planet-star planet-star-3"></span>
+    <span class="planet-orbit planet-orbit-1"></span>
+    <span class="planet-orbit planet-orbit-2"></span>
+    <span class="planet-sun"></span>
+    <span class="planet-moon"></span>
+  </div>
 
-  <main class="sky-report-scroll" (scroll)="onSkyScroll($event)">
-    <!-- TIME / HOME -->
-    <section id="sky-section-time" class="sky-section time-section">
-      <div class="section-inner time-inner">
+  <header class="sky-header">
+    <div class="sky-header-left">
+      @if (skyPage === 'time') {
+        <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
+        <h1>Time in {{ selectedLocation().name }}, {{ selectedLocation().country }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
+      } @else if (skyPage === 'weather') {
+        <span class="section-eyebrow">WEATHER · {{ selectedLocation().name }}</span>
+        <h1>Weather</h1>
+        <p>Current conditions, hourly forecast and the week ahead.</p>
+      } @else if (skyPage === 'astronomy') {
+        <span class="section-eyebrow">ASTRONOMY · {{ selectedLocation().name }}</span>
+        <h1>The sky above you.</h1>
+        <p>Solar, lunar and astronomical conditions for your location.</p>
+      } @else {
+        <span class="section-eyebrow">WORLD TIME</span>
+        <h1>World clocks</h1>
+        <p>Local time across the cities that matter.</p>
+      }
+    </div>
 
-        <div class="top-context">
-          <div class="top-location">
-            <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag>
-            <div>
-              <strong>{{ selectedLocation().name }}</strong>
-              <span>{{ selectedLocation().country }} · {{ timezoneDisplay() }}</span>
-            </div>
-            <button type="button" class="context-button" (click)="openDrawerTab('locations')" title="Change location">
-              <mat-icon>expand_more</mat-icon>
-            </button>
-          </div>
-          <div class="top-actions">
-            @if (activeAlerts().length > 0) {
-              <button type="button" class="quiet-button alert-action" (click)="openAlertsModal()" title="Weather alerts">
-                <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
-              </button>
-            }
-            <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings"><mat-icon>settings</mat-icon><span>Settings</span></button>
-          </div>
-        </div>
+    <div class="sky-header-right">
+      <button type="button" class="location-action" (click)="openDrawerTab('locations')" title="Change location">
+        <span>{{ selectedLocation().name }}</span>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+      @if (activeAlerts().length > 0) {
+        <button type="button" class="icon-action" (click)="openAlertsModal()" title="Weather alerts">
+          <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
+        </button>
+      }
+      <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
+        <mat-icon>settings</mat-icon><span>Settings</span>
+      </button>
+    </div>
+  </header>
 
-        <div class="home-heading">
-          <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
-          <h1>Time in {{ selectedLocation().name }}, {{ selectedLocation().country }}</h1>
-          <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
-        </div>
+  <nav class="sky-navigation" aria-label="Sky">
+    <a routerLink="/sky" [class.active]="skyPage === 'time'">Time</a>
+    <a routerLink="/sky/weather" [class.active]="skyPage === 'weather'">Weather</a>
+    <a routerLink="/sky/astronomy" [class.active]="skyPage === 'astronomy'">Astronomy</a>
+    <a routerLink="/sky/world" [class.active]="skyPage === 'world'">World time</a>
+  </nav>
 
-        <div class="hero-layout">
+  <main class="sky-page">
+    @if (skyPage === 'time') {
+      <section class="sky-time-layout">
+        <div class="time-column">
           <div class="time-stage">
-            <div class="sky-orbit-backdrop" aria-hidden="true">
-              <span class="orbit-ring orbit-ring-one"></span>
-              <span class="orbit-ring orbit-ring-two"></span>
-              <span class="orbit-sun"></span>
-              <span class="orbit-moon"></span>
-            </div>
-            <!-- Keep the existing celestial clock language: sun/moon rotation + exact local time. -->
             <div class="polar-clock-container">
               <svg class="polar-clock" viewBox="-160 -160 320 320" aria-label="Celestial clock">
                 <defs>
@@ -91,105 +107,86 @@
             </div>
           </div>
 
-          <aside class="home-info-panel">
-            <div class="info-panel-top">
-              <div>
-                <span class="section-eyebrow">SELECTED LOCATION</span>
-                <h2>{{ selectedLocation().name }}</h2>
-                <p>{{ selectedLocation().country }}</p>
-              </div>
-              <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'country-panel-flag'"></app-country-flag>
-            </div>
+          <div class="time-controls">
+            @if (!isLive()) {
+              <button type="button" class="live-return" (click)="setLive()"><i></i> Live</button>
+            } @else {
+              <span class="live-status"><i></i> Live</span>
+            }
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')"><span>Sunrise</span><b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')"><span>Noon</span><b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
+            <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')"><span>Sunset</span><b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
+          </div>
 
-            <div class="analog-clock-row">
-              <app-analog-clock
-                [timezone]="selectedLocation().timezone"
-                [activeDate]="activeDate()"
-                [latitude]="selectedLocation().latitude"
-                [longitude]="selectedLocation().longitude">
-              </app-analog-clock>
-              <div class="location-facts">
-                <div><span>Local time</span><strong>{{ localTime() }}</strong></div>
-                <div><span>Time zone</span><strong>{{ timezoneDisplay() }}</strong></div>
-                <div><span>Coordinates</span><strong>{{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</strong></div>
-                <div><span>Elevation</span><strong>{{ selectedLocation().elevationMeters ? selectedLocation().elevationMeters + ' m' : '—' }}</strong></div>
-              </div>
-            </div>
-
-            <div class="info-weather">
-              <div>
-                <span class="section-eyebrow">CURRENT WEATHER</span>
-                <strong>{{ weather().conditionLabel }}</strong>
-                <p>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}° · feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
-              </div>
-              <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
-            </div>
-
-            <div class="country-facts">
-              <div><span>Country</span><strong>{{ selectedLocation().country }}</strong></div>
-              <div><span>Location</span><strong>{{ selectedLocation().name }}</strong></div>
-              <div><span>UTC offset</span><strong>{{ timezoneDisplay() }}</strong></div>
-              <div><span>Daylight</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
-            </div>
-
-            <button type="button" class="weather-card-link" (click)="scrollToSection('weather')">
-              Full weather report <mat-icon>arrow_forward</mat-icon>
-            </button>
-          </aside>
+          <div class="time-scrubber">
+            <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
+            <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" (input)="onScrubberInput($event)" aria-label="Time of day"/>
+            <div class="scrubber-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+          </div>
         </div>
 
-        <div class="time-controls">
-          @if (!isLive()) {
-            <button type="button" class="live-return" (click)="setLive()"><i></i> Return to live</button>
-          } @else {
-            <span class="live-status"><i></i> Live</span>
-          }
-          <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunrise')">Sunrise <b>{{ formatTime(celestial().solarEvents.sunrise) }}</b></button>
-          <button type="button" class="time-tool" (click)="jumpToSolarEvent('noon')">Noon <b>{{ formatTime(celestial().solarEvents.solarNoon) }}</b></button>
-          <button type="button" class="time-tool" (click)="jumpToSolarEvent('sunset')">Sunset <b>{{ formatTime(celestial().solarEvents.sunset) }}</b></button>
-          <button type="button" class="next-section-button" (click)="scrollToSection('weather')">Explore weather <mat-icon>south</mat-icon></button>
-        </div>
-
-        <div class="time-scrubber">
-          <div class="scrubber-head"><span>TIME MACHINE</span><span>{{ isLive() ? 'LIVE' : 'SIMULATED' }}</span></div>
-          <input type="range" min="0" max="1" step="0.0001" [value]="localDayFraction()" (input)="onScrubberInput($event)" aria-label="Time of day"/>
-          <div class="scrubber-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WEATHER -->
-    <section id="sky-section-weather" class="sky-section weather-section">
-      <div class="section-inner report-inner">
-        <div class="section-heading">
-          <span class="section-eyebrow">WEATHER · {{ selectedLocation().name }}</span>
-          <h2>Weather, without the noise.</h2>
-          <p>Current conditions first, then the hours and week ahead.</p>
-        </div>
-
-        <div class="weather-main-card">
-          <div class="weather-main-condition">
-            <div class="weather-big-icon"><mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon></div>
+        <aside class="home-info-panel">
+          <div class="info-panel-top">
             <div>
-              <span class="section-eyebrow">CURRENT CONDITIONS</span>
-              <strong>{{ weather().conditionLabel }}</strong>
-              <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+              <span class="section-eyebrow">SELECTED LOCATION</span>
+              <h2>{{ selectedLocation().name }}</h2>
+              <p>{{ selectedLocation().country }}</p>
+            </div>
+            <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'country-panel-flag'"></app-country-flag>
+          </div>
+
+          <div class="analog-clock-row">
+            <app-analog-clock [timezone]="selectedLocation().timezone" [activeDate]="activeDate()" [latitude]="selectedLocation().latitude" [longitude]="selectedLocation().longitude"></app-analog-clock>
+            <div class="location-facts">
+              <div><span>Local time</span><strong>{{ localTime() }}</strong></div>
+              <div><span>Time zone</span><strong>{{ timezoneDisplay() }}</strong></div>
+              <div><span>Coordinates</span><strong>{{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</strong></div>
+              <div><span>Elevation</span><strong>{{ selectedLocation().elevationMeters ? selectedLocation().elevationMeters + ' m' : '—' }}</strong></div>
             </div>
           </div>
-          <div class="weather-big-temp">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}<small>°{{ isFahrenheit() ? 'F' : 'C' }}</small></div>
+
+          <div class="info-weather">
+            <div>
+              <span class="section-eyebrow">CURRENT WEATHER</span>
+              <strong>{{ weather().conditionLabel }}</strong>
+              <p>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}° · feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
+            </div>
+            <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+          </div>
+
+          <div class="country-facts">
+            <div><span>Daylight</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
+            <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
+            <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
+            <div><span>Day length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong></div>
+          </div>
+        </aside>
+      </section>
+    }
+
+    @if (skyPage === 'weather') {
+      <section class="report-page weather-page">
+        <div class="weather-current">
+          <div class="weather-current-copy">
+            <span class="section-eyebrow">CURRENT CONDITIONS</span>
+            <div class="weather-temperature">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°<small>{{ isFahrenheit() ? 'F' : 'C' }}</small></div>
+            <h2>{{ weather().conditionLabel }}</h2>
+            <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+          </div>
+          <mat-icon class="weather-current-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
         </div>
 
-        <div class="weather-stat-grid">
-          <div class="weather-stat"><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong><small>Current probability</small></div>
-          <div class="weather-stat"><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong><small>Surface wind</small></div>
-          <div class="weather-stat"><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong><small>Current sky</small></div>
-          <div class="weather-stat"><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong><small>Approximate range</small></div>
-          <div class="weather-stat"><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong><small>Surface pressure</small></div>
-          <div class="weather-stat"><span>UV index</span><strong>{{ weather().uvIndex }}</strong><small>Current UV level</small></div>
+        <div class="weather-stats">
+          <div><span>Rain chance</span><strong>{{ weather().precipitationPct }}%</strong></div>
+          <div><span>Wind</span><strong>{{ weather().windSpeedKmh }} km/h</strong></div>
+          <div><span>Cloud cover</span><strong>{{ weather().cloudCoverPct }}%</strong></div>
+          <div><span>Visibility</span><strong>{{ weather().visibilityKm }} km</strong></div>
+          <div><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong></div>
+          <div><span>UV index</span><strong>{{ weather().uvIndex }}</strong></div>
         </div>
 
-        <div class="forecast-block">
-          <div class="forecast-heading"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h3>Hourly forecast</h3></div><span>Swipe / scroll</span></div>
+        <section class="weather-section-block">
+          <div class="section-heading-row"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h2>Hourly</h2></div><span>Local time</span></div>
           <div class="hourly-forecast">
             @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
               <div class="hour-item">
@@ -200,85 +197,63 @@
               </div>
             }
           </div>
-        </div>
+        </section>
 
-        <div class="forecast-block weekly-block">
-          <div class="forecast-heading"><div><span class="section-eyebrow">7 DAY OUTLOOK</span><h3>Week ahead</h3></div><span>High / low · rain</span></div>
+        <section class="weather-section-block">
+          <div class="section-heading-row"><div><span class="section-eyebrow">7 DAY OUTLOOK</span><h2>Forecast</h2></div><span>High / low · rain</span></div>
           <div class="weekly-forecast">
             @for (day of weeklyForecast(); track day.key) {
               <div class="week-day">
                 <strong>{{ day.label }}</strong>
                 <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : day.condition.toLowerCase().includes('snow') ? 'ac_unit' : 'wb_sunny' }}</mat-icon>
-                <span class="week-condition">{{ day.condition }}</span>
-                <div class="week-temp"><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><span>{{ isFahrenheit() ? day.lowF : day.lowC }}°</span></div>
-                <small>{{ day.precipitationPct }}% rain</small>
+                <span>{{ day.condition }}</span>
+                <div><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small></div>
+                <em>{{ day.precipitationPct }}% rain</em>
               </div>
             }
           </div>
+        </section>
+      </section>
+    }
+
+    @if (skyPage === 'astronomy') {
+      <section class="report-page astronomy-page">
+        <div class="astronomy-hero">
+          <div class="astronomy-orbit">
+            <span class="astronomy-sun">SUN</span>
+            <span class="astronomy-moon">MOON</span>
+            <div class="astronomy-moon-core"></div>
+          </div>
+          <div class="astronomy-now"><span>{{ getTwilightLabel(celestial().twilightState) }}</span><strong>{{ localTime() }}</strong></div>
         </div>
 
-        <div class="section-nav-actions">
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('time')"><mat-icon>north</mat-icon> Time</button>
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('astronomy')">Astronomy <mat-icon>arrow_forward</mat-icon></button>
+        <div class="astro-grid">
+          <div><span>Moon phase</span><strong>{{ celestial().moon.phaseName }}</strong><small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small></div>
+          <div><span>Moon altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong><small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small></div>
+          <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong><small>Local time</small></div>
+          <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></div>
+          <div><span>Day length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong><small>Sun above horizon</small></div>
+          <div><span>Solar altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong><small>Current position</small></div>
         </div>
-      </div>
-    </section>
 
-    <!-- ASTRONOMY -->
-    <section id="sky-section-astronomy" class="sky-section astronomy-section">
-      <div class="starfield" aria-hidden="true"></div>
-      <div class="section-inner astronomy-inner">
-        <div class="section-heading">
-          <span class="section-eyebrow">ASTRONOMY · {{ selectedLocation().name }}</span>
-          <h2>Tonight, above you.</h2>
-          <p>The sky follows your exact location and local time.</p>
-        </div>
-        <div class="astronomy-visual">
-          <div class="moon-orbit"><div class="moon-core"></div><span class="orbit-point orbit-sun">SUN</span><span class="orbit-point orbit-moon">MOON</span></div>
-          <div class="astro-now"><span>{{ getTwilightLabel(celestial().twilightState) }}</span><strong>{{ localTime() }}</strong></div>
-        </div>
-        <div class="astro-report-grid">
-          <div class="astro-item"><span>Moon phase</span><strong>{{ celestial().moon.phaseName }}</strong><small>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}% illuminated</small></div>
-          <div class="astro-item"><span>Moon altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong><small>{{ formatMoonDistance(celestial().moon.distanceKm) }} km away</small></div>
-          <div class="astro-item"><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong><small>Local time</small></div>
-          <div class="astro-item"><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong><small>Local time</small></div>
-        </div>
-        <div class="section-nav-actions">
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('weather')"><mat-icon>arrow_back</mat-icon> Weather</button>
+        <div class="astronomy-actions">
           <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
-          <button type="button" class="secondary-report-button" (click)="scrollToSection('world')">World time <mat-icon>arrow_forward</mat-icon></button>
+          <a routerLink="/sky" class="secondary-report-button">Back to time <mat-icon>arrow_forward</mat-icon></a>
         </div>
-      </div>
-    </section>
+      </section>
+    }
 
-    <!-- WORLD TIME -->
-    <section id="sky-section-world" class="sky-section world-section">
-      <div class="section-inner report-inner narrow-inner">
-        <div class="section-heading"><span class="section-eyebrow">WORLD TIME</span><h2>Time keeps moving everywhere.</h2><p>A compact global view from {{ selectedLocation().name }}.</p></div>
+    @if (skyPage === 'world') {
+      <section class="report-page world-page">
         <div class="world-clock-list">
           <div class="world-clock local-world-clock"><div><span class="world-city">Here</span><small>{{ selectedLocation().name }}</small></div><strong>{{ localTime() }}</strong><span>{{ timezoneDisplay() }}</span></div>
           @for (city of worldClockCities; track city.name) {
             <div class="world-clock"><div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div><strong>{{ formatWorldTime(city.zone) }}</strong><span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span></div>
           }
         </div>
-        <div class="world-footer"><span>Need more cities?</span><a href="/world">Explore World Clocks <mat-icon>arrow_forward</mat-icon></a></div>
-      </div>
-    </section>
-
-    <!-- TODAY -->
-    
-
-    <!-- COMING UP -->
-    
-
-    <!-- FOOTER -->
-    <section id="sky-section-footer" class="sky-section footer-section">
-      <div class="section-inner footer-inner">
-        <div class="footer-brand">2π</div><h2>Time, weather and the sky.</h2><p>One location. One continuous view of what is happening now and what comes next.</p>
-        <div class="footer-links"><a href="/sky">Sky</a><a href="/world">World clocks</a><a href="/weather">Weather</a><a href="/ephemeris">Astronomy</a><a href="/planner">Meeting planner</a></div>
-        <span class="footer-small">2piClock · {{ selectedLocation().name }} · {{ timezoneDisplay() }}</span>
-      </div>
-    </section>
+        <a routerLink="/world" class="secondary-report-button">Open full world clock <mat-icon>arrow_forward</mat-icon></a>
+      </section>
+    }
   </main>
 
   @if (isDrawerOpen()) {
@@ -286,12 +261,11 @@
     <aside class="sky-drawer">
       <div class="drawer-header"><div><span>2piClock</span><strong>{{ selectedLocation().name }}</strong></div><button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close</mat-icon></button></div>
       <div class="drawer-content">
-        <button type="button" class="drawer-location" (click)="openDrawerTab('locations')"><app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ selectedLocation().name }}</span><mat-icon>location_on</mat-icon></button>
-        <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Locations</button></div>
-        @if (activeDrawerTab() === 'weather') {
-          <div class="drawer-report"><span class="section-eyebrow">FULL WEATHER</span><strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong><span>Feels like {{ weather().feelsLikeC }}°C</span><span>Humidity {{ weather().humidityPct }}%</span><span>Wind {{ weather().windSpeedKmh }} km/h</span><span>Cloud {{ weather().cloudCoverPct }}%</span><span>Visibility {{ weather().visibilityKm }} km</span><button type="button" class="primary-report-button" (click)="scrollToSection('weather'); closeDrawer()">Jump to weather report</button></div>
+        <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Location</button><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button></div>
+        @if (activeDrawerTab() === 'locations') {
+          <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
         } @else {
-          <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
+          <div class="drawer-report"><span class="section-eyebrow">CURRENT WEATHER</span><strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong><span>Feels like {{ weather().feelsLikeC }}°C</span><span>Humidity {{ weather().humidityPct }}%</span><span>Wind {{ weather().windSpeedKmh }} km/h</span><span>Cloud {{ weather().cloudCoverPct }}%</span></div>
         }
       </div>
     </aside>

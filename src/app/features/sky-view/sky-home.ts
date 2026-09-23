@@ -108,8 +108,20 @@ export class SkyHomeComponent {
   constructor() {
     effect(() => {
       const location = this.selectedLocation();
-      const title = `Time in ${location.name}, ${location.country} | 2piClock`;
-      const description = `Current local time, weather, sunrise, sunset and astronomical conditions for ${location.name}, ${location.country}.`;
+      const labels = {
+        time: `Time in ${location.name}, ${location.country}`,
+        weather: `Weather in ${location.name}, ${location.country}`,
+        astronomy: `Astronomy in ${location.name}, ${location.country}`,
+        world: 'World Time'
+      };
+      const descriptions = {
+        time: `Current local time, sunrise, sunset and astronomical conditions for ${location.name}, ${location.country}.`,
+        weather: `Current conditions, hourly weather and a 7-day forecast for ${location.name}, ${location.country}.`,
+        astronomy: `Solar and lunar conditions, moon phase, twilight and astronomical information for ${location.name}, ${location.country}.`,
+        world: 'Compare local time across major cities around the world.'
+      };
+      const title = `${labels[this.skyPage]} | 2piClock`;
+      const description = descriptions[this.skyPage];
       this.title.setTitle(title);
       this.meta.updateTag({ name: 'description', content: description });
       this.meta.updateTag({ property: 'og:title', content: title });

@@ -7,11 +7,10 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="relative w-full aspect-square max-w-[220px] mx-auto rounded-full bg-[#080a0f] border border-white/10 shadow-2xl flex items-center justify-center p-2">
+    <div class="analog-face">
       <svg class="w-full h-full overflow-visible" viewBox="0 0 200 200">
         <!-- Pure Outer & Inner Dial Circle -->
-        <circle cx="100" cy="100" r="92" fill="#07090e" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" />
-        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(245, 158, 11, 0.2)" stroke-width="0.75" />
+        <circle cx="100" cy="100" r="94" fill="#090b10" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2" />
 
         <!-- Dial Tick Marks / Stripes -->
         <!-- Fine stripes in WHITE, Big hour stripes in AMBER -->
@@ -104,9 +103,8 @@ import { CommonModule } from '@angular/common';
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+    :host { display:block; width:100%; }
+    .analog-face { width:min(100%,220px); aspect-ratio:1; margin:auto; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
   `]
 })
 export class AnalogClockComponent {

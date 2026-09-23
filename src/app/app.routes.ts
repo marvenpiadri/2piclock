@@ -3,6 +3,7 @@ import { SkyHomeComponent } from './features/sky-view/sky-home';
 import { WorldClocksComponent } from './features/world-clocks/world-clocks';
 import { CelestialEphemerisComponent } from './features/celestial-ephemeris/celestial-ephemeris';
 import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weather-atmosphere';
+import { WeatherViewComponent } from './features/weather-view/weather-view';
 import { MeetingPlannerComponent } from './features/meeting-planner/meeting-planner';
 import { SpaceViewComponent } from './shared/components/space-view/space-view';
 
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'space', component: SpaceViewComponent },
   { path: 'deep-space-observatory', redirectTo: 'space', pathMatch: 'full' },
   { path: 'atmosphere', component: WeatherAtmosphereComponent },
+  { path: 'weather', component: WeatherViewComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },

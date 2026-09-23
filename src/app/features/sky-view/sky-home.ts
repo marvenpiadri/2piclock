@@ -76,7 +76,67 @@ export class SkyHomeComponent {
 
   readonly showShareModal = signal<boolean>(false);
   
-  readonly isInspectorVisible = signal<boolean>(true);
+  readonly isInspectorVisible = signal<boolean>(false);
+
+  // /sky is a scroll-driven report: one full-screen section per subject.
+  readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next'>('time');
+  readonly skySections = [
+    { id: 'time', label: 'Time', icon: 'schedule' },
+    { id: 'weather', label: 'Weather', icon: 'cloud' },
+    { id: 'astronomy', label: 'Astronomy', icon: 'auto_awesome' },
+    { id: 'world', label: 'World Time', icon: 'public' },
+    { id: 'today', label: 'Today', icon: 'today' },
+    { id: 'next', label: 'Coming Up', icon: 'event' }
+  ] as const;
+
+  readonly worldClockCities = [
+    { name: 'London', zone: 'Europe/London' },
+    { name: 'New York', zone: 'America/New_York' },
+    { name: 'Dubai', zone: 'Asia/Dubai' },
+    { name: 'Tokyo', zone: 'Asia/Tokyo' }
+  ];
+
+  formatWorldTime(zone: string): string {
+    return this.activeDate().toLocaleTimeString('en-GB', {
+      timeZone: zone, hour: '2-digit', minute: '2-digit', hour12: false
+    });
+  }
+
+  formatWorldDay(zone: string): string {
+    return this.activeDate().toLocaleDateString('en-US', { timeZone: zone, weekday: 'short' });
+  }
+
+  onSkyScroll(event: Event): void {
+    const container = event.currentTarget as HTMLElement;
+    const center = container.scrollTop + container.clientHeight / 2;
+    let nearest = this.skySections[0].id;
+    let nearestDistance = Infinity;
+
+    for (const section of this.skySections) {
+      const element = document.getElementById('sky-section-' + section.id);
+      if (!element) continue;
+      const midpoint = element.offsetTop + element.offsetHeight / 2;
+      const distance = Math.abs(midpoint - center);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = section.id;
+      }
+    }
+
+    this.activeSection.set(nearest as 'time' | 'weather' | 'astronomy' | 'world' | 'today' | 'next');
+  }
+
+  scrollToSection(id: string): void {
+    document.getElementById('sky-section-' + id)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+
+  openWeatherReport(): void {
+    this.scrollToSection('weather');
+  }
+
 
   toggleInspector(): void {
     this.isInspectorVisible.update(v => !v);

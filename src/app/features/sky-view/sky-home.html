@@ -1,4 +1,4 @@
-<div class="sky-report">
+<div class="sky-report" [class.astronomy-active]="activeSection() === 'astronomy'">
 
   @if (showParticles()) {
     <app-weather-particles></app-weather-particles>

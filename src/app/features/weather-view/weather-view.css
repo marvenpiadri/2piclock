@@ -965,3 +965,4 @@
   .speed-group { display: none; }
   .altitude-bar { top: auto; bottom: 64px; }
 }
+.met-icon.weather-icon-sun{color:#f5b942;filter:drop-shadow(0 0 5px rgba(245,185,66,.28))}.met-icon.weather-icon-partly{color:#9ca3af}.met-icon.weather-icon-overcast{color:#737b87}.met-icon.weather-icon-rain{color:#4da3ff}.met-icon.weather-icon-storm{color:#c084fc;filter:drop-shadow(0 0 6px rgba(192,132,252,.35))}.met-icon.weather-icon-snow{color:#b9e7ff}.met-icon.weather-icon-fog{color:#a8adb5}.met-icon.weather-icon-night{color:#818cf8;filter:drop-shadow(0 0 5px rgba(129,140,248,.3))}

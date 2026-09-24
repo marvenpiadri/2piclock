@@ -191,6 +191,8 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       longitude: point.longitude,
       temperature: (point.hourly.temperature_2m?.[index] ?? 18) + tempLapseC,
       precipitation: point.hourly.precipitation?.[index] ?? 0,
+      snowfall: point.hourly.snowfall?.[index] ?? 0,
+      weatherCode: point.hourly.weather_code?.[index] ?? 0,
       cloudCover: point.hourly.cloud_cover?.[index] ?? 0,
       windSpeed: Math.round((point.hourly.wind_speed_10m?.[index] ?? 15) * speedMult),
       windDirection: (point.hourly.wind_direction_10m?.[index] ?? 0) + (altitude === '300hpa' ? 25 : 0),

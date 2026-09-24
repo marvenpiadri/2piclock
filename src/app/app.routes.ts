@@ -10,6 +10,7 @@ import { SpaceViewComponent } from './shared/components/space-view/space-view';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
 import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
 import { WorldRadioComponent } from './features/world-radio/world-radio';
+import { PlaceViewComponent } from './features/place-view/place-view';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'sky', pathMatch: 'full' },
@@ -51,6 +52,7 @@ export const routes: Routes = [
   { path: 'weather', component: WeatherViewComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
+  { path: 'place/:slug', component: PlaceViewComponent },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
   { path: '**', redirectTo: 'sky' }
 ];

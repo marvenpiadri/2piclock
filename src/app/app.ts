@@ -65,7 +65,7 @@ export class App {
   readonly currentRoute = signal<string>('/');
   readonly showReactiveSky = computed(() => {
     const url = this.currentRoute();
-    return url === '/' || url.startsWith('/sky');
+    return url === '/' || url === '/now' || url === '/weather' || url === '/tonight' || url.startsWith('/sky');
   });
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute();
@@ -150,7 +150,7 @@ export class App {
       items: [
         {
           label: 'Sky Window & 2Pi Dial',
-          path: '/',
+          path: '/now',
           view: 'sky',
           desc: 'Living horizon simulation, diurnal radian vector, and optical twilight gradient.',
           icon: 'radio_button_checked',
@@ -158,7 +158,7 @@ export class App {
         },
         {
           label: 'Solar & Daylight Calculator',
-          path: '/astronomy-tools',
+          path: '/astronomy',
           desc: 'Solar altitude/azimuth, golden hour, twilight boundaries, and solar noon.',
           icon: 'wb_twilight',
           tag: 'Tool'

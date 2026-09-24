@@ -15,7 +15,7 @@
   [class.bg-transparent]="!glassThemeService.isGlassEnabled()">
 </div>
 
-<div class="app-layout min-h-screen flex flex-col relative z-20" (click)="closeMenus()">
+<div class="app-layout min-h-screen flex flex-col relative z-20" [class.sky-background-active]="showReactiveSky()" (click)="closeMenus()">
 
   <!-- Universal Top Header (doomath-inspired clean layout with border-bottom) -->
   <header class="universal-top-header sticky top-0 z-50 w-full h-14 bg-black/90 backdrop-blur-xl border-b border-white/10 px-3 sm:px-5 flex items-center justify-between select-none">
@@ -91,7 +91,7 @@
         <a routerLink="/world" routerLinkActive="nav-main-active" class="nav-main-link"><span>World</span></a>
         <a routerLink="/astronomy-tools" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
         <a routerLink="/radio" routerLinkActive="nav-main-active" class="nav-main-link"><span>Radio</span></a>
-      </nav>>
+      </nav>
 
     </div>
 

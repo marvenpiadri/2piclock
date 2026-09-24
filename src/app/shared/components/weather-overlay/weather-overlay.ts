@@ -51,7 +51,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
       <div class="grid grid-cols-3 gap-2">
         <!-- Wind Speed & Gust -->
         <div class="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col items-center text-center gap-0.5">
-          <mat-icon class="text-cyan-400 text-sm">air</mat-icon>
+          <app-weather-icon icon="wind" label="Wind" size="sm"></app-weather-icon>
           <span class="text-[10px] text-slate-400 font-mono">Wind</span>
           <span class="text-xs font-bold font-mono text-white">{{ weather().windSpeedKmh }} <span class="text-[9px] text-slate-400">km/h</span></span>
           <span class="text-[9px] text-cyan-300 font-mono">Gust {{ weather().windGustKmh || weather().windSpeedKmh }}</span>
@@ -59,7 +59,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
 
         <!-- Barometric Pressure -->
         <div class="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col items-center text-center gap-0.5">
-          <mat-icon class="text-amber-400 text-sm">speed</mat-icon>
+          <app-weather-icon icon="barometer" label="Pressure" size="sm"></app-weather-icon>
           <span class="text-[10px] text-slate-400 font-mono">Pressure</span>
           <span class="text-xs font-bold font-mono text-white">{{ weather().pressureHpa }}</span>
           <span class="text-[9px] text-amber-300 font-mono">hPa (MSLP)</span>
@@ -67,7 +67,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
 
         <!-- Relative Humidity -->
         <div class="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col items-center text-center gap-0.5">
-          <mat-icon class="text-sky-400 text-sm">water_drop</mat-icon>
+          <app-weather-icon icon="humidity" label="Humidity" size="sm"></app-weather-icon>
           <span class="text-[10px] text-slate-400 font-mono">Humidity</span>
           <span class="text-xs font-bold font-mono text-white">{{ weather().humidityPct }}%</span>
           <span class="text-[9px] text-sky-300 font-mono">Dew point</span>
@@ -78,7 +78,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
       <div class="grid grid-cols-2 gap-2">
         <div class="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <mat-icon class="text-slate-300 text-sm">cloud</mat-icon>
+            <app-weather-icon icon="cloudy" label="Cloud cover" size="sm"></app-weather-icon>
             <span class="text-[11px] text-slate-300 font-medium">Cloud Cover</span>
           </div>
           <span class="text-xs font-bold font-mono text-white">{{ weather().cloudCoverPct }}%</span>
@@ -86,7 +86,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
 
         <div class="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <mat-icon class="text-emerald-400 text-sm">visibility</mat-icon>
+            <app-weather-icon icon="visibility" label="Visibility" size="sm"></app-weather-icon>
             <span class="text-[11px] text-slate-300 font-medium">Visibility</span>
           </div>
           <span class="text-xs font-bold font-mono text-white">{{ weather().visibilityKm }} km</span>
@@ -97,7 +97,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
       <div class="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col gap-1.5">
         <div class="flex items-center justify-between text-xs">
           <span class="text-slate-300 font-medium flex items-center gap-1.5">
-            <mat-icon class="text-amber-400 text-sm">thunderstorm</mat-icon>
+            <app-weather-icon icon="thunderstorms-day-rain" label="Storm intensity" size="sm"></app-weather-icon>
             <span>Storm Aggressiveness</span>
           </span>
           <span class="font-mono font-bold text-amber-300">{{ weather().aggressivenessIndex }}/100</span>

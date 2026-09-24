@@ -45,6 +45,7 @@ export interface NavCategory {
   styleUrl: './app.css',
 })
 export class App {
+  private readonly document = inject(DOCUMENT);
   private locationService = inject(LocationService);
   private celestialService = inject(CelestialService);
   private geocodingService = inject(GeocodingService);

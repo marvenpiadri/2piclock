@@ -128,15 +128,30 @@ export class WeatherService {
 
   // Active combined weather accounting for manual overrides
   readonly currentWeather = computed<WeatherData>(() => {
-    return this.rawWeather();
+    const raw = this.rawWeather();
+    const override = this.overrideConfig();
+    if (!override.active) return raw;
+    const condition = override.condition || raw.condition;
+    return {
+      ...raw,
+      condition,
+      conditionLabel: this.formatConditionLabel(condition),
+      cloudCoverPct: override.cloudCoverPct ?? raw.cloudCoverPct,
+      precipitationPct: override.precipitationPct ?? raw.precipitationPct,
+      windSpeedKmh: override.windSpeedKmh ?? raw.windSpeedKmh,
+      windGustKmh: override.windSpeedKmh !== undefined ? Math.round(override.windSpeedKmh * 1.45) : raw.windGustKmh,
+      isSimulated: true
+    };
   });
 
   private lastFetchedKey = '';
   private weatherCache = new Map<string, { weather: WeatherData; hourly: { timeMs: number; weather: WeatherData }[]; timestamp: number }>();
   private pendingKeys = new Set<string>();
+  private requestSequence = 0;
   private readonly CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
   fetchWeatherForLocation(loc: GeoLocation): void {
+    const requestId = ++this.requestSequence;
     const key = `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`;
 
     // Check memory cache first
@@ -177,6 +192,10 @@ export class WeatherService {
       .subscribe({
         next: (data) => {
           this.isLoading.set(false);
+          if (requestId !== this.requestSequence) {
+            this.pendingKeys.delete(key);
+            return;
+          }
           if (data && data.current) {
             const c = data.current;
             const condition = this.mapWmoCodeToCondition(c.weather_code);
@@ -292,6 +311,7 @@ export class WeatherService {
         },
         error: () => {
           this.pendingKeys.delete(key);
+          if (requestId !== this.requestSequence) return;
           this.isLoading.set(false);
           this.rawWeather.set(this.generateRealisticWeather(loc));
         }

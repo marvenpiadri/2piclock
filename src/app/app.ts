@@ -107,16 +107,15 @@ export class App {
       icon: 'public',
       items: [
         {
-          label: 'World Clocks & Grid',
+          label: 'World Clocks',
           path: '/world-clocks',
-          desc: 'Global multi-city clocks, analog/digital cards, and solar elevation matrix.',
+          desc: 'Live clocks across major cities and time zones.',
           icon: 'schedule',
           tag: 'Multi-City'
         },
         {
-          label: 'NASA Terminator Projection',
-          path: '/',
-          view: 'world',
+          label: 'World Map',
+          path: '/world',
           desc: 'Continuous analytical 2D terminator curve, subsolar zenith, and timezone grid.',
           icon: 'public'
         },

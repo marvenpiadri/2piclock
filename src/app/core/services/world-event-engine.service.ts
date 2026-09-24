@@ -54,7 +54,7 @@ export interface WorldEventContext {
 export class WorldEventEngineService {
   buildContext(location: GeoLocation, date: Date): WorldEventContext {
     const solarPosition = calculateSolarPosition(date, location.latitude, location.longitude);
-    const solar = calculateSolarEvents(date, location.latitude, location.longitude);
+    const solar = calculateSolarEvents(date, location.latitude, location.longitude, location.timezone);
     const lunar = calculateLunarPosition(date, location.latitude, location.longitude, solarPosition);
 
     const events = [

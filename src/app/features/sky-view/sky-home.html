@@ -217,7 +217,7 @@
                       <small>{{ weather().pressureHpa > 1013 ? 'High pressure' : 'Low pressure' }}</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>cloud_queue</mat-icon> CLOUD COVER</span>
+                      <span class="metric-label"><app-weather-icon icon="cloudy" label="Cloud cover" size="sm"></app-weather-icon> CLOUD COVER</span>
                       <strong>{{ weather().cloudCoverPct }}%</strong>
                       <small>{{ weather().cloudCoverPct < 25 ? 'Clear sky' : weather().cloudCoverPct < 70 ? 'Partly cloudy' : 'Overcast' }}</small>
                     </div>
@@ -231,7 +231,7 @@
                   <!-- UV Index Banner -->
                   <div class="deck-banner-card">
                     <div class="banner-left">
-                      <span class="metric-label"><mat-icon>wb_sunny</mat-icon> UV INDEX</span>
+                      <span class="metric-label"><app-weather-icon icon="uv-index" label="UV index" size="sm"></app-weather-icon> UV INDEX</span>
                       <strong>Index {{ weather().uvIndex }} · {{ uvRiskLevel().label }}</strong>
                     </div>
                     <span class="banner-advice">{{ uvRiskLevel().advice }}</span>
@@ -498,7 +498,7 @@
             @for (day of weeklyForecast(); track day.key) {
               <div class="week-day">
                 <strong>{{ day.label }}</strong>
-                <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : day.condition.toLowerCase().includes('snow') ? 'ac_unit' : 'wb_sunny' }}</mat-icon>
+                <app-weather-icon [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
                 <span>{{ day.condition }}</span>
                 <div><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small></div>
                 <em>{{ day.precipitationPct }}% rain</em>

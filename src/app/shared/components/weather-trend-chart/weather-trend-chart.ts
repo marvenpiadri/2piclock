@@ -249,6 +249,7 @@ export class WeatherTrendChartComponent {
         const humidityPct = Math.min(100, Math.max(20, Math.round(currentW.humidityPct - diurnalFactor * 12)));
 
         match = {
+          ...currentW,
           condition: currentW.condition,
           conditionLabel: currentW.conditionLabel,
           temperatureC: tempC,
@@ -256,6 +257,17 @@ export class WeatherTrendChartComponent {
           feelsLikeC: tempC,
           feelsLikeF: tempF,
           humidityPct,
+          dewPointC: currentW.dewPointC,
+          precipitationMm: currentW.precipitationMm,
+          rainMm: currentW.rainMm,
+          showersMm: currentW.showersMm,
+          snowfallCm: currentW.snowfallCm,
+          snowDepthCm: currentW.snowDepthCm,
+          cloudCoverLowPct: currentW.cloudCoverLowPct,
+          cloudCoverMidPct: currentW.cloudCoverMidPct,
+          cloudCoverHighPct: currentW.cloudCoverHighPct,
+          freezingLevelM: currentW.freezingLevelM,
+          isDay: currentW.isDay,
           cloudCoverPct: currentW.cloudCoverPct,
           precipitationPct: currentW.precipitationPct,
           windSpeedKmh: currentW.windSpeedKmh,
@@ -274,6 +286,7 @@ export class WeatherTrendChartComponent {
           updatedAt: targetTime
         };
       }
+      if (!match) continue;
 
       const hourLabel = targetTime.toLocaleTimeString('en-US', {
         timeZone: loc.timezone,

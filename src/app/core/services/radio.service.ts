@@ -595,8 +595,12 @@ export class RadioService {
           }
         });
       } else {
-        // Play first curated station
-        this.playStation(CURATED_GLOBAL_STATIONS[0]);
+        const firstLiveStation = this.searchResults()[0];
+        if (firstLiveStation) {
+          this.playStation(firstLiveStation);
+        } else {
+          this.error.set('No live radio stations are loaded yet. Search or refresh the directory.');
+        }
       }
     }
   }

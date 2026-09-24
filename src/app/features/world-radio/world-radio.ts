@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   inject,
   signal
 } from '@angular/core';
@@ -125,6 +126,13 @@ export class WorldRadioComponent implements OnInit {
       };
     });
   });
+
+  constructor() {
+    effect(() => {
+      const loc = this.locationService.selectedLocation();
+      this.radioService.getStationsForLocation(loc.name, loc.country);
+    });
+  }
 
   ngOnInit(): void {
     // Populate the initial directory from Radio Browser's non-broken stations.

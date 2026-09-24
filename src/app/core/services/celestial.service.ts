@@ -25,15 +25,9 @@ export class CelestialService {
   readonly isWeatherLoading = this.weatherService.isLoading;
 
   constructor() {
-    // Automatically fetch weather when location changes
-    try {
-      effect(() => {
-        const loc = this.selectedLocation();
-        this.weatherService.fetchWeatherForLocation(loc);
-      });
-    } catch {
-      // In testing contexts without an effect scheduler
-    }
+    // Weather is intentionally demand-loaded by weather-aware pages.
+    // Celestial calculations must remain independent so time, astronomy,
+    // world map and other tools do not trigger a network request on startup.
   }
 
   // Active Astronomical & Celestial State computed from Date + Location

@@ -102,11 +102,23 @@ export class AstronomicalCalculatorService {
    * Daylight & Twilight Duration Engine
    */
   calculateDaylight(location: GeoLocation, date: Date): DaylightAnalysis {
-    const solarEvents = calculateSolarEvents(date, location.latitude, location.longitude);
+    const solarEvents = calculateSolarEvents(date, location.latitude, location.longitude, location.timezone);
 
-    // Compare with previous day to calculate delta
-    const prevDay = new Date(date.getTime() - 86400000);
-    const prevEvents = calculateSolarEvents(prevDay, location.latitude, location.longitude);
+    // Compare civil dates in the selected location, not fixed 24-hour instants.
+    const localParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: location.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
+    const localValue = (type: string) => Number(localParts.find(part => part.type === type)?.value ?? 0);
+    const previousLocalDate = new Date(Date.UTC(
+      localValue('year'),
+      localValue('month') - 1,
+      localValue('day') - 1,
+      12, 0, 0
+    ));
+    const prevEvents = calculateSolarEvents(previousLocalDate, location.latitude, location.longitude, location.timezone);
 
     const dayLengthMinutes = solarEvents.dayLengthMinutes;
     const h = Math.floor(dayLengthMinutes / 60);
@@ -178,7 +190,7 @@ export class AstronomicalCalculatorService {
    */
   calculateSolar(location: GeoLocation, date: Date): SolarCalculatorResult {
     const solarPos = calculateSolarPosition(date, location.latitude, location.longitude);
-    const solarEvents = calculateSolarEvents(date, location.latitude, location.longitude);
+    const solarEvents = calculateSolarEvents(date, location.latitude, location.longitude, location.timezone);
     const subsolarPoint = calculateSubsolarPoint(date);
 
     // Calculate maximum Solar Noon Altitude: 90 - latitude + declination

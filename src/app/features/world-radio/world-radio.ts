@@ -68,7 +68,7 @@ export class WorldRadioComponent implements OnInit {
   readonly favorites = this.radioService.favorites;
   readonly recents = this.radioService.recentStations;
 
-  readonly allCuratedStations = CURATED_GLOBAL_STATIONS;
+  readonly allCuratedStations = this.radioService.searchResults;
 
   readonly filteredStations = computed<RadioStation[]>(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -127,6 +127,10 @@ export class WorldRadioComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Populate the initial directory from Radio Browser's non-broken stations.
+    // The local list remains only as a fallback if the directory is unavailable.
+    this.radioService.loadGlobalStations(48);
+
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && ['explore', 'map', 'favorites', 'recents'].includes(params['tab'])) {
         this.activeTab.set(params['tab'] as RadioTab);

@@ -55,7 +55,7 @@
           (click)="setCondition(c.id)">
           
           <div class="c-icon-row flex items-center justify-between">
-            <mat-icon class="c-icon text-lg" [class.text-amber-400]="weather().condition === c.id" [class.text-slate-400]="weather().condition !== c.id">{{ c.icon }}</mat-icon>
+            <app-weather-icon class="c-icon" [condition]="c.id" [icon]="c.icon" [label]="c.label" size="md"></app-weather-icon>
             @if (weather().condition === c.id) {
               <span class="active-badge font-mono text-[9px] px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold">ACTIVE</span>
             }

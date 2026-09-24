@@ -191,7 +191,7 @@
                         <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
                       </div>
                     </div>
-                    <mat-icon class="deck-hero-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg" [color]="weatherIconColor(weather().condition)"></app-weather-icon>
                   </div>
 
                   <!-- 6-Metric Atmospheric Telemetry Grid -->

@@ -78,6 +78,14 @@ export class SkyHomeComponent {
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly timezoneDisplay = this.celestialService.timezoneDisplay;
   readonly polarAngles = this.celestialService.polarClockAngles;
+  readonly isBrightSky = this.celestialService.isBrightSky;
+
+  readonly moonHandRotation = computed(() => {
+    const ageDays = this.celestial().moon.ageDays;
+    const elongationDeg = (ageDays / 29.530588853) * 360;
+    const sunRot = this.localDayFraction() * 360 - 180;
+    return sunRot + elongationDeg;
+  });
 
   // Clock Display Mode: Radian 2Pi Dial vs Analog Clock (Digital option removed as requested)
   readonly clockDisplayMode = signal<'radian' | 'analog'>('radian');
@@ -441,18 +449,43 @@ export class SkyHomeComponent {
   }
 
   // Quick jump time presets operate on the exact selected-location instant.
-  jumpToSolarEvent(event: 'dawn' | 'sunrise' | 'noon' | 'golden' | 'sunset' | 'blue' | 'night'): void {
+  jumpToSolarEvent(event: 'dawn' | 'sunrise' | 'noon' | 'golden' | 'sunset' | 'blue' | 'night' | 'midnight'): void {
     const events = this.celestial().solarEvents;
     let targetDate: Date | null = null;
 
     switch (event) {
       case 'dawn': targetDate = events.civilDawn || events.nauticalDawn; break;
-      case 'sunrise': targetDate = events.sunrise; break;
-      case 'noon': targetDate = events.solarNoon; break;
+      case 'sunrise': {
+        if (events.sunrise) {
+          targetDate = events.sunrise;
+        } else if (events.isPolarDay) {
+          const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+          targetDate = this.getZonedDateTime(localDate.year, localDate.month, localDate.day, 0, 0, 0, this.selectedLocation().timezone);
+        }
+        break;
+      }
+      case 'noon': {
+        if (events.solarNoon) {
+          targetDate = events.solarNoon;
+        } else {
+          const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+          targetDate = this.getZonedDateTime(localDate.year, localDate.month, localDate.day, 12, 0, 0, this.selectedLocation().timezone);
+        }
+        break;
+      }
       case 'golden': targetDate = events.goldenHourEvening.start || events.goldenHourMorning.start; break;
-      case 'sunset': targetDate = events.sunset; break;
+      case 'sunset': {
+        if (events.sunset) {
+          targetDate = events.sunset;
+        } else if (events.isPolarNight) {
+          const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
+          targetDate = this.getZonedDateTime(localDate.year, localDate.month, localDate.day, 12, 0, 0, this.selectedLocation().timezone);
+        }
+        break;
+      }
       case 'blue': targetDate = events.blueHourEvening.start; break;
-      case 'night': {
+      case 'night':
+      case 'midnight': {
         const localDate = this.getLocalDateParts(this.activeDate(), this.selectedLocation().timezone);
         targetDate = this.getZonedDateTime(
           localDate.year,

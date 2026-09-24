@@ -21,32 +21,23 @@ export class TimeControlService {
   readonly isPlaying = signal(true);
   readonly simulationSpeed = signal<SimulationSpeed>(1);
 
-  readonly simulatedTimeOfDayMs = signal(this.getInitialTimeOfDayMs());
+  readonly simulatedEpochMs = signal(Date.now());
   private readonly liveEpochMs = signal(Date.now());
 
   readonly currentActiveDate = computed(() => {
     if (this.isLive()) {
       return new Date(this.liveEpochMs());
     }
-
-    const base = this.baseDate();
-    const midnight = new Date(
-      base.getFullYear(),
-      base.getMonth(),
-      base.getDate(),
-      0, 0, 0, 0
-    );
-
-    return new Date(midnight.getTime() + this.simulatedTimeOfDayMs());
+    return new Date(this.simulatedEpochMs());
   });
 
   readonly dayFraction = computed(() => {
     const d = this.currentActiveDate();
     return (
-      (d.getHours() * 3600000 +
-        d.getMinutes() * 60000 +
-        d.getSeconds() * 1000 +
-        d.getMilliseconds()) /
+      (d.getUTCHours() * 3600000 +
+        d.getUTCMinutes() * 60000 +
+        d.getUTCSeconds() * 1000 +
+        d.getUTCMilliseconds()) /
       86400000
     );
   });
@@ -56,23 +47,17 @@ export class TimeControlService {
   private liveAnchorEpochMs = Date.now();
   private liveAnchorPerformanceMs = 0;
   private lastClockResyncPerformanceMs = 0;
+  private lastEmittedLiveSecond = Math.floor(Date.now() / 1000);
+  private simulationAccumulatorMs = 0;
+  private lastSimulationEmitPerformanceMs = 0;
 
   constructor() {
     if (this.isBrowser) {
       this.liveAnchorPerformanceMs = performance.now();
       this.lastClockResyncPerformanceMs = this.liveAnchorPerformanceMs;
+      this.lastSimulationEmitPerformanceMs = this.liveAnchorPerformanceMs;
       this.startLoop();
     }
-  }
-
-  private getInitialTimeOfDayMs(): number {
-    const now = new Date();
-    return (
-      now.getHours() * 3600000 +
-      now.getMinutes() * 60000 +
-      now.getSeconds() * 1000 +
-      now.getMilliseconds()
-    );
   }
 
   private startLoop(): void {
@@ -88,7 +73,12 @@ export class TimeControlService {
       if (this.isLive()) {
         const elapsed = performanceTime - this.liveAnchorPerformanceMs;
         const epoch = this.liveAnchorEpochMs + elapsed;
-        this.liveEpochMs.set(epoch);
+        const currentSec = Math.floor(epoch / 1000);
+
+        if (currentSec !== this.lastEmittedLiveSecond) {
+          this.lastEmittedLiveSecond = currentSec;
+          this.liveEpochMs.set(epoch);
+        }
 
         // Re-anchor every 30 seconds to absorb system clock corrections
         // without introducing visible per-frame jitter.
@@ -96,8 +86,19 @@ export class TimeControlService {
           this.reanchorLiveClock(performanceTime);
         }
       } else if (this.isPlaying()) {
-        const advancement = deltaMs * this.simulationSpeed();
-        this.advanceSimulation(advancement);
+        const speed = this.simulationSpeed();
+        this.simulationAccumulatorMs += deltaMs * speed;
+
+        // Controlled emission cadence:
+        // At 1x speed: emit once per simulated second (or min 250ms)
+        // At higher speeds: emit at max 20Hz (every 50ms) to ensure smooth motion without frame drops
+        const minIntervalMs = speed === 1 ? 500 : 50;
+        if (performanceTime - this.lastSimulationEmitPerformanceMs >= minIntervalMs) {
+          this.lastSimulationEmitPerformanceMs = performanceTime;
+          const advancement = this.simulationAccumulatorMs;
+          this.simulationAccumulatorMs = 0;
+          this.advanceSimulation(advancement);
+        }
       }
 
       if (typeof requestAnimationFrame !== 'undefined') {
@@ -118,28 +119,7 @@ export class TimeControlService {
   }
 
   private advanceSimulation(advancementMs: number): void {
-    let next = this.simulatedTimeOfDayMs() + advancementMs;
-    let dayCarry = 0;
-
-    while (next >= 86400000) {
-      next -= 86400000;
-      dayCarry++;
-    }
-
-    while (next < 0) {
-      next += 86400000;
-      dayCarry--;
-    }
-
-    if (dayCarry !== 0) {
-      this.baseDate.update(date => {
-        const nextDate = new Date(date);
-        nextDate.setDate(nextDate.getDate() + dayCarry);
-        return nextDate;
-      });
-    }
-
-    this.simulatedTimeOfDayMs.set(next);
+    this.simulatedEpochMs.update(epoch => epoch + advancementMs);
   }
 
   setLive(): void {
@@ -149,56 +129,60 @@ export class TimeControlService {
     this.liveAnchorEpochMs = now;
     this.liveAnchorPerformanceMs = perf;
     this.lastClockResyncPerformanceMs = perf;
+    this.lastEmittedLiveSecond = Math.floor(now / 1000);
     this.liveEpochMs.set(now);
+    this.simulatedEpochMs.set(now);
 
     const date = new Date(now);
     this.baseDate.set(date);
     this.isLive.set(true);
     this.isPlaying.set(true);
     this.simulationSpeed.set(1);
-    this.simulatedTimeOfDayMs.set(this.getInitialTimeOfDayMs());
   }
 
   /**
    * Set the simulation to an exact instant.
-   * Unlike setTimeHoursMinutes(), this preserves the Date's timezone instant,
-   * which is required when astronomy events are calculated for a selected city.
+   * Directly stores the exact epoch timestamp, preserving the exact UTC/timezone instant
+   * and avoiding any browser-local midnight shifts or DST conversion errors.
    */
   setSpecificInstant(date: Date): void {
-    const instant = new Date(date.getTime());
-    this.baseDate.set(new Date(
-      instant.getFullYear(),
-      instant.getMonth(),
-      instant.getDate(),
-      0, 0, 0, 0
-    ));
+    const instantMs = date.getTime();
     this.isLive.set(false);
-    this.simulatedTimeOfDayMs.set(
-      (instant.getHours() * 3600 + instant.getMinutes() * 60 + instant.getSeconds()) * 1000 +
-      instant.getMilliseconds()
-    );
+    this.simulatedEpochMs.set(instantMs);
+    this.baseDate.set(new Date(instantMs));
   }
 
   setTimeOfDayFraction(fraction: number): void {
     this.isLive.set(false);
-    this.simulatedTimeOfDayMs.set(
-      Math.max(0, Math.min(0.999999999, fraction)) * 86400000
-    );
+    const current = this.currentActiveDate();
+    const d = new Date(current.getTime());
+    const clampedFrac = Math.max(0, Math.min(0.999999, fraction));
+    const dayMs = clampedFrac * 86400000;
+    const hours = Math.floor(dayMs / 3600000);
+    const minutes = Math.floor((dayMs % 3600000) / 60000);
+    const seconds = Math.floor((dayMs % 60000) / 1000);
+    d.setUTCHours(hours, minutes, seconds, 0);
+    this.simulatedEpochMs.set(d.getTime());
   }
 
   setTimeHoursMinutes(hours: number, minutes: number, seconds = 0): void {
     this.isLive.set(false);
-    const safeHours = Math.max(0, Math.min(23, hours));
-    const safeMinutes = Math.max(0, Math.min(59, minutes));
-    const safeSeconds = Math.max(0, Math.min(59, seconds));
-    this.simulatedTimeOfDayMs.set(
-      (safeHours * 3600 + safeMinutes * 60 + safeSeconds) * 1000
+    const current = this.currentActiveDate();
+    const d = new Date(current.getTime());
+    d.setUTCHours(
+      Math.max(0, Math.min(23, hours)),
+      Math.max(0, Math.min(59, minutes)),
+      Math.max(0, Math.min(59, seconds)),
+      0
     );
+    this.simulatedEpochMs.set(d.getTime());
   }
 
   setSpecificDate(year: number, month: number, day: number): void {
-    this.baseDate.set(new Date(year, month - 1, day, 0, 0, 0, 0));
-    this.isLive.set(false);
+    const current = this.currentActiveDate();
+    const d = new Date(current.getTime());
+    d.setUTCFullYear(year, month - 1, day);
+    this.setSpecificInstant(d);
   }
 
   setSimulationSpeed(speed: SimulationSpeed): void {

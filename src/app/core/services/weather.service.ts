@@ -132,10 +132,29 @@ export class WeatherService {
   });
 
   private lastFetchedKey = '';
+  private weatherCache = new Map<string, { weather: WeatherData; hourly: { timeMs: number; weather: WeatherData }[]; timestamp: number }>();
+  private pendingKeys = new Set<string>();
+  private readonly CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
   fetchWeatherForLocation(loc: GeoLocation): void {
     const key = `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`;
-    if (this.lastFetchedKey === key && !this.rawWeather().isSimulated) {
+
+    // Check memory cache first
+    const cached = this.weatherCache.get(key);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp < this.CACHE_TTL_MS) && !this.overrideConfig().active) {
+      this.rawWeather.set(cached.weather);
+      this.hourlyForecasts.set(cached.hourly);
+      this.lastFetchedKey = key;
+      return;
+    }
+
+    if (this.lastFetchedKey === key && !this.rawWeather().isSimulated && !this.overrideConfig().active) {
+      return;
+    }
+
+    // Prevent concurrent duplicate requests for the same location
+    if (this.pendingKeys.has(key)) {
       return;
     }
 
@@ -144,6 +163,7 @@ export class WeatherService {
       return;
     }
 
+    this.pendingKeys.add(key);
     this.isLoading.set(true);
     const params = new HttpParams()
       .set('latitude', loc.latitude)
@@ -252,13 +272,26 @@ export class WeatherService {
                 }
               }
               this.hourlyForecasts.set(parsed);
+              this.weatherCache.set(key, {
+                weather,
+                hourly: parsed,
+                timestamp: Date.now()
+              });
+            } else {
+              this.weatherCache.set(key, {
+                weather,
+                hourly: [],
+                timestamp: Date.now()
+              });
             }
 
           } else {
             this.rawWeather.set(this.generateRealisticWeather(loc));
           }
+          this.pendingKeys.delete(key);
         },
         error: () => {
+          this.pendingKeys.delete(key);
           this.isLoading.set(false);
           this.rawWeather.set(this.generateRealisticWeather(loc));
         }

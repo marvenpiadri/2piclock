@@ -146,6 +146,13 @@ export function calculateSolarPosition(
 }
 
 /**
+ * Bounded memoization cache for daily solar events.
+ * Keyed by calendar UTC day and coordinates (rounded to 3 decimal places ~ 110 meters).
+ */
+const solarEventsCache = new Map<string, SolarEvents>();
+const MAX_SOLAR_EVENTS_CACHE_SIZE = 500;
+
+/**
  * Calculates Solar Events (Sunrise, Sunset, Twilight transitions, Solar Noon)
  */
 export function calculateSolarEvents(
@@ -153,6 +160,12 @@ export function calculateSolarEvents(
   lat: number,
   lng: number
 ): SolarEvents {
+  const cacheKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}_${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  const cached = solarEventsCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
   const jd0 = getJulianDate(startOfDay);
   const t0 = getJulianCenturies(jd0);
@@ -225,7 +238,7 @@ export function calculateSolarEvents(
     dayLengthMinutes = (sunTimes.set.getTime() - sunTimes.rise.getTime()) / 60000;
   }
 
-  return {
+  const events: SolarEvents = {
     astronomicalDawn: astroTimes.rise,
     nauticalDawn: nauticalTimes.rise,
     civilDawn: civilTimes.rise,
@@ -255,6 +268,12 @@ export function calculateSolarEvents(
     isPolarDay,
     isPolarNight
   };
+
+  if (solarEventsCache.size >= MAX_SOLAR_EVENTS_CACHE_SIZE) {
+    solarEventsCache.clear();
+  }
+  solarEventsCache.set(cacheKey, events);
+  return events;
 }
 
 /**
@@ -521,6 +540,12 @@ export function getCelestialState(
 }
 
 /**
+ * Bounded memoization cache for 24-hour solar curves.
+ */
+const solarCurveCache = new Map<string, { timeString: string; altitude: number; isNight: boolean; hour: number }[]>();
+const MAX_SOLAR_CURVE_CACHE_SIZE = 100;
+
+/**
  * Computes 24-hour solar elevation curve (for ephemeris chart)
  */
 export function get24HourSolarCurve(
@@ -529,6 +554,12 @@ export function get24HourSolarCurve(
   lng: number,
   timezone: string
 ): { timeString: string; altitude: number; isNight: boolean; hour: number }[] {
+  const cacheKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}_${lat.toFixed(2)}_${lng.toFixed(2)}_${timezone}`;
+  const cached = solarCurveCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const points: { timeString: string; altitude: number; isNight: boolean; hour: number }[] = [];
   const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
 
@@ -555,6 +586,10 @@ export function get24HourSolarCurve(
     });
   }
 
+  if (solarCurveCache.size >= MAX_SOLAR_CURVE_CACHE_SIZE) {
+    solarCurveCache.clear();
+  }
+  solarCurveCache.set(cacheKey, points);
   return points;
 }
 

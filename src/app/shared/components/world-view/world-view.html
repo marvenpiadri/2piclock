@@ -9,8 +9,8 @@
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-base font-bold text-white tracking-wide uppercase font-mono">2PiClock Earth Observatory</h2>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20 font-semibold">
-            NASA Scientific 2D Projection
+          <span class="text-[11px] font-mono text-amber-400 font-semibold">
+            · NASA Scientific 2D Projection
           </span>
         </div>
         <p class="text-xs text-slate-400 mt-0.5">
@@ -387,6 +387,34 @@
               <div>Wind {{ currentWeather()!.windSpeedKmh }} km/h</div>
               <div>Humidity {{ currentWeather()!.humidityPct }}%</div>
             </div>
+          </div>
+        }
+
+        <!-- Connected Radio Intelligence -->
+        @if (activeCityStations().length > 0) {
+          <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-3 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="text-amber-300 font-bold flex items-center gap-1">
+                <mat-icon class="text-xs w-3.5 h-3.5">radio</mat-icon>
+                <span>Live Broadcast ({{ activeCityStations().length }})</span>
+              </span>
+              <span class="text-[10px] text-amber-400/80">RADIO OBSERVATORY</span>
+            </div>
+            @for (st of activeCityStations().slice(0, 1); track st.id) {
+              <div class="flex items-center justify-between bg-black/40 p-1.5 rounded-lg border border-white/5">
+                <div class="text-[11px] truncate mr-2">
+                  <span class="text-white font-medium truncate block">{{ st.name }}</span>
+                  <span class="text-[9px] text-slate-400 font-mono">{{ st.tags.slice(0, 2).join(' · ') }}</span>
+                </div>
+                <button 
+                  type="button" 
+                  (click)="playRadioStation(st)"
+                  class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[10px] font-bold font-mono hover:bg-amber-300 transition-colors flex items-center gap-1 cursor-pointer shrink-0">
+                  <mat-icon class="text-xs w-3 h-3">play_arrow</mat-icon>
+                  <span>Listen</span>
+                </button>
+              </div>
+            }
           </div>
         }
 

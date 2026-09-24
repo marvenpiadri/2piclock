@@ -43,18 +43,43 @@ export class CelestialService {
     return getCelestialState(date, loc.latitude, loc.longitude, loc.timezone);
   });
 
+  private lastCrossCheckKey = '';
+  private cachedSolarCrossCheck: SolarCrossCheck | null = null;
+
   // Dual-Engine Solar Validation Cross-Check (NOAA/Meeus/AstronomyEngine vs SunCalc)
   readonly solarCrossCheck = computed<SolarCrossCheck>(() => {
     const loc = this.selectedLocation();
     const date = this.activeDate();
-    return this.precisionAstronomy.crossCheckSun(date, loc.latitude, loc.longitude);
+    const minuteEpoch = Math.floor(date.getTime() / 60000);
+    const key = `${minuteEpoch}_${loc.id}`;
+    if (key === this.lastCrossCheckKey && this.cachedSolarCrossCheck) {
+      return this.cachedSolarCrossCheck;
+    }
+    this.lastCrossCheckKey = key;
+    this.cachedSolarCrossCheck = this.precisionAstronomy.crossCheckSun(date, loc.latitude, loc.longitude);
+    return this.cachedSolarCrossCheck;
   });
+
+  private lastPlanetaryKey = '';
+  private cachedPlanetaryPositions: PlanetaryPosition[] = [];
 
   // Ephemeris planetary positions (Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune)
   readonly planetaryPositions = computed<PlanetaryPosition[]>(() => {
     const loc = this.selectedLocation();
     const date = this.activeDate();
-    return this.precisionAstronomy.getPlanetaryPositions(date, loc.latitude, loc.longitude, loc.elevationMeters ?? 0);
+    const minuteEpoch = Math.floor(date.getTime() / 60000);
+    const key = `${minuteEpoch}_${loc.id}`;
+    if (key === this.lastPlanetaryKey && this.cachedPlanetaryPositions.length > 0) {
+      return this.cachedPlanetaryPositions;
+    }
+    this.lastPlanetaryKey = key;
+    this.cachedPlanetaryPositions = this.precisionAstronomy.getPlanetaryPositions(
+      date,
+      loc.latitude,
+      loc.longitude,
+      loc.elevationMeters ?? 0
+    );
+    return this.cachedPlanetaryPositions;
   });
 
   // 24-hour Solar Elevation curve for the active day/location
@@ -154,4 +179,17 @@ export class CelestialService {
       return loc.timezone;
     }
   });
+
+  // Derived atmospheric brightness for UI contrast adaptation
+  readonly isBrightSky = computed(() => {
+    return this.celestialState().sun.altitudeDeg > 6;
+  });
+
+  readonly skyLuminance = computed(() => {
+    // 0.0 (pitch black night) to 1.0 (noon daylight)
+    const alt = this.celestialState().sun.altitudeDeg;
+    return Math.max(0, Math.min(1, (alt + 12) / 36));
+  });
+
+  readonly twilightState = computed(() => this.celestialState().twilightState);
 }

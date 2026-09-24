@@ -7,6 +7,9 @@ import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weathe
 import { WeatherViewComponent } from './features/weather-view/weather-view';
 import { MeetingPlannerComponent } from './features/meeting-planner/meeting-planner';
 import { SpaceViewComponent } from './shared/components/space-view/space-view';
+import { TimeSuiteComponent } from './features/time-suite/time-suite';
+import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
+import { WorldRadioComponent } from './features/world-radio/world-radio';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'sky', pathMatch: 'full' },
@@ -14,6 +17,32 @@ export const routes: Routes = [
   { path: 'sky/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'sky/astronomy', component: SkyHomeComponent, data: { skyPage: 'astronomy' } },
   { path: 'sky/world', component: SkyHomeComponent, data: { skyPage: 'world' } },
+  
+  // World Radio routes
+  { path: 'radio', component: WorldRadioComponent },
+  { path: 'world-radio', redirectTo: 'radio', pathMatch: 'full' },
+  
+  // Time Product Suite routes
+  { path: 'time', component: TimeSuiteComponent },
+  { path: 'time-zone-converter', redirectTo: 'time?tab=converter', pathMatch: 'full' },
+  { path: 'time-difference', redirectTo: 'time?tab=difference', pathMatch: 'full' },
+  { path: 'time-duration', redirectTo: 'time?tab=duration', pathMatch: 'full' },
+  { path: 'date-difference', redirectTo: 'time?tab=date-difference', pathMatch: 'full' },
+  { path: 'add-subtract-time', redirectTo: 'time?tab=add-subtract', pathMatch: 'full' },
+  { path: 'countdown', redirectTo: 'time?tab=countdown', pathMatch: 'full' },
+  { path: 'count-up', redirectTo: 'time?tab=countdown', pathMatch: 'full' },
+  { path: 'unix-timestamp', redirectTo: 'time?tab=unix', pathMatch: 'full' },
+
+  // Astronomy Suite routes
+  { path: 'astronomy-tools', component: AstronomySuiteComponent },
+  { path: 'astronomy', redirectTo: 'astronomy-tools', pathMatch: 'full' },
+  { path: 'solar-calculator', redirectTo: 'astronomy-tools?tab=solar', pathMatch: 'full' },
+  { path: 'daylight-calculator', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
+  { path: 'moon-calculator', redirectTo: 'astronomy-tools?tab=moon', pathMatch: 'full' },
+  { path: 'astronomical-events', redirectTo: 'astronomy-tools?tab=events', pathMatch: 'full' },
+  { path: 'when-is', redirectTo: 'astronomy-tools?tab=events', pathMatch: 'full' },
+
+  // World & Space routes
   { path: 'world', component: WorldViewComponent },
   { path: 'world-clocks', component: WorldClocksComponent },
   { path: 'space', component: SpaceViewComponent },

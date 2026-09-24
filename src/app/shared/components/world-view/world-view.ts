@@ -18,6 +18,8 @@ import { LocationService } from '../../../core/services/location.service';
 import { TimeControlService } from '../../../core/services/time-control.service';
 import { CelestialService } from '../../../core/services/celestial.service';
 import { WeatherService } from '../../../core/services/weather.service';
+import { RadioService } from '../../../core/services/radio.service';
+import { RadioStation } from '../../../core/models/radio.model';
 import { GeoLocation } from '../../../core/models/location.model';
 import {
   calculateSubsolarPoint,
@@ -314,6 +316,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private timeControlService = inject(TimeControlService);
   private celestialService = inject(CelestialService);
   private weatherService = inject(WeatherService);
+  readonly radioService = inject(RadioService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly allPresets = this.locationService.allPresets;
@@ -377,106 +380,119 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     ).slice(0, 10);
   });
 
-  // Global City Hub Statuses with IANA Timezones & Solar Ephemeris
-  readonly worldHubStatuses = computed<WorldHubStatus[]>(() => {
-    const date = this.activeDate();
-    return this.allPresets.map(loc => {
-      const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
-      const sunTimes = calculateSolarEvents(date, loc.latitude, loc.longitude);
+  private markerRenderState = new Map<string, string>();
+  private lastTerminatorDateMs = 0;
+  private lastSolarTrackLat: number | null = null;
 
-      let timeStr = '--:--';
-      let timeSecStr = '--:--:--';
-      let utcOffset = 'UTC';
+  // Calculates complete WorldHubStatus for a single location on demand
+  private calculateLocationStatus(loc: GeoLocation, date: Date): WorldHubStatus {
+    const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
+    const sunTimes = calculateSolarEvents(date, loc.latitude, loc.longitude);
 
-      try {
-        timeStr = new Intl.DateTimeFormat('en-US', {
-          timeZone: loc.timezone,
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).format(date);
+    let timeStr = '--:--';
+    let timeSecStr = '--:--:--';
+    let utcOffset = 'UTC';
 
-        timeSecStr = new Intl.DateTimeFormat('en-US', {
-          timeZone: loc.timezone,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        }).format(date);
+    try {
+      timeStr = new Intl.DateTimeFormat('en-US', {
+        timeZone: loc.timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(date);
 
-        const parts = new Intl.DateTimeFormat('en-US', {
-          timeZone: loc.timezone,
-          timeZoneName: 'shortOffset'
-        }).formatToParts(date);
-        const tzPart = parts.find(p => p.type === 'timeZoneName');
-        utcOffset = tzPart ? tzPart.value : 'UTC';
-      } catch {
-        timeStr = '--:--';
-      }
+      timeSecStr = new Intl.DateTimeFormat('en-US', {
+        timeZone: loc.timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).format(date);
 
-      const alt = sun.altitudeDeg;
-      let astroState: WorldHubStatus['astroState'] = 'night';
-      let statusLabel = 'Deep Night';
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: loc.timezone,
+        timeZoneName: 'shortOffset'
+      }).formatToParts(date);
+      const tzPart = parts.find(p => p.type === 'timeZoneName');
+      utcOffset = tzPart ? tzPart.value : 'UTC';
+    } catch {
+      timeStr = '--:--';
+    }
 
-      if (alt > 6) {
-        astroState = 'day';
-        statusLabel = 'Full Daylight';
-      } else if (alt > 0) {
-        astroState = 'day';
-        statusLabel = 'Golden Hour';
-      } else if (alt > -6) {
-        astroState = 'civil-twilight';
-        statusLabel = 'Civil Twilight';
-      } else if (alt > -12) {
-        astroState = 'nautical-twilight';
-        statusLabel = 'Nautical Twilight';
-      } else if (alt > -18) {
-        astroState = 'astro-twilight';
-        statusLabel = 'Astronomical Twilight';
-      } else {
-        astroState = 'night';
-        statusLabel = 'Deep Night';
-      }
+    const alt = sun.altitudeDeg;
+    let astroState: WorldHubStatus['astroState'] = 'night';
+    let statusLabel = 'Deep Night';
 
-      // Calculate 2Pi Diurnal Phase [0, 2π] based on local time
-      const timeParts = timeSecStr.split(':');
-      const h = parseInt(timeParts[0], 10) || 0;
-      const m = parseInt(timeParts[1], 10) || 0;
-      const s = parseInt(timeParts[2], 10) || 0;
-      const secondsSinceMidnight = h * 3600 + m * 60 + s;
-      const twoPiPhasePercent = (secondsSinceMidnight / 86400);
-      const twoPiPhaseRad = twoPiPhasePercent * 2 * Math.PI;
+    if (alt > 6) {
+      astroState = 'day';
+      statusLabel = 'Full Daylight';
+    } else if (alt > 0) {
+      astroState = 'day';
+      statusLabel = 'Golden Hour';
+    } else if (alt > -6) {
+      astroState = 'civil-twilight';
+      statusLabel = 'Civil Twilight';
+    } else if (alt > -12) {
+      astroState = 'nautical-twilight';
+      statusLabel = 'Nautical Twilight';
+    } else if (alt > -18) {
+      astroState = 'astro-twilight';
+      statusLabel = 'Astronomical Twilight';
+    } else {
+      astroState = 'night';
+      statusLabel = 'Deep Night';
+    }
 
-      return {
-        location: loc,
-        localTime: timeStr,
-        localTimeWithSeconds: timeSecStr,
-        solarAltitude: Math.round(alt * 10) / 10,
-        solarAzimuth: Math.round(sun.azimuthDeg * 10) / 10,
-        isDaylight: alt > 0,
-        astroState,
-        statusLabel,
-        utcOffset,
-        sunriseTime: sunTimes.sunrise ? this.formatTimeOnly(sunTimes.sunrise, loc.timezone) : '--:--',
-        sunsetTime: sunTimes.sunset ? this.formatTimeOnly(sunTimes.sunset, loc.timezone) : '--:--',
-        solarNoonTime: sunTimes.solarNoon ? this.formatTimeOnly(sunTimes.solarNoon, loc.timezone) : '--:--',
-        dayLengthMinutes: Math.round(sunTimes.dayLengthMinutes),
-        twoPiPhaseRad: Math.round(twoPiPhaseRad * 100) / 100,
-        twoPiPhasePercent: Math.round(twoPiPhasePercent * 100)
-      };
-    });
-  });
+    // Calculate 2Pi Diurnal Phase [0, 2π] based on local time
+    const timeParts = timeSecStr.split(':');
+    const h = parseInt(timeParts[0], 10) || 0;
+    const m = parseInt(timeParts[1], 10) || 0;
+    const s = parseInt(timeParts[2], 10) || 0;
+    const secondsSinceMidnight = h * 3600 + m * 60 + s;
+    const twoPiPhasePercent = (secondsSinceMidnight / 86400);
+    const twoPiPhaseRad = twoPiPhasePercent * 2 * Math.PI;
+
+    return {
+      location: loc,
+      localTime: timeStr,
+      localTimeWithSeconds: timeSecStr,
+      solarAltitude: Math.round(alt * 10) / 10,
+      solarAzimuth: Math.round(sun.azimuthDeg * 10) / 10,
+      isDaylight: alt > 0,
+      astroState,
+      statusLabel,
+      utcOffset,
+      sunriseTime: sunTimes.sunrise ? this.formatTimeOnly(sunTimes.sunrise, loc.timezone) : '--:--',
+      sunsetTime: sunTimes.sunset ? this.formatTimeOnly(sunTimes.sunset, loc.timezone) : '--:--',
+      solarNoonTime: sunTimes.solarNoon ? this.formatTimeOnly(sunTimes.solarNoon, loc.timezone) : '--:--',
+      dayLengthMinutes: Math.round(sunTimes.dayLengthMinutes),
+      twoPiPhaseRad: Math.round(twoPiPhaseRad * 100) / 100,
+      twoPiPhasePercent: Math.round(twoPiPhasePercent * 100)
+    };
+  }
 
   // Currently Focused Location Details (either selected observer or inspected city)
   readonly activeCardLocation = computed(() => {
     return this.inspectedLocation() || this.selectedLocation();
   });
 
-  readonly activeCardStatus = computed(() => {
+  // Focused location status computed directly for the single active card (O(1) instead of O(N))
+  readonly activeCardStatus = computed<WorldHubStatus>(() => {
     const loc = this.activeCardLocation();
-    const list = this.worldHubStatuses();
-    return list.find(h => h.location.id === loc.id) || list[0];
+    const date = this.activeDate();
+    return this.calculateLocationStatus(loc, date);
   });
+
+  readonly activeCityStations = computed<RadioStation[]>(() => {
+    const loc = this.activeCardLocation();
+    return this.radioService.getStationsForLocation(loc.name, loc.country);
+  });
+
+  playRadioStation(station: RadioStation): void {
+    this.radioService.playStation(station);
+  }
+
+  readonly worldHubStatuses = computed<WorldHubStatus[]>(() => [this.activeCardStatus()]);
 
   constructor() {
     if (this.isBrowser) {
@@ -512,15 +528,15 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       setTimeout(() => {
         this.initMapLibreMap();
-        this.startWindParticleLoop();
+        if (this.showWindVectors()) {
+          this.startWindParticleLoop();
+        }
       }, 40);
     }
   }
 
   ngOnDestroy(): void {
-    if (this.windAnimFrameId !== null && this.isBrowser) {
-      cancelAnimationFrame(this.windAnimFrameId);
-    }
+    this.stopWindParticleLoop();
     if (this.map) {
       this.cityMarkers.forEach(m => m.remove());
       this.cityMarkers.clear();
@@ -867,10 +883,14 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private updateTerminatorLayers(date: Date, showNight: boolean, showTwilight: boolean): void {
     if (!this.map || !this.map.getSource('terminator-source')) return;
 
-    const source = this.map.getSource('terminator-source') as GeoJSONSource;
-    if (source) {
-      const data = this.buildTerminatorGeoJson(date);
-      source.setData(data as any);
+    const dateMs = date.getTime();
+    if (Math.abs(dateMs - this.lastTerminatorDateMs) >= 2000) {
+      this.lastTerminatorDateMs = dateMs;
+      const source = this.map.getSource('terminator-source') as GeoJSONSource;
+      if (source) {
+        const data = this.buildTerminatorGeoJson(date);
+        source.setData(data as any);
+      }
     }
 
     const nightFill = showNight ? 0.68 : 0;
@@ -1127,21 +1147,24 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private updateSolarTrackLayer(date: Date, show: boolean): void {
     if (!this.map || !this.map.getSource('solar-track-source')) return;
     const sub = calculateSubsolarPoint(date);
-    const source = this.map.getSource('solar-track-source') as GeoJSONSource;
-    if (source) {
-      source.setData({
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            properties: { lineType: 'solar-track' },
-            geometry: {
-              type: 'LineString',
-              coordinates: [[-180, sub.latitude], [180, sub.latitude]]
+    if (this.lastSolarTrackLat === null || Math.abs(sub.latitude - this.lastSolarTrackLat) > 0.02) {
+      this.lastSolarTrackLat = sub.latitude;
+      const source = this.map.getSource('solar-track-source') as GeoJSONSource;
+      if (source) {
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: { lineType: 'solar-track' },
+              geometry: {
+                type: 'LineString',
+                coordinates: [[-180, sub.latitude], [180, sub.latitude]]
+              }
             }
-          }
-        ]
-      } as any);
+          ]
+        } as any);
+      }
     }
 
     if (this.map.getLayer('solar-track-line')) {
@@ -1304,18 +1327,19 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   }
 
   private updateCityMarkerLabels(): void {
-    const statuses = this.worldHubStatuses();
+    const date = this.activeDate();
     const activeLocId = this.selectedLocation().id;
     const showLabels = this.showCityLabels();
     const currentZoom = this.map ? this.map.getZoom() : 2;
+    const minuteBucket = Math.floor(date.getTime() / 60000);
 
-    statuses.forEach(status => {
-      const marker = this.cityMarkers.get(status.location.id);
-      if (!marker) return;
+    for (const loc of this.allPresets) {
+      const marker = this.cityMarkers.get(loc.id);
+      if (!marker) continue;
 
       const el = marker.getElement();
-      const isSelected = status.location.id === activeLocId;
-      const tier = status.location.tier ?? 2;
+      const isSelected = loc.id === activeLocId;
+      const tier = loc.tier ?? 2;
 
       let isVisible = false;
       if (isSelected) {
@@ -1329,20 +1353,39 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       }
 
       if (!isVisible && !isSelected) {
-        el.style.display = 'none';
-        return;
+        if (el.style.display !== 'none') {
+          el.style.display = 'none';
+        }
+        continue;
       }
-      el.style.display = 'block';
+      if (el.style.display !== 'block') {
+        el.style.display = 'block';
+      }
+
+      const sun = calculateSolarPosition(date, loc.latitude, loc.longitude);
+      const alt = sun.altitudeDeg;
+      let astroState: WorldHubStatus['astroState'] = 'night';
+      if (alt > 6) {
+        astroState = 'day';
+      } else if (alt > 0) {
+        astroState = 'day';
+      } else if (alt > -6) {
+        astroState = 'civil-twilight';
+      } else if (alt > -12) {
+        astroState = 'nautical-twilight';
+      } else if (alt > -18) {
+        astroState = 'astro-twilight';
+      }
 
       let dotColorClass = 'bg-sky-400';
       let badgeTimeClass = 'text-sky-300';
-      if (status.astroState === 'day') {
+      if (astroState === 'day') {
         dotColorClass = 'bg-amber-400 shadow-amber-400/80';
         badgeTimeClass = 'text-amber-300';
-      } else if (status.astroState === 'civil-twilight') {
+      } else if (astroState === 'civil-twilight') {
         dotColorClass = 'bg-purple-400 shadow-purple-400/80';
         badgeTimeClass = 'text-purple-300';
-      } else if (status.astroState === 'nautical-twilight') {
+      } else if (astroState === 'nautical-twilight') {
         dotColorClass = 'bg-indigo-400 shadow-indigo-400/80';
         badgeTimeClass = 'text-indigo-300';
       } else {
@@ -1353,35 +1396,74 @@ export class WorldViewComponent implements OnInit, OnDestroy {
       el.classList.toggle('is-selected', isSelected);
 
       if (isSelected) {
+        const timeSecStr = new Intl.DateTimeFormat('en-US', {
+          timeZone: loc.timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).format(date);
+        let utcOffset = 'UTC';
+        try {
+          const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: loc.timezone,
+            timeZoneName: 'shortOffset'
+          }).formatToParts(date);
+          const tzPart = parts.find(p => p.type === 'timeZoneName');
+          utcOffset = tzPart ? tzPart.value : 'UTC';
+        } catch {
+          utcOffset = 'UTC';
+        }
+
         el.innerHTML = `
           <div class="city-inner flex items-center justify-center cursor-pointer select-none">
             <div class="city-pill-selected flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[11px] bg-slate-950/95 border-2 border-emerald-400 text-white shadow-2xl backdrop-blur-md ring-4 ring-emerald-500/20 whitespace-nowrap">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="text-xs">${status.location.flag}</span>
-              <span class="font-bold text-emerald-300 font-sans tracking-wide uppercase">${status.location.name}</span>
-              <span class="font-bold font-mono text-white">${status.localTimeWithSeconds}</span>
-              <span class="text-[9px] px-1 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 font-mono">${status.utcOffset}</span>
+              <span class="text-xs">${loc.flag}</span>
+              <span class="font-bold text-emerald-300 font-sans tracking-wide uppercase">${loc.name}</span>
+              <span class="font-bold font-mono text-white">${timeSecStr}</span>
+              <span class="text-[9px] px-1 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 font-mono">${utcOffset}</span>
             </div>
           </div>
         `;
       } else if (!showLabels) {
-        el.innerHTML = `
-          <div class="city-inner flex items-center justify-center cursor-pointer select-none">
-            <div class="city-dot ${dotColorClass}"></div>
-          </div>
-        `;
-      } else {
-        el.innerHTML = `
-          <div class="city-inner flex items-center justify-center cursor-pointer select-none">
-            <div class="city-pill flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[10px] bg-slate-950/90 border border-white/10 hover:border-amber-400/60 transition-all backdrop-blur-md shadow-lg group whitespace-nowrap">
-              <span class="city-status-indicator w-1.5 h-1.5 rounded-full ${dotColorClass}"></span>
-              <span class="city-name font-sans text-slate-300 font-medium tracking-tight uppercase">${status.location.name}</span>
-              <span class="city-time font-bold ${badgeTimeClass}">${status.localTime}</span>
+        const stateKey = `dot_${dotColorClass}`;
+        if (this.markerRenderState.get(loc.id) !== stateKey) {
+          this.markerRenderState.set(loc.id, stateKey);
+          el.innerHTML = `
+            <div class="city-inner flex items-center justify-center cursor-pointer select-none">
+              <div class="city-dot ${dotColorClass}"></div>
             </div>
-          </div>
-        `;
+          `;
+        }
+      } else {
+        const stateKey = `label_${dotColorClass}_${minuteBucket}`;
+        if (this.markerRenderState.get(loc.id) !== stateKey) {
+          this.markerRenderState.set(loc.id, stateKey);
+          let localTime = '--:--';
+          try {
+            localTime = new Intl.DateTimeFormat('en-US', {
+              timeZone: loc.timezone,
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }).format(date);
+          } catch {
+            localTime = '--:--';
+          }
+
+          el.innerHTML = `
+            <div class="city-inner flex items-center justify-center cursor-pointer select-none">
+              <div class="city-pill flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[10px] bg-slate-950/90 border border-white/10 hover:border-amber-400/60 transition-all backdrop-blur-md shadow-lg group whitespace-nowrap">
+                <span class="city-status-indicator w-1.5 h-1.5 rounded-full ${dotColorClass}"></span>
+                <span class="city-name font-sans text-slate-300 font-medium tracking-tight uppercase">${loc.name}</span>
+                <span class="city-time font-bold ${badgeTimeClass}">${localTime}</span>
+              </div>
+            </div>
+          `;
+        }
       }
-    });
+    }
   }
 
   /**
@@ -1618,10 +1700,32 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
   toggleWindVectors(): void {
     this.showWindVectors.update(v => !v);
+    if (this.showWindVectors()) {
+      this.startWindParticleLoop();
+    } else {
+      this.stopWindParticleLoop();
+    }
+  }
+
+  private stopWindParticleLoop(): void {
+    if (this.windAnimFrameId !== null && this.isBrowser) {
+      cancelAnimationFrame(this.windAnimFrameId);
+      this.windAnimFrameId = null;
+    }
+    const canvas = this.windCanvasRef?.nativeElement;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   private startWindParticleLoop(): void {
+    if (this.windAnimFrameId !== null || !this.isBrowser) return;
     const loop = () => {
+      if (!this.showWindVectors()) {
+        this.stopWindParticleLoop();
+        return;
+      }
       this.renderWindFrame();
       this.windAnimFrameId = requestAnimationFrame(loop);
     };

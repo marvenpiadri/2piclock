@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
 import { DeepSpaceBackdropComponent } from './shared/components/deep-space-backdrop/deep-space-backdrop';
-import { CountryFlagComponent, ASMRPlayerComponent } from './shared/components';
+import { CountryFlagComponent, ASMRPlayerComponent, MiniRadioPlayerComponent } from './shared/components';
 import { GlassThemeService } from './core/services/glass-theme.service';
 import { LocationService } from './core/services/location.service';
 import { CelestialService } from './core/services/celestial.service';
@@ -39,7 +39,8 @@ export interface NavCategory {
     ReactiveSkyComponent, 
     DeepSpaceBackdropComponent,
     CountryFlagComponent,
-    ASMRPlayerComponent
+    ASMRPlayerComponent,
+    MiniRadioPlayerComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -82,7 +83,32 @@ export class App {
   // Categorized Navigation Directory
   readonly navCategories: NavCategory[] = [
     {
-      title: 'Celestial Horizons',
+      title: 'Time Product Suite',
+      icon: 'schedule',
+      items: [
+        {
+          label: 'Time Zone Converter',
+          path: '/time',
+          desc: 'Multi-target timezone conversion with DST awareness, 12/24h formats, and date offsets.',
+          icon: 'sync_alt',
+          tag: 'Product'
+        },
+        {
+          label: 'Time & Date Differences',
+          path: '/time',
+          desc: 'Precise time difference solver, calendar date arithmetic, and business days.',
+          icon: 'compare_arrows'
+        },
+        {
+          label: 'Countdowns & Unix Epoch',
+          path: '/time',
+          desc: 'Live high-precision target event countdowns, count-ups, and Unix timestamp engine.',
+          icon: 'hourglass_bottom'
+        }
+      ]
+    },
+    {
+      title: 'Celestial Horizons & Solar',
       icon: 'wb_sunny',
       items: [
         {
@@ -94,35 +120,48 @@ export class App {
           tag: 'Real-Time'
         },
         {
-          label: 'Solar & Twilight Tracker',
-          path: '/',
-          view: 'sky',
-          desc: 'Civil (-6°), Nautical (-12°), and Astronomical (-18°) solar boundary tracker.',
-          icon: 'wb_twilight'
+          label: 'Solar & Daylight Calculator',
+          path: '/astronomy-tools',
+          desc: 'Solar altitude/azimuth, golden hour, twilight boundaries, and solar noon.',
+          icon: 'wb_twilight',
+          tag: 'Tool'
+        },
+        {
+          label: 'Lunar Phase & "When Is?"',
+          path: '/astronomy-tools',
+          desc: 'Geometric Moon phase terminator, next lunar milestones, and astronomical events.',
+          icon: 'nightlight_round'
         }
       ]
     },
     {
-      title: 'Earth & Global Clocks',
+      title: 'Earth & Global Experience',
       icon: 'public',
       items: [
         {
-          label: 'World Clocks',
+          label: 'World Radio (Listen to Earth)',
+          path: '/radio',
+          desc: 'Live global terrestrial broadcasts synchronized with local solar & diurnal cycles.',
+          icon: 'radio',
+          tag: 'Radio'
+        },
+        {
+          label: 'World Clocks Grid',
           path: '/world-clocks',
           desc: 'Live clocks across major cities and time zones.',
           icon: 'schedule',
           tag: 'Multi-City'
         },
         {
-          label: 'World Map',
+          label: 'World Map (Terminator)',
           path: '/world',
           desc: 'Continuous analytical 2D terminator curve, subsolar zenith, and timezone grid.',
           icon: 'public'
         },
         {
-          label: 'Golden Hour & Meeting Planner',
-          path: '/meeting-planner',
-          desc: 'Synchronized multi-location overlap calculator and optimum lighting planner.',
+          label: 'Meeting & Overlap Planner',
+          path: '/planner',
+          desc: 'Synchronized multi-location overlap calculator and optimum meeting planner.',
           icon: 'event_available'
         }
       ]
@@ -133,7 +172,7 @@ export class App {
       items: [
         {
           label: 'Deep Space Orrery (3D)',
-          path: '/deep-space-observatory',
+          path: '/space',
           view: 'space',
           desc: '3D Celestial Sphere, Right Ascension / Declination, and Keplerian orbital paths.',
           icon: 'view_in_ar',
@@ -156,6 +195,12 @@ export class App {
           path: '/atmosphere',
           desc: 'Weather Aggressiveness Index, winter frost, barometric pressure, and visibility.',
           icon: 'thunderstorm'
+        },
+        {
+          label: 'Wind & Weather Map',
+          path: '/weather',
+          desc: 'Global meteorological maps and live weather observations.',
+          icon: 'air'
         }
       ]
     }

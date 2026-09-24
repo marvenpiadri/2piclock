@@ -32,7 +32,14 @@ const staticSitemapUrls = [
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {
-  const urls = [...staticSitemapUrls, ...PRESET_LOCATIONS.map(location => '/place/' + location.id)];
+  const placeUrls = PRESET_LOCATIONS.flatMap(location => [
+    '/place/' + location.id,
+    '/time/' + location.id,
+    '/sun/' + location.id,
+    '/moon/' + location.id,
+    '/tonight/' + location.id,
+  ]);
+  const urls = [...staticSitemapUrls, ...placeUrls];
   const uniqueUrls = [...new Set(urls)];
   const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';

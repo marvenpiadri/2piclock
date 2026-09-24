@@ -216,11 +216,11 @@
           } @else if (activeTab() === 'recents') {
             Recently Played Streams ({{ filteredStations().length }})
           } @else {
-            Global Broadcast Streams ({{ filteredStations().length }})
+            Live Global Broadcast Streams ({{ filteredStations().length }})
           }
         </h3>
         <span class="status-summary font-mono text-xs text-slate-400">
-          Showing {{ filteredStations().length }} verified audio streams
+          Showing {{ filteredStations().length }} live directory streams
         </span>
       </div>
 
@@ -308,7 +308,7 @@
       </div>
 
       <div class="interactive-world-canvas-wrapper">
-        <!-- SVG Equirectangular World Map Background with Radio Nodes -->
+        <!-- Radio Browser live station coordinates -->
         <svg class="world-radio-svg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">

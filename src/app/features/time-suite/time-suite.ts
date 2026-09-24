@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit, O
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Meta, Title } from '@angular/platform-browser';
 import { MatIconModule } from '@angular/material/icon';
 import { LocationService } from '../../core/services/location.service';
 import { TimeCalculationService, TimezoneConversionResult, TimeDifferenceResult, DurationResult, DateDifferenceResult, AddSubtractResult, CountdownState, UnixConversionResult, WorldComparisonRow } from '../../core/services/time-calculation.service';
@@ -27,6 +28,8 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private locationService = inject(LocationService);
   private timeCalc = inject(TimeCalculationService);
+  private title = inject(Title);
+  private meta = inject(Meta);
 
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<TimeToolTab>('converter');
@@ -152,7 +155,17 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    // Parse query params for deep-linking
+    // The URL path is the canonical product identity. Query params remain useful
+    // for calculation state, but each calculator has its own crawlable /time/:slug path.
+    this.route.data.subscribe(data => {
+      const tool = data['tool'] as string | undefined;
+      if (tool && this.isValidTab(tool)) {
+        this.activeTab.set(tool as TimeToolTab);
+        this.updateSeo(tool as TimeToolTab);
+      }
+    });
+
+    // Parse query params for calculation state / older shared links.
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && this.isValidTab(params['tab'])) {
         this.activeTab.set(params['tab'] as TimeToolTab);
@@ -183,11 +196,65 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
 
   setTab(tab: TimeToolTab): void {
     this.activeTab.set(tab);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab },
-      queryParamsHandling: 'merge'
+    this.updateSeo(tab);
+    this.router.navigate(['/time', this.toolSlug(tab)], {
+      queryParamsHandling: 'merge',
+      queryParams: this.route.snapshot.queryParams
     });
+  }
+
+  private toolSlug(tab: TimeToolTab): string {
+    return {
+      converter: 'converter',
+      difference: 'difference',
+      duration: 'duration',
+      'date-difference': 'date-difference',
+      'add-subtract': 'add-subtract',
+      countdown: 'countdown',
+      unix: 'unix-timestamp',
+      'world-comparison': 'world-matrix'
+    }[tab];
+  }
+
+  private updateSeo(tab: TimeToolTab): void {
+    const seo: Record<TimeToolTab, { title: string; description: string }> = {
+      converter: {
+        title: 'Time Zone Converter | 2piClock',
+        description: 'Convert a date and time between cities and IANA time zones with precise local results.'
+      },
+      difference: {
+        title: 'Time Difference Calculator | 2piClock',
+        description: 'Calculate the exact time difference between two cities and time zones.'
+      },
+      duration: {
+        title: 'Time Duration Calculator | 2piClock',
+        description: 'Calculate the exact duration between two dates and times in days, hours, minutes and seconds.'
+      },
+      'date-difference': {
+        title: 'Date Difference Calculator | 2piClock',
+        description: 'Calculate calendar days, weeks, business days and weekends between two dates.'
+      },
+      'add-subtract': {
+        title: 'Add or Subtract Time | 2piClock',
+        description: 'Add or subtract years, months, days, hours, minutes and seconds from a date and time.'
+      },
+      countdown: {
+        title: 'Countdown & Count-Up Calculator | 2piClock',
+        description: 'Create a live countdown to an event or measure elapsed time from a starting instant.'
+      },
+      unix: {
+        title: 'Unix Timestamp Converter | 2piClock',
+        description: 'Convert Unix timestamps between seconds, milliseconds, ISO and local date-time formats.'
+      },
+      'world-comparison': {
+        title: 'World Time Matrix | 2piClock',
+        description: 'Compare local times, UTC offsets and day status across cities around the world.'
+      }
+    };
+    this.title.setTitle(seo[tab].title);
+    this.meta.updateTag({ name: 'description', content: seo[tab].description });
+    this.meta.updateTag({ property: 'og:title', content: seo[tab].title });
+    this.meta.updateTag({ property: 'og:description', content: seo[tab].description });
   }
 
   private isValidTab(tab: string): boolean {

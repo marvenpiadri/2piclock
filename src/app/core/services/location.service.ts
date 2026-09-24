@@ -76,16 +76,16 @@ export class LocationService {
     this.selectLocation(customLoc);
   }
 
-  detectUserLocation(): void {
+  detectUserLocation(): Promise<GeoLocation | null> {
     if (!this.isBrowser || !navigator.geolocation) {
       this.locationError.set('Geolocation is not supported by your browser.');
-      return;
+      return Promise.resolve(null);
     }
 
     this.isLocating.set(true);
     this.locationError.set(null);
 
-    navigator.geolocation.getCurrentPosition(
+    return new Promise(resolve => navigator.geolocation.getCurrentPosition(
       (pos) => {
         this.isLocating.set(false);
         const lat = pos.coords.latitude;
@@ -106,13 +106,34 @@ export class LocationService {
         };
 
         this.selectLocation(userLoc);
+        resolve(userLoc);
       },
       (err) => {
         this.isLocating.set(false);
         this.locationError.set(err.message || 'Unable to retrieve location.');
+        resolve(null);
       },
       { timeout: 10000, enableHighAccuracy: false }
-    );
+    ));
+  }
+
+  /**
+   * Resolve a usable location for the root experience. A saved choice wins;
+   * otherwise try browser GPS, then use a deterministic preset fallback.
+   */
+  async ensureInitialLocation(): Promise<GeoLocation> {
+    const current = this.selectedLocation();
+    if (this.isBrowser) {
+      const saved = localStorage.getItem('2piclock_selected_location');
+      if (saved) return current;
+      const detected = await this.detectUserLocation();
+      if (detected) return detected;
+    }
+
+    const fallback = this.allPresets[Math.floor(Math.random() * this.allPresets.length)] ?? this.allPresets[0];
+    this.selectLocation(fallback);
+    return fallback;
+  }
   }
 
   addToWatchlist(loc: GeoLocation): void {

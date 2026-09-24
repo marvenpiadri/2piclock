@@ -38,6 +38,9 @@
   --2pi-text-secondary: #cbd5e1;
   --2pi-muted: #94a3b8;
   --2pi-muted-dark: #64748b;
+  --2pi-text-on-sky: #f8fafc;
+  --2pi-text-on-sky-secondary: #d7dee8;
+  --2pi-text-on-sky-muted: #b9c3d0;
   
   /* Fonts */
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -202,4 +205,65 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+
+/* ==========================================================================
+   Shared 2pi UI language
+   Use these primitives across products instead of inventing local variants.
+   ========================================================================== */
+.app-surface {
+  background: var(--2pi-surface);
+  border: 1px solid var(--2pi-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+.app-surface-solid {
+  background: var(--2pi-surface-solid);
+  border: 1px solid var(--2pi-border);
+  border-radius: var(--radius-lg);
+}
+.app-section-title {
+  color: var(--2pi-text);
+  font-weight: 700;
+}
+.app-section-label {
+  color: var(--2pi-text-secondary);
+  font: 700 10px/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.app-muted {
+  color: var(--2pi-text-secondary);
+}
+.app-control {
+  min-height: 36px;
+  border: 1px solid var(--2pi-border);
+  border-radius: var(--radius-md);
+  background: var(--2pi-surface-input);
+  color: var(--2pi-text-secondary);
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.app-control:hover {
+  color: var(--2pi-text);
+  border-color: var(--2pi-border-strong);
+  background: rgba(255,255,255,.07);
+}
+.app-control.active {
+  color: #09090b;
+  border-color: var(--2pi-amber);
+  background: var(--2pi-amber);
+}
+.app-layout.sky-background-active .text-slate-400,
+.app-layout.sky-background-active .text-slate-500,
+.app-layout.sky-background-active .text-zinc-400,
+.app-layout.sky-background-active .text-zinc-500 {
+  color: var(--2pi-text-on-sky-secondary) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.65);
+}
+.app-layout.sky-background-active .text-slate-600,
+.app-layout.sky-background-active .text-zinc-600 {
+  color: var(--2pi-text-on-sky-muted) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.7);
 }

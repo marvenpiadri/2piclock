@@ -304,6 +304,7 @@ export class RadioService {
 
   private audio: HTMLAudioElement | null = null;
   private connectionTimeoutTimer: any = null;
+  private fallbackAttempted = new Set<string>();
 
   // State Signals
   readonly currentStation = signal<RadioStation | null>(null);
@@ -400,14 +401,20 @@ export class RadioService {
       });
 
       this.audio.addEventListener('error', () => {
-        this.isLoading.set(false);
-        this.isPlaying.set(false);
-        const errMsg = 'Station audio stream is temporarily unavailable or blocked by CORS.';
-        this.error.set(errMsg);
+        const station = this.currentStation();
         if (this.connectionTimeoutTimer) {
           clearTimeout(this.connectionTimeoutTimer);
           this.connectionTimeoutTimer = null;
         }
+
+        if (station && !this.fallbackAttempted.has(station.id)) {
+          this.tryAlternativeStream(station);
+          return;
+        }
+
+        this.isLoading.set(false);
+        this.isPlaying.set(false);
+        this.error.set('This station stream is unavailable. Try another station.');
       });
 
       this.audio.addEventListener('ended', () => {
@@ -438,6 +445,7 @@ export class RadioService {
 
     this.error.set(null);
     this.currentStation.set(station);
+    this.fallbackAttempted.delete(station.id);
     this.isLoading.set(true);
     this.isPlaying.set(true);
 
@@ -472,6 +480,69 @@ export class RadioService {
       this.isPlaying.set(false);
       this.error.set(err?.message || 'Failed to start audio stream.');
     }
+  }
+
+  private tryAlternativeStream(station: RadioStation): void {
+    if (!this.isBrowser || !this.audio || this.fallbackAttempted.has(station.id)) {
+      this.isLoading.set(false);
+      this.isPlaying.set(false);
+      this.error.set('This station stream is unavailable. Try another station.');
+      return;
+    }
+
+    this.fallbackAttempted.add(station.id);
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    const name = encodeURIComponent(station.name);
+    const apiUrl =
+      `https://de1.api.radio-browser.info/json/stations/search?name=${name}&limit=8&hidebroken=true&order=votes&reverse=true`;
+
+    this.http.get<any[]>(apiUrl).subscribe({
+      next: stations => {
+        const candidate = (stations || []).find(s => {
+          const url = s.url_resolved || s.url;
+          return !!url && url !== station.url && url !== station.urlResolved;
+        });
+
+        if (!candidate) {
+          this.isLoading.set(false);
+          this.isPlaying.set(false);
+          this.error.set('No working stream was found for this station.');
+          return;
+        }
+
+        const fallback: RadioStation = {
+          ...station,
+          stationuuid: candidate.stationuuid || station.stationuuid,
+          url: candidate.url_resolved || candidate.url,
+          urlResolved: candidate.url_resolved,
+          homepage: candidate.homepage || station.homepage,
+          favicon: candidate.favicon || station.favicon,
+          codec: candidate.codec || station.codec,
+          bitrate: candidate.bitrate || station.bitrate
+        };
+
+        this.currentStation.set(fallback);
+        this.audio!.pause();
+        this.audio!.src = fallback.urlResolved || fallback.url;
+        this.audio!.load();
+        this.audio!.play().then(() => {
+          this.isLoading.set(false);
+          this.isPlaying.set(true);
+          this.error.set(null);
+        }).catch(() => {
+          this.isLoading.set(false);
+          this.isPlaying.set(false);
+          this.error.set('The available stream could not be played in this browser.');
+        });
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.isPlaying.set(false);
+        this.error.set('The station is unavailable right now.');
+      }
+    });
   }
 
   togglePlay(): void {

@@ -168,7 +168,7 @@
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'observations'" (click)="setDeckTab('observations')" role="tab">
                 <mat-icon>query_stats</mat-icon>
-                <span>Insights & D3</span>
+                <span>Insights</span>
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'locations'" (click)="setDeckTab('locations')" role="tab">
                 <mat-icon>place</mat-icon>
@@ -191,7 +191,7 @@
                         <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
                       </div>
                     </div>
-                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg" [color]="weatherIconColor(weather().condition)"></app-weather-icon>
+                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg"></app-weather-icon>
                   </div>
 
                   <!-- 6-Metric Atmospheric Telemetry Grid -->
@@ -472,11 +472,6 @@
           <div><span>Sea-level pressure</span><strong>{{ weather().seaLevelPressureHpa || '—' }} hPa</strong></div>
           <div><span>Conditions</span><strong>{{ weather().isDay ? 'Day' : 'Night' }}</strong></div>
         </div>
-
-        <section class="weather-section-block">
-          <div class="section-heading-row"><div><span class="section-eyebrow">ATMOSPHERIC D3 VISUALIZER</span><h2>Humidity & Visibility Trends</h2></div><span>Real-time telemetry</span></div>
-          <app-weather-bar-chart></app-weather-bar-chart>
-        </section>
 
         <section class="weather-section-block">
           <div class="section-heading-row"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h2>Hourly</h2></div><span>Local time</span></div>

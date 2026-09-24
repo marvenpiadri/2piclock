@@ -4,7 +4,7 @@ import { WorldClocksComponent } from './features/world-clocks/world-clocks';
 import { WorldViewComponent } from './shared/components/world-view/world-view';
 import { CelestialEphemerisComponent } from './features/celestial-ephemeris/celestial-ephemeris';
 import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weather-atmosphere';
-import { WeatherViewComponent } from './features/weather-view/weather-view';
+import { WeatherComingSoonComponent } from './features/weather-coming-soon/weather-coming-soon';
 import { MeetingPlannerComponent } from './features/meeting-planner/meeting-planner';
 import { SpaceViewComponent } from './shared/components/space-view/space-view';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
@@ -49,7 +49,7 @@ export const routes: Routes = [
   { path: 'space', component: SpaceViewComponent },
   { path: 'deep-space-observatory', redirectTo: 'space', pathMatch: 'full' },
   { path: 'atmosphere', component: WeatherAtmosphereComponent },
-  { path: 'weather', component: WeatherViewComponent },
+  { path: 'weather', component: WeatherComingSoonComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
   { path: 'place/:slug', component: PlaceViewComponent },

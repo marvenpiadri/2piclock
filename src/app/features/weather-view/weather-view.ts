@@ -507,7 +507,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       .set('latitude', points.map(p => p.latitude.toFixed(3)).join(','))
       .set('longitude', points.map(p => p.longitude.toFixed(3)).join(','))
       .set('hourly', 'temperature_2m,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure')
-      .set('forecast_days', '4')
+      .set('forecast_days', '3')
       .set('timezone', 'GMT')
       .set('wind_speed_unit', 'kmh')
       .set('precipitation_unit', 'mm');
@@ -572,12 +572,13 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     const lonRadius = latRadius / cosLat;
     const points: { latitude: number; longitude: number }[] = [];
 
-    // Dense 6x6 sampling grid for smooth interpolation across viewport
-    for (let y = -3; y <= 3; y++) {
-      for (let x = -3; x <= 3; x++) {
+    // 5x5 is enough for a smooth analytical field while keeping the
+    // multi-coordinate weather response and interpolation lightweight.
+    for (let y = -2; y <= 2; y++) {
+      for (let x = -2; x <= 2; x++) {
         points.push({
-          latitude: latitude + (y / 3) * latRadius,
-          longitude: longitude + (x / 3) * lonRadius
+          latitude: latitude + (y / 2) * latRadius,
+          longitude: longitude + (x / 2) * lonRadius
         });
       }
     }
@@ -742,6 +743,8 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     // Semi-transparent trailing black fill gives Windy's fluid trail motion blur
     ctx.fillStyle = 'rgba(5, 8, 13, 0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (!this.isWindLayer()) return;
 
     const field = this.activeField();
     if (!field.length) return;

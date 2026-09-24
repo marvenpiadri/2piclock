@@ -206,7 +206,8 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private routerNavigate(slug: string): void {
     // Keep search/play state shareable while making the directory path canonical.
-    const { tab: _tab, ...queryParams } = this.route.snapshot.queryParams;
+    const queryParams = { ...this.route.snapshot.queryParams };
+    delete queryParams['tab'];
     this.router.navigate(['/radio', slug], {
       queryParams
     });

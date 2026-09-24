@@ -1,3 +1,6 @@
+@import url('https://erikflowers.github.io/weather-icons/css/weather-icons.css');
+@import url('https://erikflowers.github.io/weather-icons/css/weather-icons-wind.css');
+
 @import "tailwindcss";
 @import "maplibre-gl/dist/maplibre-gl.css";
 

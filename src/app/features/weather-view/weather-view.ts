@@ -278,7 +278,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       this.installWeatherSource();
       this.loadParticles();
       this.resizeCanvas();
-      this.startAnimation();
+      if (this.isWindLayer()) this.startAnimation();
       this.scheduleGridFetch(loc, true);
     });
 
@@ -322,6 +322,19 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   setLayer(layer: WeatherLayer): void {
     this.activeLayer.set(layer);
     this.updateWeatherSource();
+
+    // Wind particles are an optional visualization, never a permanent layer.
+    if (this.isWindLayer()) {
+      this.resetParticles();
+      this.startAnimation();
+    } else {
+      this.stopParticleAnimation();
+    }
+  }
+
+  private isWindLayer(): boolean {
+    const layer = this.activeLayer();
+    return layer === 'wind' || layer === 'gusts';
   }
 
   setAltitude(altitude: AltitudeLevel): void {
@@ -410,6 +423,8 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleMapClick(lon: number, lat: number, x: number, y: number): void {
+    if (!this.isWindLayer()) return;
+
     const field = this.activeField();
     if (!field.length) return;
     const sampled = this.sampleWind(lat, lon, field);
@@ -667,8 +682,9 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     const latRadius = zoom > 8 ? 1.2 : zoom > 6 ? 2.5 : 5.5;
     const lonRadius = latRadius / Math.max(0.2, Math.cos(center.lat * Math.PI / 180));
 
-    // High density 1,600 streamlines for that signature silky Windy.com look
-    this.particles = Array.from({ length: 1600 }, () => ({
+    // Keep the flow sparse so the map remains the primary visual.
+    // Dense particles hide geography and make every frame unnecessarily expensive.
+    this.particles = Array.from({ length: 420 }, () => ({
       latitude: center.lat + (Math.random() * 2 - 1) * latRadius,
       longitude: center.lng + (Math.random() * 2 - 1) * lonRadius,
       age: Math.random() * 80,
@@ -678,10 +694,22 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   }
 
   private startAnimation(): void {
-    if (!this.particleContext || !this.map) return;
+    if (!this.particleContext || !this.map || !this.isWindLayer() || this.animationFrameId) return;
     this.lastFrame = performance.now();
 
     const frame = (now: number) => {
+      if (!this.isWindLayer()) {
+        this.stopParticleAnimation();
+        return;
+      }
+
+      // 30 fps is visually sufficient for a meteorological flow layer and
+      // leaves the main thread available for MapLibre and UI interaction.
+      if (now - this.lastFrame < 33) {
+        this.animationFrameId = requestAnimationFrame(frame);
+        return;
+      }
+
       const dt = Math.min(80, now - this.lastFrame);
       this.lastFrame = now;
 
@@ -692,6 +720,18 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     };
 
     this.animationFrameId = requestAnimationFrame(frame);
+  }
+
+  private stopParticleAnimation(): void {
+    if (this.animationFrameId !== undefined) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+    }
+    const canvas = this.particleCanvas?.nativeElement;
+    const ctx = canvas?.getContext('2d');
+    if (ctx && canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   private renderParticles(dtMs: number): void {
@@ -767,21 +807,25 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   }
 
   private sampleWind(latitude: number, longitude: number, field: SampledWeatherPoint[]): SampledWeatherPoint {
-    let best = field[0];
-    let bestDistance = Infinity;
+    // buildGrid() creates a regular square lattice. Use direct cell lookup
+    // instead of scanning every grid point for every particle on every frame.
+    const size = Math.round(Math.sqrt(field.length));
+    if (size > 1 && size * size === field.length) {
+      const southWest = field[0];
+      const northWest = field[size * (size - 1)];
+      const southEast = field[size - 1];
 
-    for (const point of field) {
-      const distance =
-        Math.pow(point.latitude - latitude, 2) +
-        Math.pow((point.longitude - longitude) * Math.cos(latitude * Math.PI / 180), 2);
+      const latStep = (northWest.latitude - southWest.latitude) / (size - 1);
+      const lonStep = (southEast.longitude - southWest.longitude) / (size - 1);
 
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = point;
+      if (Math.abs(latStep) > 1e-9 && Math.abs(lonStep) > 1e-9) {
+        const y = Math.max(0, Math.min(size - 1, Math.round((latitude - southWest.latitude) / latStep)));
+        const x = Math.max(0, Math.min(size - 1, Math.round((longitude - southWest.longitude) / lonStep)));
+        return field[y * size + x];
       }
     }
 
-    return best;
+    return field[0];
   }
 
   private resizeCanvas(): void {

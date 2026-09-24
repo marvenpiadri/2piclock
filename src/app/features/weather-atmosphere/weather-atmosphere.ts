@@ -28,6 +28,11 @@ export class WeatherAtmosphereComponent {
   readonly isLoading = this.weatherService.isLoading;
   readonly selectedLocation = this.celestialService.selectedLocation;
 
+  constructor() {
+    // Weather is this page's primary data source; fetch only while mounted.
+    this.weatherService.fetchWeatherForLocation(this.selectedLocation());
+  }
+
   readonly conditions: { id: WeatherCondition; label: string; icon: string; desc: string }[] = [
     { id: 'clear', label: 'Crystal Clear', icon: 'wb_sunny', desc: 'Maximum visibility & starlight penetration' },
     { id: 'partly_cloudy', label: 'Partly Cloudy', icon: 'partly_cloudy_day', desc: 'Scattered cumulus clouds & parallax drift' },

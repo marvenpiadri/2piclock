@@ -458,6 +458,20 @@
           <div><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong></div>
           <div><span>UV index</span><strong>{{ weather().uvIndex }}</strong></div>
         </div>
+        <div class="weather-stats weather-stats-expanded">
+          <div><span>Dew point</span><strong>{{ isFahrenheit() ? dewPointF() : dewPointC() }}°</strong></div>
+          <div><span>Precipitation</span><strong>{{ weather().precipitationMm.toFixed(1) }} mm</strong></div>
+          <div><span>Rain</span><strong>{{ weather().rainMm.toFixed(1) }} mm</strong></div>
+          <div><span>Showers</span><strong>{{ weather().showersMm.toFixed(1) }} mm</strong></div>
+          <div><span>Snowfall</span><strong>{{ weather().snowfallCm.toFixed(1) }} cm</strong></div>
+          <div><span>Snow depth</span><strong>{{ weather().snowDepthCm.toFixed(1) }} cm</strong></div>
+          <div><span>Low cloud</span><strong>{{ weather().cloudCoverLowPct }}%</strong></div>
+          <div><span>Mid cloud</span><strong>{{ weather().cloudCoverMidPct }}%</strong></div>
+          <div><span>High cloud</span><strong>{{ weather().cloudCoverHighPct }}%</strong></div>
+          <div><span>Freezing level</span><strong>{{ weather().freezingLevelM ? weather().freezingLevelM.toFixed(0) + ' m' : '—' }}</strong></div>
+          <div><span>Sea-level pressure</span><strong>{{ weather().seaLevelPressureHpa || '—' }} hPa</strong></div>
+          <div><span>Conditions</span><strong>{{ weather().isDay ? 'Day' : 'Night' }}</strong></div>
+        </div>
 
         <section class="weather-section-block">
           <div class="section-heading-row"><div><span class="section-eyebrow">ATMOSPHERIC D3 VISUALIZER</span><h2>Humidity & Visibility Trends</h2></div><span>Real-time telemetry</span></div>

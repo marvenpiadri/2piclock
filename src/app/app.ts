@@ -13,6 +13,7 @@ import { ObservatoryViewService, ObservatoryView } from './core/services/observa
 import { GeoLocation } from './core/models/location.model';
 import { GeocodingService } from './core/services/geocoding.service';
 import { Subscription, filter } from 'rxjs';
+import { DOCUMENT } from '@angular/common';
 
 export interface NavCategory {
   title: string;
@@ -80,8 +81,23 @@ export class App {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(event => {
-        this.currentRoute.set((event as NavigationEnd).urlAfterRedirects || '/');
+        const url = (event as NavigationEnd).urlAfterRedirects || '/';
+        this.currentRoute.set(url);
+        this.updateCanonical(url);
       });
+    this.updateCanonical(this.router.url || '/');
+  }
+
+  private updateCanonical(url: string): void {
+    const cleanPath = url.split('?')[0] || '/';
+    const canonicalUrl = 'https://2piclock.com' + (cleanPath === '/' ? '/' : cleanPath.replace(/\/$/, ''));
+    let link = this.document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = this.document.createElement('link');
+      link.rel = 'canonical';
+      this.document.head.appendChild(link);
+    }
+    link.href = canonicalUrl;
   }
 
   // Dropdown & sidebar collapse states

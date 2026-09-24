@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, forkJoin, map, of } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, shareReplay } from 'rxjs';
 import { GeoLocation } from '../models/location.model';
 
 interface OpenMeteoGeocodingResult {
@@ -15,12 +15,10 @@ interface OpenMeteoGeocodingResult {
   admin1?: string;
 }
 
-interface OpenMeteoGeocodingResponse {
-  results?: OpenMeteoGeocodingResult[];
-}
+interface OpenMeteoGeocodingResponse { results?: OpenMeteoGeocodingResult[]; }
 
 interface RestCountryResult {
-  name?: { common?: string };
+  name?: { common?: string; official?: string };
   cca2?: string;
   latlng?: number[];
   timezones?: string[];
@@ -31,8 +29,27 @@ interface RestCountryResult {
 export class GeocodingService {
   private readonly http = inject(HttpClient);
   private readonly cityEndpoint = 'https://geocoding-api.open-meteo.com/v1/search';
-  private readonly countryEndpoint = 'https://restcountries.com/v3.1/name';
+  private readonly countriesEndpoint = 'https://restcountries.com/v3.1/all?fields=name,cca2,latlng,timezones,capital';
   private readonly cache = new Map<string, GeoLocation[]>();
+  private countries$?: Observable<GeoLocation[]>;
+
+  /**
+   * One shared global location database for the entire application.
+   * REST Countries supplies the complete country/capital index; Open-Meteo
+   * supplies city-level coordinates on demand. Consumers should use this
+   * service rather than maintaining route-specific preset search lists.
+   */
+  getCountries(): Observable<GeoLocation[]> {
+    if (!this.countries$) {
+      this.countries$ = this.http.get<RestCountryResult[]>(this.countriesEndpoint).pipe(
+        map(results => results.map((result, index) => this.mapCountry(result, index))),
+        map(locations => locations.filter(loc => loc.countryCode && Number.isFinite(loc.latitude) && Number.isFinite(loc.longitude))),
+        shareReplay({ bufferSize: 1, refCount: true }),
+        catchError(() => of([]))
+      );
+    }
+    return this.countries$;
+  }
 
   search(query: string, count = 8): Observable<GeoLocation[]> {
     const term = query.trim();
@@ -48,40 +65,37 @@ export class GeocodingService {
       .set('language', 'en')
       .set('format', 'json');
 
-    const cities$ = this.http
-      .get<OpenMeteoGeocodingResponse>(this.cityEndpoint, { params: cityParams })
-      .pipe(
-        map(response => (response.results ?? []).map((result, index) => this.mapCity(result, index))),
-        catchError(() => of([]))
-      );
+    const cities$ = this.http.get<OpenMeteoGeocodingResponse>(this.cityEndpoint, { params: cityParams }).pipe(
+      map(response => (response.results ?? []).map((result, index) => this.mapCity(result, index))),
+      catchError(() => of([]))
+    );
 
-    // REST Countries complements city geocoding with actual country records.
-    // This prevents searches such as "Morocco" or "Japan" from depending on
-    // whether the geocoder happens to rank a city highly enough.
-    const countries$ = this.http
-      .get<RestCountryResult[]>(`${this.countryEndpoint}/${encodeURIComponent(term)}`)
-      .pipe(
-        map(results => results.slice(0, 4).map((result, index) => this.mapCountry(result, index))),
-        catchError(() => of([]))
-      );
+    const countries$ = this.getCountries().pipe(
+      map(countries => {
+        const q = term.toLocaleLowerCase();
+        return countries.filter(country =>
+          country.country.toLocaleLowerCase().includes(q) ||
+          country.name.toLocaleLowerCase().includes(q) ||
+          country.countryCode.toLocaleLowerCase() === q
+        ).slice(0, 8);
+      })
+    );
 
     return forkJoin({ cities: cities$, countries: countries$ }).pipe(
       map(({ cities, countries }) => {
         const merged = [...countries, ...cities];
         const seen = new Set<string>();
         const unique = merged.filter(location => {
-          const key = [
+          const signature = [
             location.name.toLocaleLowerCase(),
             location.countryCode,
             location.latitude.toFixed(4),
             location.longitude.toFixed(4)
           ].join('|');
-
-          if (seen.has(key)) return false;
-          seen.add(key);
+          if (seen.has(signature)) return false;
+          seen.add(signature);
           return true;
         });
-
         const limited = unique.slice(0, Math.min(20, Math.max(1, count)));
         this.cache.set(key, limited);
         return limited;

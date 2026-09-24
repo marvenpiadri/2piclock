@@ -71,7 +71,7 @@
         <div><span class="eyebrow">ATMOSPHERE</span><strong>{{ weather.temperatureC | number:'1.0-1' }}°C</strong><span>{{ weather.conditionLabel }}</span></div>
         <div><span>WIND</span><strong>{{ weather.windSpeedKmh }} km/h</strong></div>
         <div><span>VISUAL SKY</span><strong>{{ kind() === 'tonight' ? 'Live conditions' : 'Local weather' }}</strong></div>
-        <a [routerLink]="['/sky/weather']">Open weather →</a>
+        <a [routerLink]="['/weather']">Open weather →</a>
       </section>
     }
 
@@ -121,5 +121,5 @@
     </nav>
   </main>
 } @else {
-  <main class="seo-not-found"><h1>Place not found</h1><p>Choose a city from 2PiClock's location search.</p><a [routerLink]="['/sky']">Return to 2PiClock</a></main>
+  <main class="seo-not-found"><h1>Place not found</h1><p>Choose a city from 2PiClock's location search.</p><a [routerLink]="['/now']">Return to 2PiClock</a></main>
 }

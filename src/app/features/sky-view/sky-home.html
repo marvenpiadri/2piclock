@@ -556,7 +556,7 @@
               <span>Fajr {{ worldEvents.prayerTimes()['Fajr'] || '—' }}</span>
               <span>Maghrib {{ worldEvents.prayerTimes()['Maghrib'] || '—' }}</span>
             </div>
-            <small>Aladhan · Muslim World League method</small>
+            <small>Source: Aladhan · Muslim World League method</small>
           </article>
 
           <article class="world-event-card">
@@ -567,7 +567,7 @@
             } @else {
               <strong>—</strong><span>No upcoming Shabbat marker</span>
             }
-            <small>Hebcal · candle lighting / Havdalah</small>
+            <small>Source: Hebcal · candle lighting / Havdalah</small>
           </article>
 
           <article class="world-event-card">
@@ -589,7 +589,7 @@
               <span>Blue {{ worldEvents.formatTime(worldEvents.solarWindows().blueEvening, selectedLocation().timezone) }}</span>
               <span>Sunset {{ worldEvents.formatTime(worldEvents.solarWindows().sunset, selectedLocation().timezone) }}</span>
             </div>
-            <small>Sunrise-Sunset.org v2</small>
+            <small>Source: <a href="https://sunrise-sunset.org/" target="_blank" rel="noopener noreferrer">Sunrise-Sunset.org</a> v2</small>
           </article>
         </div>
 

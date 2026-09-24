@@ -39,7 +39,6 @@ export const routes: Routes = [
   // The directory roots are navigation entry points; the child pages are canonical tools.
   { path: 'time', pathMatch: 'full', redirectTo: 'time/converter' },
   { path: 'time/converter', component: TimeSuiteComponent, data: { tool: 'converter' } },
-  { path: 'time/time-zone-converter', component: TimeSuiteComponent, data: { tool: 'converter' } },
   { path: 'time/difference', component: TimeSuiteComponent, data: { tool: 'difference' } },
   { path: 'time/duration', component: TimeSuiteComponent, data: { tool: 'duration' } },
   { path: 'time/date-difference', component: TimeSuiteComponent, data: { tool: 'date-difference' } },

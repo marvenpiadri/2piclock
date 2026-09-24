@@ -129,6 +129,15 @@ export class AstronomySuiteComponent implements OnInit {
     });
   }
 
+  trajectoryX(hour: number): number {
+    return Math.max(3, Math.min(97, (hour / 23) * 94 + 3));
+  }
+
+  trajectoryY(altitude: number): number {
+    const normalized = Math.max(-90, Math.min(90, altitude));
+    return 50 - (normalized / 90) * 42;
+  }
+
   getCompassHeading(azimuthDeg: number): string {
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
     const idx = Math.round(azimuthDeg / 22.5) % 16;

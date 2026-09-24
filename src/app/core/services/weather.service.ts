@@ -391,7 +391,7 @@ export class WeatherService {
     if (code >= 45 && code <= 48) return 'fog';
     if (code >= 51 && code <= 57) return 'drizzle';
     if (code >= 58 && code <= 65) return 'rain';
-    if (code >= 66 && code <= 67) return 'rain';
+    if (code >= 66 && code <= 67) return 'freezing_rain';
     if (code >= 71 && code <= 75) return 'snow';
     if (code >= 76 && code <= 77) return 'heavy_snow';
     if (code >= 80 && code <= 82) return 'heavy_rain';
@@ -409,6 +409,8 @@ export class WeatherService {
       case 'overcast': return 'Overcast';
       case 'drizzle': return 'Drizzle';
       case 'rain': return 'Rain';
+      case 'freezing_rain': return 'Freezing Rain';
+      case 'hail': return 'Hail';
       case 'heavy_rain': return 'Heavy Downpour';
       case 'thunderstorm': return 'Thunderstorm & Lightning';
       case 'severe_thunderstorm': return 'Severe Thunderstorm';
@@ -430,6 +432,8 @@ export class WeatherService {
       case 'overcast': return 95;
       case 'drizzle': return 65;
       case 'rain': return 85;
+      case 'freezing_rain': return 90;
+      case 'hail': return 92;
       case 'heavy_rain': return 100;
       case 'thunderstorm': return 100;
       case 'severe_thunderstorm': return 100;

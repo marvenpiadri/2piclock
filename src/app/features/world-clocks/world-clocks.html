@@ -1,8 +1,17 @@
 <div class="world-clocks-page">
   <header class="world-clocks-header">
     <div><span class="eyebrow">GLOBAL TIME</span><h1>World Clocks</h1><p>Live local time across major cities and time zones.</p></div>
-    <div class="clock-count">{{ displayedClocks().length }} cities</div>
+    <div class="clock-actions"><div class="clock-search"><mat-icon>search</mat-icon><input [value]="locationSearch()" (input)="onLocationSearch($any($event.target).value)" placeholder="Search any city or country" aria-label="Search any city or country"></div><span class="clock-count">{{ displayedClocks().length }} cities</span></div>
   </header>
+  @if (locationSearch().trim().length >= 2) {
+    <div class="location-results">
+      @if (isSearching()) { <span class="search-status">Searching global locations…</span> }
+      @for (loc of locationResults(); track loc.id) {
+        <button type="button" class="location-result" (click)="selectLocation(loc)"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'flag'"></app-country-flag><span><b>{{ loc.name }}</b><small>{{ loc.country }} · {{ loc.timezone }}</small></span></button>
+      }
+      @if (!isSearching() && locationResults().length === 0) { <span class="search-status">No matching locations.</span> }
+    </div>
+  }
   <section class="clock-grid" aria-label="World clocks">
     @for (status of displayedClocks(); track status.location.id) {
       <button type="button" class="world-clock-card" [class.active]="selectedLocation().id === status.location.id" (click)="selectLocation(status.location)">

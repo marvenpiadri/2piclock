@@ -170,7 +170,7 @@ export class WeatherService {
       .set('longitude', loc.longitude)
       .set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
       .set('hourly', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
-      .set('forecast_days', '14')
+      .set('forecast_days', '7')
       .set('timezone', 'auto');
 
     this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
@@ -219,7 +219,7 @@ export class WeatherService {
             this.rawWeather.set(weather);
             this.lastFetchedKey = key;
 
-            // Parse 14-day hourly forecast series
+            // Parse 7-day hourly forecast series
             if (data.hourly && Array.isArray(data.hourly.time)) {
               const times: string[] = data.hourly.time;
               const hTemps = data.hourly.temperature_2m || [];

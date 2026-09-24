@@ -334,7 +334,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   readonly showCelestialGrid = signal<boolean>(true);
   readonly showSolarTrack = signal<boolean>(true);
   readonly showMoonZenith = signal<boolean>(true);
-  readonly showWindVectors = signal<boolean>(true);
+  readonly showWindVectors = signal<boolean>(false);
   readonly currentMapTheme = signal<MapThemeMode>('nasa');
   readonly isMapLoaded = signal<boolean>(false);
 
@@ -517,7 +517,9 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
           if (loc.id !== this.lastLocationId) {
             this.lastLocationId = loc.id;
-            this.weatherService.fetchWeatherForLocation(loc);
+            if (this.showWindVectors()) {
+              this.weatherService.fetchWeatherForLocation(loc);
+            }
           }
         }
       });
@@ -1699,8 +1701,12 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   }
 
   toggleWindVectors(): void {
-    this.showWindVectors.update(v => !v);
-    if (this.showWindVectors()) {
+    const enabled = !this.showWindVectors();
+    this.showWindVectors.set(enabled);
+
+    if (enabled) {
+      // Weather is an opt-in analytical layer on the World Map.
+      this.weatherService.fetchWeatherForLocation(this.selectedLocation());
       this.startWindParticleLoop();
     } else {
       this.stopWindParticleLoop();
@@ -1734,7 +1740,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
   private initWindParticles(west: number, east: number, south: number, north: number): void {
     this.windParticles = [];
-    const particleCount = 280;
+    const particleCount = 160;
     for (let i = 0; i < particleCount; i++) {
       this.windParticles.push({
         lng: west + Math.random() * (east - west),

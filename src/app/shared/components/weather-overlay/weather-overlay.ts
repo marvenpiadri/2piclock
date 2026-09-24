@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { WeatherService } from '../../../core/services/weather.service';
 import { CountryFlagComponent } from '../country-flag/country-flag';
+import { WeatherIconComponent } from '../weather-icon/weather-icon';
 
 @Component({
   selector: 'app-weather-overlay',
   standalone: true,
-  imports: [CommonModule, MatIconModule, CountryFlagComponent],
+  imports: [CommonModule, MatIconModule, CountryFlagComponent, WeatherIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="weather-overlay-hud p-4 rounded-3xl bg-slate-950/90 border border-white/15 backdrop-blur-2xl shadow-2xl flex flex-col gap-3 max-w-sm text-slate-100 font-sans select-none animate-fadeIn">
@@ -30,7 +31,7 @@ import { CountryFlagComponent } from '../country-flag/country-flag';
       <div class="flex items-center justify-between p-3 rounded-2xl bg-white/[0.04] border border-white/10">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-300">
-            <mat-icon class="text-2xl">{{ getWeatherIcon(weather().conditionLabel) }}</mat-icon>
+            <app-weather-icon [condition]="weather().condition" [label]="weather().conditionLabel" size="lg" [color]="weatherIconColor(weather().condition)"></app-weather-icon>
           </div>
 
           <div class="flex flex-col">
@@ -141,14 +142,13 @@ export class WeatherOverlayComponent {
     this.isFahrenheit.update(v => !v);
   }
 
-  getWeatherIcon(condition: string): string {
-    if (!condition) return 'air';
-    const lower = condition.toLowerCase();
-    if (lower.includes('rain') || lower.includes('drizzle')) return 'grain';
-    if (lower.includes('snow') || lower.includes('frost')) return 'ac_unit';
-    if (lower.includes('thunder') || lower.includes('storm')) return 'thunderstorm';
-    if (lower.includes('cloud') || lower.includes('overcast')) return 'cloud';
-    if (lower.includes('clear') || lower.includes('sunny')) return 'wb_sunny';
-    return 'air';
+  weatherIconColor(condition: string): string {
+    const c = condition.toLowerCase();
+    if (c.includes('thunder') || c.includes('storm')) return '#a78bfa';
+    if (c.includes('rain') || c.includes('drizzle')) return '#38bdf8';
+    if (c.includes('snow') || c.includes('blizzard')) return '#e2e8f0';
+    if (c.includes('fog') || c.includes('haze')) return '#cbd5e1';
+    if (c.includes('cloud')) return '#94a3b8';
+    return '#fbbf24';
   }
 }

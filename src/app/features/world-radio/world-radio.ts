@@ -38,6 +38,7 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly locationService = inject(LocationService);
   readonly timeService = inject(TimeControlService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private title = inject(Title);
   private meta = inject(Meta);
   private readonly mapBackbone = inject(MapBackboneService);
@@ -204,10 +205,7 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private routerNavigate(slug: string): void {
-    // Keep calculation/search query state shareable while making the directory path canonical.
-    this.route.parent;
-    void this.route.snapshot;
-    // ActivatedRoute is the child route itself, so navigate from the application root.
+    // Keep search/play state shareable while making the directory path canonical.
     this.router.navigate(['/radio', slug], {
       queryParams: this.route.snapshot.queryParams
     });

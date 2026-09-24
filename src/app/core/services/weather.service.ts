@@ -186,7 +186,7 @@ export class WeatherService {
       .set('current', 'temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,pressure_msl,visibility,uv_index,is_day')
       .set('hourly', 'temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,pressure_msl,visibility,uv_index,is_day,freezing_level_height')
       .set('forecast_days', '7')
-      .set('timezone', 'auto');
+      .set('timezone', 'UTC');
 
     this.http.get<any>('https://api.open-meteo.com/v1/forecast', { params })
       .subscribe({
@@ -395,7 +395,7 @@ export class WeatherService {
     if (code >= 71 && code <= 75) return 'snow';
     if (code >= 76 && code <= 77) return 'heavy_snow';
     if (code >= 80 && code <= 82) return 'heavy_rain';
-    if (code >= 85 && code <= 86) return 'blizzard';
+    if (code >= 85 && code <= 86) return 'snow';
     if (code === 95) return 'thunderstorm';
     if (code >= 96 && code <= 99) return 'severe_thunderstorm';
     return 'partly_cloudy';

@@ -485,44 +485,4 @@
     </div>
   </div>
 
-  <!-- Global Cities Comparison Grid (Tier 1 & Major Capitals) -->
-  <div class="glass-panel p-5 rounded-2xl bg-slate-900/85 border border-white/10 backdrop-blur-xl shadow-xl">
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center gap-2">
-        <mat-icon class="text-sky-400">public</mat-icon>
-        <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wide">Global Observatory Clocks</h3>
-      </div>
-      <span class="text-xs font-mono text-slate-400">{{ allPresets.length }} Registered Observatories</span>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
-      @for (status of worldHubStatuses().slice(0, 18); track status.location.id) {
-        <button 
-          type="button" 
-          (click)="selectLocation(status.location)"
-          class="hub-card p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 group"
-          [class.active-hub]="selectedLocation().id === status.location.id">
-          <div class="flex items-center justify-between">
-            <app-country-flag [countryCode]="status.location.countryCode" [customClass]="'w-5 h-3.5 rounded-xs'"></app-country-flag>
-            <span class="w-1.5 h-1.5 rounded-full"
-              [class.bg-amber-400]="status.astroState === 'day'"
-              [class.bg-purple-400]="status.astroState === 'civil-twilight'"
-              [class.bg-indigo-400]="status.astroState === 'nautical-twilight'"
-              [class.bg-sky-400]="status.astroState === 'night'"></span>
-          </div>
-          <div>
-            <div class="text-xs font-bold text-white group-hover:text-sky-300 transition-colors truncate">
-              {{ status.location.name }}
-            </div>
-            <div class="text-[10px] text-slate-400 font-mono">{{ status.utcOffset }}</div>
-          </div>
-          <div class="text-sm font-mono font-bold mt-1"
-            [class.text-amber-300]="status.astroState === 'day'"
-            [class.text-sky-300]="status.astroState !== 'day'">
-            {{ status.localTime }}
-          </div>
-        </button>
-      }
-    </div>
-  </div>
 </div>

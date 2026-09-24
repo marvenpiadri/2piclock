@@ -93,7 +93,7 @@ export class LocationService {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
         const userLoc: GeoLocation = {
-          id: 'user-current-gps',
+          id: 'current-location',
           name: 'Current Location',
           country: 'GPS Detected',
           countryCode: 'GPS',
@@ -113,7 +113,7 @@ export class LocationService {
         this.locationError.set(err.message || 'Unable to retrieve location.');
         resolve(null);
       },
-      { timeout: 10000, enableHighAccuracy: false }
+      { timeout: 5000, enableHighAccuracy: false }
     ));
   }
 

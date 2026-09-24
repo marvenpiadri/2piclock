@@ -48,10 +48,22 @@ export class AstronomySuiteComponent implements OnInit {
   // "When Is?" query selector
   readonly whenIsQuery = signal<'next-full-moon' | 'next-new-moon' | 'spring-equinox' | 'summer-solstice' | 'autumn-equinox' | 'winter-solstice' | 'solar-noon'>('next-full-moon');
 
+  /**
+   * Interpret the form's date/time as wall-clock time in the selected location.
+   * The astronomy engine works with real UTC instants, so this conversion must
+   * happen before any solar/lunar calculation. In particular, 00:00 must stay
+   * midnight rather than being treated as a falsy value and becoming 12:00.
+   */
   readonly parsedInstant = computed<Date>(() => {
     const [y, m, d] = this.selectedDate().split('-').map(Number);
     const [h, min] = this.selectedTime().split(':').map(Number);
-    return new Date(Date.UTC(y || 2026, (m || 1) - 1, d || 1, h || 12, min || 0, 0));
+    const year = Number.isFinite(y) ? y : new Date().getFullYear();
+    const month = Number.isFinite(m) && m >= 1 && m <= 12 ? m : 1;
+    const day = Number.isFinite(d) && d >= 1 && d <= 31 ? d : 1;
+    const hour = Number.isFinite(h) && h >= 0 && h <= 23 ? h : 12;
+    const minute = Number.isFinite(min) && min >= 0 && min <= 59 ? min : 0;
+
+    return this.getZonedDateTime(year, month, day, hour, minute, 0, this.selectedLocation().timezone);
   });
 
   // --- Calculations ---
@@ -117,6 +129,37 @@ export class AstronomySuiteComponent implements OnInit {
 
   setWhenIsQuery(query: 'next-full-moon' | 'next-new-moon' | 'spring-equinox' | 'summer-solstice' | 'autumn-equinox' | 'winter-solstice' | 'solar-noon'): void {
     this.whenIsQuery.set(query);
+  }
+
+  private getZonedDateTime(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    timeZone: string,
+    millisecond = 0
+  ): Date {
+    const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+
+    const getOffsetMinutes = (instant: Date): number => {
+      const value = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        timeZoneName: 'longOffset'
+      }).formatToParts(instant).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+      const match = value.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+      if (!match) return 0;
+      const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
+      return match[1] === '+' ? minutes : -minutes;
+    };
+
+    let instant = new Date(wallClockUtc - getOffsetMinutes(new Date(wallClockUtc)) * 60000);
+    const correctedOffset = getOffsetMinutes(instant);
+    if (correctedOffset !== getOffsetMinutes(new Date(wallClockUtc))) {
+      instant = new Date(wallClockUtc - correctedOffset * 60000);
+    }
+    return instant;
   }
 
   formatTime(date: Date | null): string {

@@ -7,8 +7,9 @@ import { WeatherService } from '../../core/services/weather.service';
 import { AstronomicalCalculatorService } from '../../core/services/astronomical-calculator.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
+import { MoonPhaseIndicator } from '../../shared/components/moon-phase-indicator/moon-phase-indicator';
 
-@Component({ selector: 'app-place-view', standalone: true, imports: [CommonModule, RouterModule], changeDetection: ChangeDetectionStrategy.OnPush, templateUrl: './place-view.html', styleUrl: './place-view.css' })
+@Component({ selector: 'app-place-view', standalone: true, imports: [CommonModule, RouterModule, MoonPhaseIndicator], changeDetection: ChangeDetectionStrategy.OnPush, templateUrl: './place-view.html', styleUrl: './place-view.css' })
 export class PlaceViewComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly title = inject(Title);
@@ -49,6 +50,11 @@ export class PlaceViewComponent {
     script.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description, url: canonicalUrl, about: { '@type': 'City', name: loc.name, containedInPlace: { '@type': 'Country', name: loc.country } } });
     this.document.head.appendChild(script);
   }
+  readonly sunVisualPosition = computed(() => {
+    const az = this.solar()?.solarPos?.azimuthDeg ?? 0;
+    return { left: 50 + Math.sin(az * Math.PI / 180) * 42, top: 50 - Math.cos(az * Math.PI / 180) * 42 };
+  });
+
   formatTime(date: Date | null): string { const loc = this.location(); return !date || !loc ? '--:--' : date.toLocaleTimeString('en-US', { timeZone: loc.timezone, hour: '2-digit', minute: '2-digit', hour12: false }); }
   formatDegrees(value: number | undefined): string { return value === undefined || !Number.isFinite(value) ? '—' : value.toFixed(1) + '°'; }
   formatMoonPhase(): string { return this.moon()?.sublunarPoint.phaseName ?? '—'; }

@@ -30,7 +30,7 @@ export class PlaceViewComponent {
   readonly utcOffset = computed(() => { const loc = this.location(); if (!loc) return ''; try { const formatted = new Intl.DateTimeFormat('en-US', { timeZone: loc.timezone, timeZoneName: 'shortOffset' }).format(this.activeDate()); return formatted.split(' ').pop() ?? loc.timezone; } catch { return loc.timezone; } });
   constructor() { effect(() => { const loc = this.location(); if (!loc) return; this.locationService.selectLocation(loc); this.weatherService.fetchWeatherForLocation(loc); this.updateSeo(loc); }); }
   private updateSeo(loc: GeoLocation): void {
-    const title = loc.name + ', ' + loc.country + ' — Time, Weather & Sky | 2PiClock';
+    const title = 'Explore ' + loc.name + ' — Time, Weather & Sky | 2PiClock';
     const description = 'Current local time, sunrise, sunset, daylight, moon phase, weather and astronomical calculations for ' + loc.name + ', ' + loc.country + '. Explore the sky, weather and time tools for ' + loc.name + '.';
     const canonicalUrl = 'https://2piclock.com/place/' + loc.id;
     this.title.setTitle(title);

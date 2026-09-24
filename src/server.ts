@@ -29,7 +29,7 @@ const angularApp = new AngularNodeAppEngine();
 // Redirect-only intent aliases remain useful for navigation/search entry, but
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
-  '/now', '/weather', '/astronomy', '/tonight',
+  '/', '/weather', '/astronomy', '/tonight',
   '/world', '/world-clocks', '/time',
   '/radio', '/atmosphere', '/ephemeris',
   '/planner', '/space'
@@ -37,11 +37,13 @@ const staticSitemapUrls = [
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {
   const placeUrls = PRESET_LOCATIONS.flatMap(location => [
-    '/place/' + location.id,
-    '/time/' + location.id,
-    '/sun/' + location.id,
-    '/moon/' + location.id,
-    '/tonight/' + location.id,
+    '/' + location.id,
+    '/' + location.id + '/time',
+    '/' + location.id + '/weather',
+    '/' + location.id + '/sun',
+    '/' + location.id + '/moon',
+    '/' + location.id + '/tonight',
+    '/' + location.id + '/astronomy',
   ]);
   const urls = [...staticSitemapUrls, ...placeUrls];
   const uniqueUrls = [...new Set(urls)];

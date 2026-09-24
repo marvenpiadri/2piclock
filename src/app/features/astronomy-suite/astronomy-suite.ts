@@ -14,7 +14,7 @@ import {
 import { GeoLocation } from '../../core/models/location.model';
 import { MoonPhaseIndicator } from '../../shared/components/moon-phase-indicator/moon-phase-indicator';
 
-export type AstronomyTab = 'solar' | 'daylight' | 'moon' | 'events';
+export type AstronomyTab = 'overview' | 'solar' | 'daylight' | 'moon' | 'events';
 
 @Component({
   selector: 'app-astronomy-suite',
@@ -37,7 +37,7 @@ export class AstronomySuiteComponent implements OnInit {
   private astroCalc = inject(AstronomicalCalculatorService);
 
   readonly allPresets = this.locationService.allPresets;
-  readonly activeTab = signal<AstronomyTab>('solar');
+  readonly activeTab = signal<AstronomyTab>('overview');
   readonly selectedLocation = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly selectedDate = signal<string>(
     new Intl.DateTimeFormat('en-CA', {
@@ -141,7 +141,7 @@ export class AstronomySuiteComponent implements OnInit {
   }
 
   private isValidTab(tab: string): boolean {
-    return ['solar', 'daylight', 'moon', 'events'].includes(tab);
+    return ['overview', 'solar', 'daylight', 'moon', 'events'].includes(tab);
   }
 
   setLocation(loc: GeoLocation): void {

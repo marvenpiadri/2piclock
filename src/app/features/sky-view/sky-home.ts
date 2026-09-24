@@ -46,7 +46,7 @@ export class SkyHomeComponent {
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
 
-  readonly skyPage = (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'world';
+  readonly skyPage = (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
@@ -238,15 +238,17 @@ export class SkyHomeComponent {
     effect(() => {
       const location = this.selectedLocation();
       const labels = {
-        time: `Time in ${location.name}, ${location.country}`,
+        time: `Now in ${location.name}, ${location.country}`,
         weather: `Weather in ${location.name}, ${location.country}`,
         astronomy: `Astronomy in ${location.name}, ${location.country}`,
+        tonight: `Tonight in ${location.name}, ${location.country}`,
         world: 'World Time'
       };
       const descriptions = {
-        time: `Current local time, sunrise, sunset and astronomical conditions for ${location.name}, ${location.country}.`,
+        time: `Current local time, sunrise, sunset, weather and astronomical conditions for ${location.name}, ${location.country}.`,
         weather: `Current conditions, hourly weather and a 7-day forecast for ${location.name}, ${location.country}.`,
-        astronomy: `Solar and lunar conditions, moon phase, twilight and astronomical information for ${location.name}, ${location.country}.`,
+        astronomy: `Solar and lunar positions, moon phase, twilight and astronomical information for ${location.name}, ${location.country}.`,
+        tonight: `Tonight in ${location.name}: moon phase, twilight, stargazing conditions and the night sky.`,
         world: 'Compare local time across major cities around the world.'
       };
       const title = `${labels[this.skyPage]} | 2piClock`;

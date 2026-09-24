@@ -15,6 +15,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl';
+import { WeatherIconComponent } from '../../shared/components/weather-icon/weather-icon';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { WeatherService } from '../../core/services/weather.service';

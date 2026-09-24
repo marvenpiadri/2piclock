@@ -116,15 +116,6 @@ export class SkyHomeComponent {
     );
   });
 
-  weatherIconColor(condition: string): string {
-    const c = condition.toLowerCase();
-    if (c.includes('thunder') || c.includes('storm')) return '#a78bfa';
-    if (c.includes('rain') || c.includes('drizzle')) return '#38bdf8';
-    if (c.includes('snow') || c.includes('blizzard')) return '#e2e8f0';
-    if (c.includes('fog') || c.includes('haze')) return '#cbd5e1';
-    if (c.includes('cloud')) return '#94a3b8';
-    return '#fbbf24';
-  }
 
   readonly windCompass = computed(() => {
     const deg = this.weather().windDirectionDeg;

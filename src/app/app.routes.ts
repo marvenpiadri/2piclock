@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { SkyHomeComponent } from './features/sky-view/sky-home';
 import { WorldClocksComponent } from './features/world-clocks/world-clocks';
+import { WorldViewComponent } from './shared/components/world-view/world-view';
 import { CelestialEphemerisComponent } from './features/celestial-ephemeris/celestial-ephemeris';
 import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weather-atmosphere';
 import { WeatherViewComponent } from './features/weather-view/weather-view';

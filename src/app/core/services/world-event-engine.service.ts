@@ -61,10 +61,10 @@ export class WorldEventEngineService {
       this.event('sunrise', 'solar', 'Sunrise', solar.sunrise, 'Sun crosses the local horizon.', location.timezone),
       this.event('solar-noon', 'solar', 'Solar noon', solar.solarNoon, 'The Sun reaches its highest altitude for the day.', location.timezone),
       this.event('sunset', 'solar', 'Sunset', solar.sunset, 'Sunset at the local horizon.', location.timezone),
-      this.event('golden-morning', 'solar', 'Morning golden hour', solar.goldenHourMorning.start, 'Warm low-angle sunlight after sunrise.', location.timezone),
-      this.event('golden-evening', 'solar', 'Evening golden hour', solar.goldenHourEvening.start, 'Warm low-angle sunlight before sunset.', location.timezone),
-      this.event('blue-morning', 'solar', 'Morning blue hour', solar.blueHourMorning.start, 'Deep blue twilight before civil dawn.', location.timezone),
-      this.event('blue-evening', 'solar', 'Evening blue hour', solar.blueHourEvening.start, 'Deep blue twilight after civil dusk.', location.timezone),
+      this.event('golden-morning', 'solar', 'Morning golden hour', solar.goldenMorning.start, 'Warm low-angle sunlight after sunrise.', location.timezone),
+      this.event('golden-evening', 'solar', 'Evening golden hour', solar.goldenEvening.start, 'Warm low-angle sunlight before sunset.', location.timezone),
+      this.event('blue-morning', 'solar', 'Morning blue hour', solar.blueMorning.start, 'Deep blue twilight before civil dawn.', location.timezone),
+      this.event('blue-evening', 'solar', 'Evening blue hour', solar.blueEvening.start, 'Deep blue twilight after civil dusk.', location.timezone),
       this.event('moon-position', 'lunar', lunar.phaseName, date, Math.round(lunar.illuminationFraction * 100) + '% illuminated · ' + Math.round(lunar.distanceKm) + ' km away.', location.timezone)
     ];
 

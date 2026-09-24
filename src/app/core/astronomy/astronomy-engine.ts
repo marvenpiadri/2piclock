@@ -163,7 +163,7 @@ function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
   return match[1] === '+' ? minutes : -minutes;
 }
 
-function zonedDateTimeToInstant(
+export function zonedDateTimeToInstant(
   year: number,
   month: number,
   day: number,

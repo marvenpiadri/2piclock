@@ -71,6 +71,24 @@ describe('Astronomy Engine Mathematics Foundation', () => {
       expect(events.dayLengthMinutes).toBeLessThan(750);
     });
 
+    it('should resolve solar events against the selected location civil date', () => {
+      // Tokyo is UTC+9, so the local civil day is not the same as the UTC day
+      // around midnight. The returned sunrise must still belong to March 20 locally.
+      const events = calculateSolarEvents(
+        new Date('2026-03-20T00:30:00Z'),
+        35.6762,
+        139.6503,
+        'Asia/Tokyo'
+      );
+      expect(events.sunrise).not.toBeNull();
+      if (events.sunrise) {
+        const localDate = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Tokyo'
+        }).format(events.sunrise);
+        expect(localDate).toBe('2026-03-20');
+      }
+    });
+
     it('should detect polar day or night correctly at high latitudes', () => {
       // 85° North on Summer Solstice (Midnight Sun / Polar Day)
       const arcticSummer = calculateSolarEvents(summerSolsticeDate, 85.0, 0);

@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
+import { PRESET_LOCATIONS } from './app/core/models/location.model';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -23,6 +24,27 @@ const angularApp = new AngularNodeAppEngine();
  * });
  * ```
  */
+
+const staticSitemapUrls = [
+  '/', '/sky', '/weather', '/world', '/world-clocks', '/time', '/time-zone-converter',
+  '/astronomy-tools', '/solar-calculator', '/daylight-calculator', '/moon-calculator',
+  '/astronomical-events', '/radio', '/atmosphere', '/ephemeris', '/planner', '/space'
+];
+const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+const buildSitemap = () => {
+  const urls = [...staticSitemapUrls, ...PRESET_LOCATIONS.map(location => '/place/' + location.id)];
+  const uniqueUrls = [...new Set(urls)];
+  const entries = uniqueUrls.map(path => '  <url><loc>https://2piclock.com' + escapeXml(path) + '</loc></url>').join('\n');
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>';
+};
+
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://2piclock.com/sitemap.xml\n');
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  res.type('application/xml').send(buildSitemap());
+});
 
 /**
  * Serve static files from /browser

@@ -313,7 +313,7 @@ export class RadioService {
   readonly volume = signal<number>(0.75);
   readonly isMuted = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly searchResults = signal<RadioStation[]>(CURATED_GLOBAL_STATIONS);
+  readonly searchResults = signal<RadioStation[]>([]);
   readonly isSearching = signal<boolean>(false);
   readonly favorites = signal<RadioStation[]>([]);
   readonly recentStations = signal<RadioStation[]>([]);
@@ -453,6 +453,14 @@ export class RadioService {
     this.addToRecents(station);
 
     const streamUrl = station.urlResolved || station.url;
+
+    // Radio Browser uses /json/url/{stationuuid} to register a user click.
+    if (station.stationuuid) {
+      this.http.get(
+        `https://all.api.radio-browser.info/json/url/${encodeURIComponent(station.stationuuid)}`,
+        { responseType: 'text' }
+      ).subscribe({ error: () => void 0 });
+    }
 
     // Set connection timeout (8s)
     if (this.connectionTimeoutTimer) clearTimeout(this.connectionTimeoutTimer);
@@ -671,127 +679,96 @@ export class RadioService {
 
     this.isSearching.set(true);
     const apiUrl =
-      `https://de1.api.radio-browser.info/json/stations/topclick/${Math.min(100, Math.max(12, limit))}?hidebroken=true`;
+      `https://all.api.radio-browser.info/json/stations/topclick/${Math.min(100, Math.max(12, limit))}?hidebroken=true&order=clickcount&reverse=true`;
 
     this.http.get<any[]>(apiUrl).subscribe({
       next: apiData => {
         const mapped = (apiData || [])
-          .filter(s => s.url_resolved || s.url)
+          .filter(s => this.isPlayableStation(s))
           .map(s => this.mapApiStation(s));
 
-        if (mapped.length) {
-          this.searchResults.set(mapped);
-        }
+        this.searchResults.set(mapped);
         this.isSearching.set(false);
       },
       error: () => {
-        // Keep the local curated fallback if the directory is unavailable.
+        // Do not silently present synthetic station data as live API data.
+        this.searchResults.set([]);
         this.isSearching.set(false);
+        this.error.set('Radio directory is temporarily unavailable. Please try again.');
       }
     });
   }
 
+  private isPlayableStation(s: any): boolean {
+    const url = s?.url_resolved || s?.url;
+    if (!url || !s?.stationuuid) return false;
+    const lower = String(url).toLowerCase();
+    return !lower.endsWith('.pls') && !lower.endsWith('.m3u');
+  }
+
   private mapApiStation(s: any): RadioStation {
-    const matchedPreset = PRESET_LOCATIONS.find(p =>
-      (s.countrycode || '').toUpperCase() === p.countryCode.toUpperCase()
-    ) || PRESET_LOCATIONS[0];
+    const lat = Number(s.geo_lat);
+    const lon = Number(s.geo_long);
 
     return {
-      id: s.stationuuid || `station-${Math.random()}`,
+      id: s.stationuuid,
       stationuuid: s.stationuuid,
       name: s.name || 'Unnamed Station',
       url: s.url_resolved || s.url,
       urlResolved: s.url_resolved,
       homepage: s.homepage,
       favicon: s.favicon,
-      country: s.country || matchedPreset.country,
-      countryCode: s.countrycode || matchedPreset.countryCode,
+      country: s.country || 'Unknown',
+      countryCode: s.countrycode || '',
       state: s.state,
-      city: s.state || matchedPreset.name,
+      city: s.city || s.state || 'Unknown',
       language: s.language,
-      tags: (s.tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
+      tags: String(s.tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
       votes: Number(s.votes || 0),
       clickCount: Number(s.clickcount || 0),
       codec: s.codec,
       bitrate: Number(s.bitrate || 0),
-      latitude: Number(s.geo_lat) || matchedPreset.latitude,
-      longitude: Number(s.geo_long) || matchedPreset.longitude,
-      timezone: matchedPreset.timezone
+      latitude: Number.isFinite(lat) ? lat : 0,
+      longitude: Number.isFinite(lon) ? lon : 0,
+      timezone: s.timezone || 'UTC'
     };
   }
 
   searchStations(params: StationSearchParams): void {
+    if (!this.isBrowser) return;
+
     this.isSearching.set(true);
-    const q = (params.query || '').trim().toLowerCase();
-    const country = (params.country || '').trim().toLowerCase();
-    const tag = (params.tag || '').trim().toLowerCase();
+    const q = (params.query || '').trim();
+    const country = (params.country || '').trim();
+    const city = (params.city || '').trim();
+    const tag = (params.tag || '').trim();
+    const limit = Math.min(100, Math.max(12, params.limit || 48));
 
-    // Local filtering on curated list
-    const filtered = CURATED_GLOBAL_STATIONS.filter(s => {
-      const matchQ = !q || s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q) || s.country.toLowerCase().includes(q) || s.tags.some(t => t.toLowerCase().includes(q));
-      const matchCountry = !country || s.country.toLowerCase().includes(country) || s.countryCode.toLowerCase() === country;
-      const matchTag = !tag || s.tags.some(t => t.toLowerCase().includes(tag));
-      return matchQ && matchCountry && matchTag;
+    const queryParts = [
+      q ? `name=${encodeURIComponent(q)}` : '',
+      country ? `country=${encodeURIComponent(country)}` : '',
+      city ? `city=${encodeURIComponent(city)}` : '',
+      tag ? `tag=${encodeURIComponent(tag)}` : ''
+    ].filter(Boolean);
+
+    const apiUrl =
+      `https://all.api.radio-browser.info/json/stations/search?limit=${limit}&hidebroken=true&order=votes&reverse=true` +
+      (queryParts.length ? `&${queryParts.join('&')}` : '');
+
+    this.http.get<any[]>(apiUrl).subscribe({
+      next: apiData => {
+        const mapped = (apiData || [])
+          .filter(s => this.isPlayableStation(s))
+          .map(s => this.mapApiStation(s));
+        this.searchResults.set(mapped);
+        this.isSearching.set(false);
+      },
+      error: () => {
+        this.searchResults.set([]);
+        this.isSearching.set(false);
+        this.error.set('Radio search is temporarily unavailable. Please try again.');
+      }
     });
-
-    // If query is broad, try querying Radio-Browser API mirror with fast timeout fallback
-    if (this.isBrowser && q.length >= 3) {
-      const apiUrl = `https://de1.api.radio-browser.info/json/stations/byname/${encodeURIComponent(q)}?limit=25&hidebroken=true&order=votes&reverse=true`;
-      
-      this.http.get<any[]>(apiUrl).subscribe({
-        next: (apiData) => {
-          this.isSearching.set(false);
-          if (Array.isArray(apiData) && apiData.length > 0) {
-            const mapped: RadioStation[] = apiData
-              .filter(s => s.url_resolved || s.url)
-              .map(s => {
-                // Determine approximate coords or fallback to preset location
-                const matchedPreset = PRESET_LOCATIONS.find(p => 
-                  p.country.toLowerCase() === (s.country || '').toLowerCase() || 
-                  p.name.toLowerCase() === (s.state || '').toLowerCase()
-                ) || PRESET_LOCATIONS[0];
-
-                return {
-                  id: s.stationuuid || `station-${Math.random()}`,
-                  stationuuid: s.stationuuid,
-                  name: s.name,
-                  url: s.url_resolved || s.url,
-                  urlResolved: s.url_resolved,
-                  homepage: s.homepage,
-                  favicon: s.favicon,
-                  country: s.country || 'Global',
-                  countryCode: s.countrycode || '🌐',
-                  state: s.state,
-                  city: s.state || matchedPreset.name,
-                  language: s.language,
-                  tags: (s.tags || '').split(',').map((t: string) => t.trim()).filter((t: string) => !!t),
-                  votes: s.votes || 0,
-                  clickCount: s.clickcount || 0,
-                  codec: s.codec,
-                  bitrate: s.bitrate,
-                  latitude: matchedPreset.latitude,
-                  longitude: matchedPreset.longitude,
-                  timezone: matchedPreset.timezone
-                };
-              });
-
-            // Combine with curated
-            const combined = [...filtered, ...mapped];
-            const deduped = combined.filter((v, i, a) => a.findIndex(t => t.name === v.name) === i);
-            this.searchResults.set(deduped);
-          } else {
-            this.searchResults.set(filtered);
-          }
-        },
-        error: () => {
-          this.isSearching.set(false);
-          this.searchResults.set(filtered);
-        }
-      });
-    } else {
-      this.isSearching.set(false);
-      this.searchResults.set(filtered);
-    }
   }
 
   getStationsForLocation(cityName: string, countryName?: string): RadioStation[] {
@@ -800,6 +777,32 @@ export class RadioService {
     return CURATED_GLOBAL_STATIONS.filter(s => 
       s.city.toLowerCase().includes(normCity) || 
       (normCountry && s.country.toLowerCase().includes(normCountry))
+    );
+  }
+}  getStationsForLocation(cityName: string, countryName?: string): RadioStation[] {
+    const city = cityName.trim();
+    const country = (countryName || '').trim();
+
+    if (!this.isBrowser) return [];
+
+    const query = [
+      city ? `city=${encodeURIComponent(city)}` : '',
+      country ? `country=${encodeURIComponent(country)}` : ''
+    ].filter(Boolean).join('&');
+
+    this.http.get<any[]>(
+      `https://all.api.radio-browser.info/json/stations/search?limit=24&hidebroken=true&order=votes&reverse=true${query ? '&' + query : ''}`
+    ).subscribe({
+      next: data => {
+        const mapped = (data || []).filter(s => this.isPlayableStation(s)).map(s => this.mapApiStation(s));
+        this.searchResults.set(mapped);
+      },
+      error: () => this.searchResults.set([])
+    });
+
+    return this.searchResults().filter(s =>
+      s.city.toLowerCase().includes(city.toLowerCase()) ||
+      (!!country && s.country.toLowerCase().includes(country.toLowerCase()))
     );
   }
 }

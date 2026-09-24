@@ -34,13 +34,32 @@ export const routes: Routes = [
   { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'astronomy', component: AstronomySuiteComponent },
   { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
-    
-  // World Radio routes
-  { path: 'radio', component: WorldRadioComponent },
-  
-  // Time Product Suite routes
-  { path: 'time', component: TimeSuiteComponent },
 
+  // Product directories: each product gets a crawlable child URL.
+  // The directory roots are navigation entry points; the child pages are canonical tools.
+  { path: 'time', pathMatch: 'full', redirectTo: 'time/converter' },
+  { path: 'time/converter', component: TimeSuiteComponent, data: { tool: 'converter' } },
+  { path: 'time/time-zone-converter', component: TimeSuiteComponent, data: { tool: 'converter' } },
+  { path: 'time/difference', component: TimeSuiteComponent, data: { tool: 'difference' } },
+  { path: 'time/duration', component: TimeSuiteComponent, data: { tool: 'duration' } },
+  { path: 'time/date-difference', component: TimeSuiteComponent, data: { tool: 'date-difference' } },
+  { path: 'time/add-subtract', component: TimeSuiteComponent, data: { tool: 'add-subtract' } },
+  { path: 'time/countdown', component: TimeSuiteComponent, data: { tool: 'countdown' } },
+  { path: 'time/unix-timestamp', component: TimeSuiteComponent, data: { tool: 'unix' } },
+  { path: 'time/world-matrix', component: TimeSuiteComponent, data: { tool: 'world-comparison' } },
+
+  // Maps are a directory of distinct map products, not one generic map page.
+  { path: 'maps', pathMatch: 'full', redirectTo: 'maps/clocks' },
+  { path: 'maps/clocks', component: WorldViewComponent, data: { mapMode: 'clocks' } },
+  { path: 'maps/weather', component: WorldViewComponent, data: { mapMode: 'weather' } },
+  { path: 'maps/radio', component: WorldRadioComponent, data: { tab: 'map' } },
+
+  // World Radio directory.
+  { path: 'radio', pathMatch: 'full', redirectTo: 'radio/stations' },
+  { path: 'radio/stations', component: WorldRadioComponent, data: { tab: 'explore' } },
+  { path: 'radio/map', component: WorldRadioComponent, data: { tab: 'map' } },
+  { path: 'radio/favorites', component: WorldRadioComponent, data: { tab: 'favorites' } },
+  { path: 'radio/recent', component: WorldRadioComponent, data: { tab: 'recents' } },
 
   // World & Space routes
   { path: 'world', component: WorldViewComponent },

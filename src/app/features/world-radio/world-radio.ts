@@ -13,7 +13,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Meta, Title } from '@angular/platform-browser';
 import { MatIconModule } from '@angular/material/icon';
 import { RadioService } from '../../core/services/radio.service';
 import { RadioStation } from '../../core/models/radio.model';
@@ -37,6 +38,8 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly locationService = inject(LocationService);
   readonly timeService = inject(TimeControlService);
   private route = inject(ActivatedRoute);
+  private title = inject(Title);
+  private meta = inject(Meta);
   private readonly mapBackbone = inject(MapBackboneService);
   @ViewChild('radioMapContainer', { static: false }) radioMapContainer?: ElementRef<HTMLDivElement>;
   private radioMap?: MapLibreMap;
@@ -150,13 +153,25 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Route segments are the canonical identities for radio products:
+    // /radio/stations, /radio/map, /radio/favorites and /radio/recent.
+    this.route.data.subscribe(data => {
+      const tab = data['tab'] as RadioTab | undefined;
+      if (tab && ['explore', 'map', 'favorites', 'recents'].includes(tab)) {
+        this.activeTab.set(tab);
+        this.updateSeo(tab);
+      }
+    });
+
     // Populate the initial directory from Radio Browser's non-broken stations.
     // The local list remains only as a fallback if the directory is unavailable.
     this.radioService.loadGlobalStations(100);
 
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && ['explore', 'map', 'favorites', 'recents'].includes(params['tab'])) {
-        this.setTab(params['tab'] as RadioTab);
+        const tab = params['tab'] as RadioTab;
+        this.activeTab.set(tab);
+        this.updateSeo(tab);
       }
       if (params['search']) {
         this.searchQuery.set(params['search']);
@@ -173,7 +188,54 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   setTab(tab: RadioTab): void {
     this.activeTab.set(tab);
+    this.updateSeo(tab);
+    const slug = this.radioTabSlug(tab);
+    this.routerNavigate(slug);
     if (tab === 'map') setTimeout(() => this.initRadioMap(), 0);
+  }
+
+  private radioTabSlug(tab: RadioTab): string {
+    return {
+      explore: 'stations',
+      map: 'map',
+      favorites: 'favorites',
+      recents: 'recent'
+    }[tab];
+  }
+
+  private routerNavigate(slug: string): void {
+    // Keep calculation/search query state shareable while making the directory path canonical.
+    this.route.parent;
+    void this.route.snapshot;
+    // ActivatedRoute is the child route itself, so navigate from the application root.
+    this.router.navigate(['/radio', slug], {
+      queryParams: this.route.snapshot.queryParams
+    });
+  }
+
+  private updateSeo(tab: RadioTab): void {
+    const seo: Record<RadioTab, { title: string; description: string }> = {
+      explore: {
+        title: 'World Radio Stations | Live Global Radio | 2piClock',
+        description: 'Explore and listen to live radio stations by city, country, genre and broadcast location.'
+      },
+      map: {
+        title: 'World Radio Map | Live Stations by Location | 2piClock',
+        description: 'Explore live radio stations on an interactive world map and play broadcasts by location.'
+      },
+      favorites: {
+        title: 'Favorite Radio Stations | 2piClock',
+        description: 'Access your saved radio stations and continue listening to broadcasts you follow.'
+      },
+      recents: {
+        title: 'Recently Played Radio Stations | 2piClock',
+        description: 'Return to recently played live radio stations and broadcasts.'
+      }
+    };
+    this.title.setTitle(seo[tab].title);
+    this.meta.updateTag({ name: 'description', content: seo[tab].description });
+    this.meta.updateTag({ property: 'og:title', content: seo[tab].title });
+    this.meta.updateTag({ property: 'og:description', content: seo[tab].description });
   }
 
   ngAfterViewInit(): void {

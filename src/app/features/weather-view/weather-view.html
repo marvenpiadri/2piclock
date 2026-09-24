@@ -95,6 +95,32 @@
         </button>
       </div>
 
+      <div class="weather-location-search">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [value]="locationSearchQuery()"
+          (input)="onLocationSearch(($any($event.target)).value)"
+          placeholder="Search any city or country"
+          aria-label="Search any city or country" />
+        @if (isLocationSearching()) {
+          <mat-icon class="search-spinner">sync</mat-icon>
+        }
+        @if (locationSearchResults().length) {
+          <div class="weather-search-results">
+            @for (loc of locationSearchResults(); track loc.id) {
+              <button type="button" (click)="selectSearchLocation(loc)">
+                <span class="weather-search-flag">{{ loc.flag }}</span>
+                <span>
+                  <strong>{{ loc.name }}</strong>
+                  <small>{{ loc.country }}</small>
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
       <!-- Hotspot quick-fly shortcuts -->
       <div class="hotspots-strip">
         @for (hotspot of worldHotspots; track hotspot.name) {

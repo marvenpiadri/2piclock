@@ -293,106 +293,20 @@
     </section>
   }
 
-  <!-- TAB 2: GEOGRAPHIC RADIO MAP -->
+  <!-- TAB 2: RADIO MAP — same map backbone, radio-specific data layer -->
   @if (activeTab() === 'map') {
-    <section class="radio-map-section glass-panel" aria-label="Geographic Radio Discovery Map">
+    <section class="radio-map-section glass-panel" aria-label="Radio Map">
       <div class="map-container-header">
         <div>
-          <h3 class="map-title">Geographic Radio Discovery</h3>
-          <p class="map-subtitle text-xs text-slate-400">Click on any geographical hotspot to tune in directly to that city's live radio broadcast.</p>
+          <h3 class="map-title">Radio Map</h3>
+          <p class="map-subtitle text-xs text-slate-400">Explore live broadcasts geographically. The map is shared with the World and Weather experiences; only the data layer changes.</p>
         </div>
-        <div class="map-legend font-mono text-xs text-slate-400 flex items-center gap-3">
-          <span class="flex items-center gap-1.5"><span class="node-sample current"></span> Currently Playing</span>
-          <span class="flex items-center gap-1.5"><span class="node-sample available"></span> Station Hotspot</span>
+        <div class="map-legend font-mono text-xs text-slate-400">
+          <span><span class="node-sample available"></span> Live station</span>
+          <span>{{ allStations().length }} stations</span>
         </div>
       </div>
-
-      <div class="interactive-world-canvas-wrapper">
-        <!-- Radio Browser live station coordinates -->
-        <svg class="world-radio-svg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.8"/>
-              <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="activeNodeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-
-          <!-- Latitude/Longitude Graticule lines -->
-          <g class="graticule" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="2,4">
-            <line x1="0" y1="125" x2="1000" y2="125" />
-            <line x1="0" y1="250" x2="1000" y2="250" stroke="rgba(255,255,255,0.12)" />
-            <line x1="0" y1="375" x2="1000" y2="375" />
-            <line x1="250" y1="0" x2="250" y2="500" />
-            <line x1="500" y1="0" x2="500" y2="500" stroke="rgba(255,255,255,0.12)" />
-            <line x1="750" y1="0" x2="750" y2="500" />
-          </g>
-
-          <!-- Simplified Continent Outlines for Geographic Context -->
-          <path 
-            class="continents-path" 
-            d="M 120 120 Q 180 80 250 100 Q 280 150 240 220 Q 180 250 120 200 Z 
-               M 200 280 Q 250 280 280 340 Q 260 440 200 420 Q 170 340 200 280 Z 
-               M 460 100 Q 540 80 580 140 Q 520 180 480 150 Z 
-               M 480 200 Q 560 200 580 320 Q 540 420 480 340 Z 
-               M 620 90 Q 840 70 880 180 Q 780 260 660 220 Z 
-               M 760 320 Q 860 320 860 400 Q 780 440 740 380 Z"
-            fill="rgba(255, 255, 255, 0.03)"
-            stroke="rgba(255, 255, 255, 0.08)"
-            stroke-width="1.2" />
-
-          <!-- Station Nodes on World Map -->
-          @for (s of mapStations(); track s.id) {
-            <g 
-              class="map-station-group" 
-              [attr.transform]="'translate(' + (s.xPercent * 10) + ',' + (s.yPercent * 5) + ')'"
-              (click)="playStation(s)"
-              (mouseenter)="hoveredStation.set(s)"
-              (mouseleave)="hoveredStation.set(null)">
-              
-              @if (s.isCurrent) {
-                <circle r="22" fill="url(#activeNodeGlow)" class="animate-pulse" />
-                <circle r="6" fill="#06b6d4" stroke="#ffffff" stroke-width="2" />
-              } @else {
-                <circle r="14" fill="url(#nodeGlow)" opacity="0.4" class="hover:opacity-100 transition-opacity" />
-                <circle r="4" fill="#fbbf24" stroke="rgba(0,0,0,0.5)" stroke-width="1" />
-              }
-
-              <!-- City Label -->
-              <text 
-                y="-10" 
-                text-anchor="middle" 
-                fill="#cbd5e1" 
-                font-size="10" 
-                font-family="var(--font-mono)" 
-                class="station-map-label">
-                {{ s.city }}
-              </text>
-            </g>
-          }
-        </svg>
-
-        <!-- Hovered / Selected Station Overlay Tooltip -->
-        @if (hoveredStation(); as h) {
-          <div class="map-hover-card glass-panel" [style.left.%]="h.longitude > 0 ? 65 : 15" [style.top.%]="30">
-            <div class="hover-head">
-              <strong class="text-amber-400 font-mono">{{ h.city }}, {{ h.country }}</strong>
-              <span class="text-xs text-slate-400 font-mono">{{ h.timezone }}</span>
-            </div>
-            <p class="hover-station-name">{{ h.name }}</p>
-            <div class="hover-tags font-mono text-[11px] text-slate-400">
-              {{ h.tags.slice(0, 3).join(' · ') }}
-            </div>
-            <div class="mt-2 text-xs text-cyan-400 flex items-center gap-1">
-              <mat-icon class="text-xs w-3.5 h-3.5">play_arrow</mat-icon>
-              <span>Click to tune in</span>
-            </div>
-          </div>
-        }
-      </div>
+      <div #radioMapContainer class="radio-map-canvas" aria-label="Interactive world radio map"></div>
     </section>
   }
 </div>

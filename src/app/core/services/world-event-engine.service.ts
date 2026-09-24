@@ -100,7 +100,6 @@ export class WorldEventEngineService {
     };
   }
 
-  private currentTimezone = 'UTC';
 
   private localTime(date: Date, timezone: string, seconds: boolean): string {
     return new Intl.DateTimeFormat('en-US', {
@@ -129,7 +128,7 @@ export class WorldEventEngineService {
   private offsetMinutes(date: Date, timezone: string): number {
     const value = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'longOffset' })
       .formatToParts(date).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
-    const match = value.match(/GMT([+-])(\\d{2}):?(\\d{2})?/);
+    const match = value.match(/GMT([+-])(\d{2}):?(\d{2})?/);
     if (!match) return 0;
     const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
     return match[1] === '-' ? -minutes : minutes;

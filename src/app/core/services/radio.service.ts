@@ -378,6 +378,7 @@ export class RadioService {
     try {
       this.audio = new Audio();
       this.audio.preload = 'none';
+      this.audio.crossOrigin = 'anonymous';
       this.audio.volume = this.volume();
 
       this.audio.addEventListener('playing', () => {
@@ -504,55 +505,72 @@ export class RadioService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    const name = encodeURIComponent(station.name);
-    const apiUrl =
-      `https://de1.api.radio-browser.info/json/stations/search?name=${name}&limit=8&hidebroken=true&order=votes&reverse=true`;
+    // Curated streams are allowed to age, so the directory fallback must not
+    // depend on an exact/fake station name. First try the station name, then
+    // fall back to real stations from the same country.
+    const endpoints = [
+      `https://all.api.radio-browser.info/json/stations/search?name=${encodeURIComponent(station.name)}&limit=8&hidebroken=true&order=votes&reverse=true`,
+      `https://all.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(station.countryCode)}&limit=12&hidebroken=true&order=votes&reverse=true`
+    ];
 
-    this.http.get<any[]>(apiUrl).subscribe({
-      next: stations => {
-        const candidate = (stations || []).find(s => {
-          const url = s.url_resolved || s.url;
-          return !!url && url !== station.url && url !== station.urlResolved;
-        });
-
-        if (!candidate) {
-          this.isLoading.set(false);
-          this.isPlaying.set(false);
-          this.error.set('No working stream was found for this station.');
-          return;
-        }
-
-        const fallback: RadioStation = {
-          ...station,
-          stationuuid: candidate.stationuuid || station.stationuuid,
-          url: candidate.url_resolved || candidate.url,
-          urlResolved: candidate.url_resolved,
-          homepage: candidate.homepage || station.homepage,
-          favicon: candidate.favicon || station.favicon,
-          codec: candidate.codec || station.codec,
-          bitrate: candidate.bitrate || station.bitrate
-        };
-
-        this.currentStation.set(fallback);
-        this.audio!.pause();
-        this.audio!.src = fallback.urlResolved || fallback.url;
-        this.audio!.load();
-        this.audio!.play().then(() => {
-          this.isLoading.set(false);
-          this.isPlaying.set(true);
-          this.error.set(null);
-        }).catch(() => {
-          this.isLoading.set(false);
-          this.isPlaying.set(false);
-          this.error.set('The available stream could not be played in this browser.');
-        });
-      },
-      error: () => {
+    const tryDirectory = (index: number): void => {
+      if (index >= endpoints.length) {
         this.isLoading.set(false);
         this.isPlaying.set(false);
-        this.error.set('The station is unavailable right now.');
+        this.error.set('No working stream was found for this station.');
+        return;
       }
-    });
+
+      this.http.get<any[]>(endpoints[index]).subscribe({
+        next: stations => {
+          const candidate = (stations || []).find(s => {
+            const url = s.url_resolved || s.url;
+            return !!url &&
+              url !== station.url &&
+              url !== station.urlResolved &&
+              !String(url).endsWith('.pls') &&
+              !String(url).endsWith('.m3u');
+          });
+
+          if (!candidate) {
+            tryDirectory(index + 1);
+            return;
+          }
+
+          const fallback: RadioStation = {
+            ...station,
+            stationuuid: candidate.stationuuid || station.stationuuid,
+            name: candidate.name || station.name,
+            url: candidate.url_resolved || candidate.url,
+            urlResolved: candidate.url_resolved,
+            homepage: candidate.homepage || station.homepage,
+            favicon: candidate.favicon || station.favicon,
+            codec: candidate.codec || station.codec,
+            bitrate: candidate.bitrate || station.bitrate,
+            country: candidate.country || station.country,
+            countryCode: candidate.countrycode || station.countryCode,
+            city: candidate.city || station.city,
+            tags: candidate.tags ? String(candidate.tags).split(',').filter(Boolean) : station.tags
+          };
+
+          this.currentStation.set(fallback);
+          this.audio!.pause();
+          this.audio!.src = fallback.urlResolved || fallback.url;
+          this.audio!.load();
+          this.audio!.play().then(() => {
+            this.isLoading.set(false);
+            this.isPlaying.set(true);
+            this.error.set(null);
+          }).catch(() => {
+            // A directory result can also be stale. Try another real result.
+            tryDirectory(index + 1);
+          });
+        },
+        error: () => tryDirectory(index + 1)
+      });
+    };
+
+    tryDirectory(0);
   }
 
   togglePlay(): void {

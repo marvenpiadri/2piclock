@@ -197,7 +197,8 @@ export class TimeSuiteComponent implements OnInit, OnDestroy {
   setTab(tab: TimeToolTab): void {
     this.activeTab.set(tab);
     this.updateSeo(tab);
-    const { tab: _tab, ...queryParams } = this.route.snapshot.queryParams;
+    const queryParams = { ...this.route.snapshot.queryParams };
+    delete queryParams['tab'];
     this.router.navigate(['/time', this.toolSlug(tab)], {
       queryParams
     });

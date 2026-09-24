@@ -13,6 +13,7 @@ import {
 } from '../../core/services/astronomical-calculator.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { MoonPhaseIndicator } from '../../shared/components/moon-phase-indicator/moon-phase-indicator';
+import { Title, Meta } from '@angular/platform-browser';
 
 export type AstronomyTab = 'overview' | 'solar' | 'daylight' | 'moon' | 'events';
 
@@ -35,6 +36,8 @@ export class AstronomySuiteComponent implements OnInit {
   private router = inject(Router);
   private locationService = inject(LocationService);
   private astroCalc = inject(AstronomicalCalculatorService);
+  private title = inject(Title);
+  private meta = inject(Meta);
 
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<AstronomyTab>('overview');
@@ -107,6 +110,24 @@ export class AstronomySuiteComponent implements OnInit {
           }).format(new Date()));
         }
       }
+    });
+
+    effect(() => {
+      const location = this.selectedLocation();
+      const tab = this.activeTab();
+      const labels: Record<AstronomyTab, string> = {
+        overview: 'Astronomy',
+        solar: 'Sun Position',
+        daylight: 'Daylight & Twilight',
+        moon: 'Moon',
+        events: 'Astronomical Events'
+      };
+      const title = `${labels[tab]} in ${location.name} | 2piClock`;
+      const description = `Live ${labels[tab].toLowerCase()} for ${location.name}, ${location.country}, including precise solar and lunar calculations.`;
+      this.title.setTitle(title);
+      this.meta.updateTag({ name: 'description', content: description });
+      this.meta.updateTag({ property: 'og:title', content: title });
+      this.meta.updateTag({ property: 'og:description', content: description });
     });
 
     this.route.data.subscribe(data => {

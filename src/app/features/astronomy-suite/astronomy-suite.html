@@ -10,8 +10,8 @@
           <span class="text-slate-600">·</span>
           <span class="text-slate-400">NOAA & MEEUS</span>
         </div>
-        <h1>Astronomical Calculation Suite</h1>
-        <p>Real-time NOAA/Meeus solar trajectories, twilight boundaries, high-precision lunar ephemerides, and astronomical events.</p>
+        <h1>Astronomy · {{ selectedLocation().name }}</h1>
+        <p>A live observatory for the Sun, Moon, daylight, twilight and the sky above {{ selectedLocation().name }}.</p>
       </div>
       <div class="suite-actions">
         <button type="button" class="btn-share" (click)="copyShareLink()" title="Copy Deep-Link URL">
@@ -51,6 +51,10 @@
 
     <!-- Tab Bar -->
     <div class="suite-tabs">
+      <button type="button" [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>Sky Overview</span>
+      </button>
       <button type="button" [class.active]="activeTab() === 'solar'" (click)="setTab('solar')">
         <mat-icon>wb_sunny</mat-icon>
         <span>Solar Calculator</span>
@@ -72,6 +76,95 @@
 
   <!-- Content Sections -->
   <div class="suite-content">
+
+    <!-- OBSERVATORY OVERVIEW -->
+    @if (activeTab() === 'overview') {
+      <div class="observatory-overview">
+        <div class="observatory-hero">
+          <div class="observatory-copy">
+            <span class="observatory-kicker">LIVE CELESTIAL STATE</span>
+            <h2>{{ solarResult().solarPos.altitudeDeg > 0 ? 'The Sun is above the horizon' : 'The Sun is below the horizon' }}</h2>
+            <p>
+              {{ selectedLocation().name }} · {{ formatTime(solarResult().solarEvents.solarNoon) }} solar noon ·
+              {{ daylightResult().dayLengthFormatted }} of daylight
+            </p>
+          </div>
+          <div class="observatory-time">
+            <span>LOCAL OBSERVATION</span>
+            <strong>{{ formatTime(parsedInstant()) }}</strong>
+            <small>{{ selectedDate() }} · {{ selectedLocation().timezone }}</small>
+          </div>
+        </div>
+
+        <div class="observatory-grid">
+          <div class="observatory-card sun-card">
+            <div class="obs-card-head"><span>SUN</span><mat-icon>wb_sunny</mat-icon></div>
+            <strong>{{ solarResult().solarPos.altitudeDeg.toFixed(1) }}°</strong>
+            <small>{{ getCompassHeading(solarResult().solarPos.azimuthDeg) }} · azimuth {{ solarResult().solarPos.azimuthDeg.toFixed(1) }}°</small>
+            <div class="obs-meter"><i [style.width.%]="Math.max(0, Math.min(100, (solarResult().solarPos.altitudeDeg + 90) / 180 * 100))"></i></div>
+          </div>
+
+          <div class="observatory-card moon-card">
+            <div class="obs-card-head"><span>MOON</span><mat-icon>nightlight_round</mat-icon></div>
+            <strong>{{ moonResult().lunarPos.phaseName }}</strong>
+            <small>{{ (moonResult().lunarPos.illuminationFraction * 100).toFixed(1) }}% illuminated · {{ moonResult().lunarPos.altitudeDeg.toFixed(1) }}° altitude</small>
+            <div class="obs-meter moon-meter"><i [style.width.%]="moonResult().lunarPos.illuminationFraction * 100"></i></div>
+          </div>
+
+          <div class="observatory-card">
+            <div class="obs-card-head"><span>LIGHT</span><mat-icon>wb_twilight</mat-icon></div>
+            <strong>{{ daylightResult().dayLengthFormatted }}</strong>
+            <small>daylight · {{ daylightResult().nightLengthFormatted }} night</small>
+            <div class="obs-times">
+              <span>RISE <b>{{ formatTime(daylightResult().solarEvents.sunrise) }}</b></span>
+              <span>SET <b>{{ formatTime(daylightResult().solarEvents.sunset) }}</b></span>
+            </div>
+          </div>
+
+          <div class="observatory-card">
+            <div class="obs-card-head"><span>TWILIGHT</span><mat-icon>gradient</mat-icon></div>
+            <strong>{{ formatTime(daylightResult().solarEvents.civilDusk) }}</strong>
+            <small>civil dusk · astronomical dusk {{ formatTime(daylightResult().solarEvents.astronomicalDusk) }}</small>
+            <div class="obs-times">
+              <span>DAWN <b>{{ formatTime(daylightResult().solarEvents.civilDawn) }}</b></span>
+              <span>DUSK <b>{{ formatTime(daylightResult().solarEvents.civilDusk) }}</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sky-horizon-panel">
+          <div class="sky-horizon-head">
+            <span>CELESTIAL HORIZON</span>
+            <small>Altitude · current observation</small>
+          </div>
+          <div class="sky-horizon">
+            <div class="horizon-line"></div>
+            <div class="horizon-label horizon-n">N</div>
+            <div class="horizon-label horizon-e">E</div>
+            <div class="horizon-label horizon-s">S</div>
+            <div class="horizon-label horizon-w">W</div>
+            <div class="celestial-marker sun-marker"
+              [style.left.%]="Math.max(4, Math.min(96, solarResult().solarPos.azimuthDeg / 360 * 100))"
+              [style.bottom.%]="Math.max(5, Math.min(90, (solarResult().solarPos.altitudeDeg + 5) / 95 * 100))">
+              <i></i><span>Sun</span>
+            </div>
+            <div class="celestial-marker moon-marker"
+              [style.left.%]="Math.max(4, Math.min(96, moonResult().lunarPos.azimuthDeg / 360 * 100))"
+              [style.bottom.%]="Math.max(5, Math.min(90, (moonResult().lunarPos.altitudeDeg + 5) / 95 * 100))">
+              <i></i><span>Moon</span>
+            </div>
+          </div>
+          <div class="horizon-scale"><span>0° horizon</span><span>45°</span><span>90° zenith</span></div>
+        </div>
+
+        <div class="observatory-actions">
+          <button type="button" (click)="setTab('solar')"><mat-icon>wb_sunny</mat-icon> Sun & Position</button>
+          <button type="button" (click)="setTab('daylight')"><mat-icon>wb_twilight</mat-icon> Daylight & Twilight</button>
+          <button type="button" (click)="setTab('moon')"><mat-icon>nightlight_round</mat-icon> Moon</button>
+          <button type="button" (click)="setTab('events')"><mat-icon>event</mat-icon> Events</button>
+        </div>
+      </div>
+    }
 
     <!-- 1. SOLAR CALCULATOR -->
     @if (activeTab() === 'solar') {

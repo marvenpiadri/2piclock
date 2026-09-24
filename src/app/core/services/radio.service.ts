@@ -648,6 +648,60 @@ export class RadioService {
     }
   }
 
+  loadGlobalStations(limit = 48): void {
+    if (!this.isBrowser) return;
+
+    this.isSearching.set(true);
+    const apiUrl =
+      `https://de1.api.radio-browser.info/json/stations/topclick/${Math.min(100, Math.max(12, limit))}?hidebroken=true`;
+
+    this.http.get<any[]>(apiUrl).subscribe({
+      next: apiData => {
+        const mapped = (apiData || [])
+          .filter(s => s.url_resolved || s.url)
+          .map(s => this.mapApiStation(s));
+
+        if (mapped.length) {
+          this.searchResults.set(mapped);
+        }
+        this.isSearching.set(false);
+      },
+      error: () => {
+        // Keep the local curated fallback if the directory is unavailable.
+        this.isSearching.set(false);
+      }
+    });
+  }
+
+  private mapApiStation(s: any): RadioStation {
+    const matchedPreset = PRESET_LOCATIONS.find(p =>
+      (s.countrycode || '').toUpperCase() === p.countryCode.toUpperCase()
+    ) || PRESET_LOCATIONS[0];
+
+    return {
+      id: s.stationuuid || `station-${Math.random()}`,
+      stationuuid: s.stationuuid,
+      name: s.name || 'Unnamed Station',
+      url: s.url_resolved || s.url,
+      urlResolved: s.url_resolved,
+      homepage: s.homepage,
+      favicon: s.favicon,
+      country: s.country || matchedPreset.country,
+      countryCode: s.countrycode || matchedPreset.countryCode,
+      state: s.state,
+      city: s.state || matchedPreset.name,
+      language: s.language,
+      tags: (s.tags || '').split(',').map((t: string) => t.trim()).filter(Boolean),
+      votes: Number(s.votes || 0),
+      clickCount: Number(s.clickcount || 0),
+      codec: s.codec,
+      bitrate: Number(s.bitrate || 0),
+      latitude: Number(s.geo_lat) || matchedPreset.latitude,
+      longitude: Number(s.geo_long) || matchedPreset.longitude,
+      timezone: matchedPreset.timezone
+    };
+  }
+
   searchStations(params: StationSearchParams): void {
     this.isSearching.set(true);
     const q = (params.query || '').trim().toLowerCase();

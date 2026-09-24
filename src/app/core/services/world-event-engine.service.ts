@@ -58,14 +58,14 @@ export class WorldEventEngineService {
     const lunar = calculateLunarPosition(date, location.latitude, location.longitude, solarPosition);
 
     const events = [
-      this.event('sunrise', 'solar', 'Sunrise', solar.sunrise, 'Sun crosses the local horizon.'),
-      this.event('solar-noon', 'solar', 'Solar noon', solar.solarNoon, 'The Sun reaches its highest altitude for the day.'),
-      this.event('sunset', 'solar', 'Sunset', solar.sunset, 'Sunset at the local horizon.'),
-      this.event('golden-morning', 'solar', 'Morning golden hour', solar.goldenHourMorning.start, 'Warm low-angle sunlight after sunrise.'),
-      this.event('golden-evening', 'solar', 'Evening golden hour', solar.goldenHourEvening.start, 'Warm low-angle sunlight before sunset.'),
-      this.event('blue-morning', 'solar', 'Morning blue hour', solar.blueHourMorning.start, 'Deep blue twilight before civil dawn.'),
-      this.event('blue-evening', 'solar', 'Evening blue hour', solar.blueHourEvening.start, 'Deep blue twilight after civil dusk.'),
-      this.event('moon-position', 'lunar', lunar.phaseName, date, Math.round(lunar.illuminationFraction * 100) + '% illuminated · ' + Math.round(lunar.distanceKm) + ' km away.')
+      this.event('sunrise', 'solar', 'Sunrise', solar.sunrise, 'Sun crosses the local horizon.', location.timezone),
+      this.event('solar-noon', 'solar', 'Solar noon', solar.solarNoon, 'The Sun reaches its highest altitude for the day.', location.timezone),
+      this.event('sunset', 'solar', 'Sunset', solar.sunset, 'Sunset at the local horizon.', location.timezone),
+      this.event('golden-morning', 'solar', 'Morning golden hour', solar.goldenHourMorning.start, 'Warm low-angle sunlight after sunrise.', location.timezone),
+      this.event('golden-evening', 'solar', 'Evening golden hour', solar.goldenHourEvening.start, 'Warm low-angle sunlight before sunset.', location.timezone),
+      this.event('blue-morning', 'solar', 'Morning blue hour', solar.blueHourMorning.start, 'Deep blue twilight before civil dawn.', location.timezone),
+      this.event('blue-evening', 'solar', 'Evening blue hour', solar.blueHourEvening.start, 'Deep blue twilight after civil dusk.', location.timezone),
+      this.event('moon-position', 'lunar', lunar.phaseName, date, Math.round(lunar.illuminationFraction * 100) + '% illuminated · ' + Math.round(lunar.distanceKm) + ' km away.', location.timezone)
     ];
 
     return {
@@ -88,13 +88,13 @@ export class WorldEventEngineService {
     };
   }
 
-  private event(id: string, category: WorldEventCategory, title: string, instant: Date | null, description: string): WorldEventItem {
+  private event(id: string, category: WorldEventCategory, title: string, instant: Date | null, description: string, timezone: string): WorldEventItem {
     return {
       id,
       category,
       title,
       instant,
-      localTime: instant ? this.localTime(instant, this.currentTimezone, false) : null,
+      localTime: instant ? this.localTime(instant, timezone, false) : null,
       description,
       available: !!instant
     };

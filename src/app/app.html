@@ -85,40 +85,13 @@
       </div>
 
       <!-- Subtle Basic Navigation Links on the Left (like doomath [Workbench] [Units]) -->
-      <nav class="hidden lg:flex items-center gap-1 text-xs">
-        <a routerLink="/sky" routerLinkActive="text-white bg-white/10 font-semibold" [routerLinkActiveOptions]="{exact: false}" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="Sky Horizon & 2Pi Dial">
-          <mat-icon class="text-amber-400 text-sm w-3.5 h-3.5">wb_sunny</mat-icon>
-          <span>Sky</span>
-        </a>
-        <a routerLink="/time" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="Time Products Suite">
-          <mat-icon class="text-amber-300 text-sm w-3.5 h-3.5">schedule</mat-icon>
-          <span>Time Tools</span>
-        </a>
-        <a routerLink="/astronomy-tools" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="Solar & Moon Calculators">
-          <mat-icon class="text-yellow-400 text-sm w-3.5 h-3.5">flare</mat-icon>
-          <span>Astronomy</span>
-        </a>
-        <a routerLink="/world" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="World Map 2D Terminator">
-          <mat-icon class="text-white text-sm w-3.5 h-3.5">public</mat-icon>
-          <span>World Map</span>
-        </a>
-        <a routerLink="/world-clocks" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="World Clocks Grid">
-          <mat-icon class="text-emerald-400 text-sm w-3.5 h-3.5">access_time</mat-icon>
-          <span>Clocks</span>
-        </a>
-        <a routerLink="/weather" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="Windy Meteorological Map">
-          <mat-icon class="text-white text-sm w-3.5 h-3.5">air</mat-icon>
-          <span>Weather</span>
-        </a>
-        <a routerLink="/space" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="3D Celestial Sphere">
-          <mat-icon class="text-white text-sm w-3.5 h-3.5">view_in_ar</mat-icon>
-          <span>Space</span>
-        </a>
-        <a routerLink="/planner" routerLinkActive="text-white bg-white/10 font-semibold" class="px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5" title="Meeting Planner">
-          <mat-icon class="text-white text-sm w-3.5 h-3.5">event_available</mat-icon>
-          <span>Planner</span>
-        </a>
-      </nav>
+      <nav class="hidden lg:flex items-center gap-0.5 text-[11px]" aria-label="Primary">
+        <a routerLink="/sky" routerLinkActive="nav-main-active" [routerLinkActiveOptions]="{exact:false}" class="nav-main-link"><span>Sky</span></a>
+        <a routerLink="/time" routerLinkActive="nav-main-active" class="nav-main-link"><span>Time</span></a>
+        <a routerLink="/world" routerLinkActive="nav-main-active" class="nav-main-link"><span>World</span></a>
+        <a routerLink="/astronomy-tools" routerLinkActive="nav-main-active" class="nav-main-link"><span>Astro</span></a>
+        <a routerLink="/radio" routerLinkActive="nav-main-active" class="nav-main-link"><span>Radio</span></a>
+      </nav>>
 
     </div>
 

@@ -1,11 +1,15 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  OnDestroy,
   OnInit,
   computed,
   effect,
   inject,
-  signal
+  signal,
+  ViewChild
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +19,8 @@ import { RadioService } from '../../core/services/radio.service';
 import { RadioStation } from '../../core/models/radio.model';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
+import { MapBackboneService } from '../../core/services/map-backbone.service';
+import { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl';
 
 export type RadioTab = 'explore' | 'map' | 'favorites' | 'recents';
 
@@ -26,11 +32,15 @@ export type RadioTab = 'explore' | 'map' | 'favorites' | 'recents';
   styleUrl: './world-radio.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WorldRadioComponent implements OnInit {
+export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly radioService = inject(RadioService);
   readonly locationService = inject(LocationService);
   readonly timeService = inject(TimeControlService);
   private route = inject(ActivatedRoute);
+  private readonly mapBackbone = inject(MapBackboneService);
+  @ViewChild('radioMapContainer', { static: false }) radioMapContainer?: ElementRef<HTMLDivElement>;
+  private radioMap?: MapLibreMap;
+  private radioMapReady = false;
 
   readonly activeTab = signal<RadioTab>('explore');
   readonly searchQuery = signal<string>('');
@@ -158,6 +168,71 @@ export class WorldRadioComponent implements OnInit {
 
   setTab(tab: RadioTab): void {
     this.activeTab.set(tab);
+    if (tab === 'map') setTimeout(() => this.initRadioMap(), 0);
+  }
+
+  ngAfterViewInit(): void {
+    if (this.activeTab() === 'map') this.initRadioMap();
+  }
+
+  ngOnDestroy(): void {
+    this.radioMap?.remove();
+  }
+
+  private initRadioMap(): void {
+    if (this.radioMap || !this.radioMapContainer?.nativeElement) return;
+    this.radioMap = this.mapBackbone.createMap(
+      this.radioMapContainer.nativeElement,
+      [0, 20],
+      1.8,
+      'radio'
+    );
+    this.radioMap.on('load', () => {
+      this.radioMapReady = true;
+      this.updateRadioMapSource();
+      this.radioMap?.on('click', 'radio-stations', event => {
+        const id = event.features?.[0]?.properties?.['id'];
+        const station = this.allStations().find(s => s.id === id);
+        if (station) this.playStation(station);
+      });
+      this.radioMap?.on('mouseenter', 'radio-stations', () => {
+        if (this.radioMap) this.radioMap.getCanvas().style.cursor = 'pointer';
+      });
+      this.radioMap?.on('mouseleave', 'radio-stations', () => {
+        if (this.radioMap) this.radioMap.getCanvas().style.cursor = '';
+      });
+    });
+  }
+
+  private updateRadioMapSource(): void {
+    if (!this.radioMapReady || !this.radioMap) return;
+    const stations = this.allStations().filter(s => Number.isFinite(s.latitude) && Number.isFinite(s.longitude));
+    const data = {
+      type: 'FeatureCollection',
+      features: stations.map(station => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [station.longitude, station.latitude] },
+        properties: { id: station.id, name: station.name, city: station.city, country: station.country }
+      }))
+    };
+    const source = this.radioMap.getSource('radio-stations') as GeoJSONSource | undefined;
+    if (source) {
+      source.setData(data as any);
+      return;
+    }
+    this.radioMap.addSource('radio-stations', { type: 'geojson', data: data as any });
+    this.radioMap.addLayer({
+      id: 'radio-stations',
+      type: 'circle',
+      source: 'radio-stations',
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 3, 5, 6, 10, 8],
+        'circle-color': '#fbbf24',
+        'circle-opacity': 0.86,
+        'circle-stroke-color': '#101820',
+        'circle-stroke-width': 1.2
+      }
+    });
   }
 
   onSearchChange(): void {
@@ -165,6 +240,7 @@ export class WorldRadioComponent implements OnInit {
       query: this.searchQuery(),
       tag: this.selectedGenre() !== 'all' ? this.selectedGenre() : undefined
     });
+    setTimeout(() => this.updateRadioMapSource(), 0);
   }
 
   setGenre(genreId: string): void {

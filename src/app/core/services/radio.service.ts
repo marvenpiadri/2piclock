@@ -313,6 +313,7 @@ export class RadioService {
   readonly isMuted = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly searchResults = signal<RadioStation[]>([]);
+  readonly locationStations = signal<RadioStation[]>([]);
   readonly isSearching = signal<boolean>(false);
   readonly favorites = signal<RadioStation[]>([]);
   readonly recentStations = signal<RadioStation[]>([]);
@@ -777,7 +778,6 @@ export class RadioService {
   getStationsForLocation(cityName: string, countryName?: string): RadioStation[] {
     const city = cityName.trim();
     const country = (countryName || '').trim();
-
     if (!this.isBrowser) return [];
 
     const query = [
@@ -790,14 +790,11 @@ export class RadioService {
     ).subscribe({
       next: data => {
         const mapped = (data || []).filter(s => this.isPlayableStation(s)).map(s => this.mapApiStation(s));
-        this.searchResults.set(mapped);
+        this.locationStations.set(mapped);
       },
-      error: () => this.searchResults.set([])
+      error: () => this.locationStations.set([])
     });
 
-    return this.searchResults().filter(s =>
-      s.city.toLowerCase().includes(city.toLowerCase()) ||
-      (!!country && s.country.toLowerCase().includes(country.toLowerCase()))
-    );
+    return this.locationStations();
   }
 }

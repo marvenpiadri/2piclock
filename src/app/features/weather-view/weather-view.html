@@ -253,7 +253,7 @@
           <div class="meteogram-col">
             <span class="met-day">{{ step.dayLabel }}</span>
             <span class="met-time">{{ step.timeLabel }}</span>
-            <mat-icon class="met-icon">{{ step.conditionIcon }}</mat-icon>
+            <mat-icon class="met-icon" [class]="weatherIconClass(step.conditionIcon)">{{ step.conditionIcon }}</mat-icon>
             <span class="met-temp">{{ step.temperatureC }}°</span>
             <div class="met-wind">
               <mat-icon

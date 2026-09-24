@@ -151,7 +151,7 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && ['explore', 'map', 'favorites', 'recents'].includes(params['tab'])) {
-        this.activeTab.set(params['tab'] as RadioTab);
+        this.setTab(params['tab'] as RadioTab);
       }
       if (params['search']) {
         this.searchQuery.set(params['search']);

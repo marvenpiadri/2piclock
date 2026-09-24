@@ -86,7 +86,7 @@ export const routes: Routes = [
   { path: ':location/tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
   { path: ':location/sun', component: AstronomySuiteComponent, data: { tab: 'daylight' } },
   { path: ':location/moon', component: AstronomySuiteComponent, data: { tab: 'moon' } },
-  { path: ':location/astronomy', component: AstronomySuiteComponent, data: { tab: 'solar' } },
+  { path: ':location/astronomy', component: AstronomySuiteComponent, data: { tab: 'overview' } },
   { path: ':location', component: SkyHomeComponent, data: { skyPage: 'time' } },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
   { path: '**', redirectTo: '' }

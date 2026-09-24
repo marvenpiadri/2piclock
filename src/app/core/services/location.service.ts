@@ -131,7 +131,9 @@ export class LocationService {
     }
 
     const fallback = this.allPresets[Math.floor(Math.random() * this.allPresets.length)] ?? this.allPresets[0];
-    this.selectLocation(fallback);
+    // Do not persist an automatic random fallback; a later visit should get
+    // another GPS opportunity. Explicit user choices are persisted by selectLocation().
+    this.selectedLocation.set(fallback);
     return fallback;
   }
   }

@@ -5,6 +5,7 @@ import { Title, Meta } from '@angular/platform-browser';
 import { LocationService } from '../../core/services/location.service';
 import { WeatherService } from '../../core/services/weather.service';
 import { AstronomicalCalculatorService } from '../../core/services/astronomical-calculator.service';
+import { TimeControlService } from '../../core/services/time-control.service';
 import { GeoLocation } from '../../core/models/location.model';
 
 @Component({ selector: 'app-place-view', standalone: true, imports: [CommonModule, RouterModule], changeDetection: ChangeDetectionStrategy.OnPush, templateUrl: './place-view.html', styleUrl: './place-view.css' })
@@ -16,15 +17,16 @@ export class PlaceViewComponent {
   private readonly locationService = inject(LocationService);
   readonly weatherService = inject(WeatherService);
   private readonly astronomy = inject(AstronomicalCalculatorService);
+  private readonly timeControl = inject(TimeControlService);
   readonly location = computed<GeoLocation | null>(() => { const slug = this.route.snapshot.paramMap.get('slug')?.toLowerCase(); return this.locationService.allPresets.find(p => p.id === slug) ?? null; });
-  readonly now = new Date();
-  readonly solar = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateSolar(loc, this.now) : null; });
-  readonly daylight = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateDaylight(loc, this.now) : null; });
-  readonly moon = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateMoon(loc, this.now) : null; });
-  readonly nextEvents = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateYearlyEvents(this.now.getFullYear(), loc).filter(event => event.isUpcoming).slice(0, 4) : []; });
-  readonly localTime = computed(() => { const loc = this.location(); return loc ? this.now.toLocaleTimeString('en-US', { timeZone: loc.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--'; });
-  readonly localDate = computed(() => { const loc = this.location(); return loc ? this.now.toLocaleDateString('en-US', { timeZone: loc.timezone, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : ''; });
-  readonly utcOffset = computed(() => { const loc = this.location(); if (!loc) return ''; try { const formatted = new Intl.DateTimeFormat('en-US', { timeZone: loc.timezone, timeZoneName: 'shortOffset' }).format(this.now); return formatted.split(' ').pop() ?? loc.timezone; } catch { return loc.timezone; } });
+  readonly activeDate = this.timeControl.currentActiveDate;
+  readonly solar = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateSolar(loc, this.activeDate()) : null; });
+  readonly daylight = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateDaylight(loc, this.activeDate()) : null; });
+  readonly moon = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateMoon(loc, this.activeDate()) : null; });
+  readonly nextEvents = computed(() => { const loc = this.location(); return loc ? this.astronomy.calculateYearlyEvents(this.activeDate().getFullYear(), loc).filter(event => event.isUpcoming).slice(0, 4) : []; });
+  readonly localTime = computed(() => { const loc = this.location(); return loc ? this.activeDate().toLocaleTimeString('en-US', { timeZone: loc.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--'; });
+  readonly localDate = computed(() => { const loc = this.location(); return loc ? this.activeDate().toLocaleDateString('en-US', { timeZone: loc.timezone, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : ''; });
+  readonly utcOffset = computed(() => { const loc = this.location(); if (!loc) return ''; try { const formatted = new Intl.DateTimeFormat('en-US', { timeZone: loc.timezone, timeZoneName: 'shortOffset' }).format(this.activeDate()); return formatted.split(' ').pop() ?? loc.timezone; } catch { return loc.timezone; } });
   constructor() { effect(() => { const loc = this.location(); if (!loc) return; this.locationService.selectLocation(loc); this.weatherService.fetchWeatherForLocation(loc); this.updateSeo(loc); }); }
   private updateSeo(loc: GeoLocation): void {
     const title = loc.name + ', ' + loc.country + ' — Time, Weather & Sky | 2PiClock';

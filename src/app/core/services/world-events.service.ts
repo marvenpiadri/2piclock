@@ -27,7 +27,7 @@ export class WorldEventsService {
   private lastKey = '';
 
   loadForLocation(loc: GeoLocation, date = new Date()): void {
-    const dateKey = date.toISOString().slice(0,10);
+    const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: loc.timezone }).format(date);
     const key = `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)},${loc.timezone},${dateKey}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
@@ -38,6 +38,7 @@ export class WorldEventsService {
       .set('longitude', loc.longitude)
       .set('method', '3')
       .set('school', '0')
+      .set('date', dateKey)
       .set('iso8601', 'true');
 
     this.http.get<any>('https://api.aladhan.com/v1/timings', { params }).subscribe({

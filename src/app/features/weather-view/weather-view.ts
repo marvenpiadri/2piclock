@@ -31,7 +31,9 @@ interface WeatherGridPoint {
     time: string[];
     temperature_2m?: number[];
     precipitation?: number[];
+    snowfall?: number[];
     cloud_cover?: number[];
+    weather_code?: number[];
     wind_speed_10m?: number[];
     wind_direction_10m?: number[];
     wind_gusts_10m?: number[];
@@ -44,6 +46,8 @@ interface SampledWeatherPoint {
   longitude: number;
   temperature: number;
   precipitation: number;
+  snowfall: number;
+  weatherCode: number;
   cloudCover: number;
   windSpeed: number;
   windDirection: number;
@@ -217,12 +221,9 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       const hour = d.getUTCHours();
       const isDaytime = hour >= 6 && hour <= 18;
 
-      let icon = 'wb_sunny';
-      if (precip > 2) icon = 'thunderstorm';
-      else if (precip > 0.4) icon = 'rainy';
-      else if (clouds > 75) icon = 'cloud';
-      else if (clouds > 35) icon = 'partly_cloudy_day';
-      else if (!isDaytime) icon = 'nightlight';
+      const weatherCode = centerPoint.hourly.weather_code?.[i] ?? 0;
+      const snow = centerPoint.hourly.snowfall?.[i] ?? 0;
+      const icon = this.getWeatherIcon(weatherCode, clouds, precip, snow, isDaytime);
 
       steps.push({
         timeMs,
@@ -506,7 +507,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     const params = new HttpParams()
       .set('latitude', points.map(p => p.latitude.toFixed(3)).join(','))
       .set('longitude', points.map(p => p.longitude.toFixed(3)).join(','))
-      .set('hourly', 'temperature_2m,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure')
+      .set('hourly', 'temperature_2m,precipitation,snowfall,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure')
       .set('forecast_days', '3')
       .set('timezone', 'GMT')
       .set('wind_speed_unit', 'kmh')
@@ -799,6 +800,29 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       ctx.fillRect(0, 0, this.particleCanvas.nativeElement.width, this.particleCanvas.nativeElement.height);
     }
   }
+
+  private getWeatherIcon(code: number, clouds: number, precip: number, snow: number, isDaytime: boolean): string {
+    if ([95, 96, 99].includes(code) || precip > 2) return 'thunderstorm';
+    if (snow > 0.2 || [71, 73, 75, 77, 85, 86].includes(code)) return 'weather_snowy';
+    if ([80, 81, 82].includes(code)) return 'rainy';
+    if ([51, 53, 55, 56, 57].includes(code)) return 'grain';
+    if ([61, 63, 65, 66, 67].includes(code) || precip > 0.4) return 'rainy';
+    if ([45, 48].includes(code)) return 'foggy';
+    if ([2, 3].includes(code) || clouds > 75) return 'cloud';
+    if ([1].includes(code) || clouds > 35) return isDaytime ? 'partly_cloudy_day' : 'partly_cloudy_night';
+    return isDaytime ? 'wb_sunny' : 'dark_mode';
+  }
+
+  readonly weatherIconClass = (icon: string): string => {
+    if (icon === 'thunderstorm') return 'weather-icon-storm';
+    if (icon === 'rainy' || icon === 'grain') return 'weather-icon-rain';
+    if (icon === 'weather_snowy') return 'weather-icon-snow';
+    if (icon === 'foggy') return 'weather-icon-fog';
+    if (icon === 'cloud') return 'weather-icon-overcast';
+    if (icon.includes('partly_cloudy')) return 'weather-icon-partly';
+    if (icon === 'dark_mode') return 'weather-icon-night';
+    return 'weather-icon-sun';
+  };
 
   private getVelocityColor(speed: number): string {
     if (speed < 12) return 'rgba(56, 189, 248, 0.55)'; // cyan breeze

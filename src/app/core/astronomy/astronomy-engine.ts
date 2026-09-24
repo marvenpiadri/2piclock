@@ -152,21 +152,74 @@ export function calculateSolarPosition(
 const solarEventsCache = new Map<string, SolarEvents>();
 const MAX_SOLAR_EVENTS_CACHE_SIZE = 500;
 
+function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
+  const value = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    timeZoneName: 'longOffset'
+  }).formatToParts(date).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+  const match = value.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+  if (!match) return 0;
+  const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
+  return match[1] === '+' ? minutes : -minutes;
+}
+
+function zonedDateTimeToInstant(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string,
+  millisecond = 0
+): Date {
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+  const initialOffset = getTimeZoneOffsetMinutes(new Date(wallClockUtc), timeZone);
+  let instant = new Date(wallClockUtc - initialOffset * 60000);
+  const correctedOffset = getTimeZoneOffsetMinutes(instant, timeZone);
+  if (correctedOffset !== initialOffset) {
+    instant = new Date(wallClockUtc - correctedOffset * 60000);
+  }
+  return instant;
+}
+
 /**
  * Calculates Solar Events (Sunrise, Sunset, Twilight transitions, Solar Noon)
  */
 export function calculateSolarEvents(
   date: Date,
   lat: number,
-  lng: number
+  lng: number,
+  timeZone?: string
 ): SolarEvents {
-  const cacheKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}_${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  const localDateKey = timeZone
+    ? new Intl.DateTimeFormat('en-CA', { timeZone }).format(date)
+    : date.toISOString().slice(0, 10);
+  const cacheKey = localDateKey + '_' + lat.toFixed(3) + '_' + lng.toFixed(3) + '_' + (timeZone ?? 'UTC');
   const cached = solarEventsCache.get(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+  let startOfDay: Date;
+  if (timeZone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
+    const value = (type: string) => Number(parts.find(part => part.type === type)?.value ?? 0);
+    const localNoon = zonedDateTimeToInstant(value('year'), value('month'), value('day'), 12, 0, 0, timeZone);
+    startOfDay = new Date(Date.UTC(
+      localNoon.getUTCFullYear(),
+      localNoon.getUTCMonth(),
+      localNoon.getUTCDate(),
+      0, 0, 0
+    ));
+  } else {
+    startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+  }
   const jd0 = getJulianDate(startOfDay);
   const t0 = getJulianCenturies(jd0);
 
@@ -447,7 +500,7 @@ export function getCelestialState(
   timezone: string
 ): CelestialState {
   const sun = calculateSolarPosition(date, lat, lng);
-  const solarEvents = calculateSolarEvents(date, lat, lng);
+  const solarEvents = calculateSolarEvents(date, lat, lng, timezone);
   const moon = calculateLunarPosition(date, lat, lng, sun);
 
   // Determine Twilight Phase based on solar altitude
@@ -561,10 +614,30 @@ export function get24HourSolarCurve(
   }
 
   const points: { timeString: string; altitude: number; isNight: boolean; hour: number }[] = [];
-  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+  const localParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const value = (type: string) => Number(localParts.find(part => part.type === type)?.value ?? 0);
+  const localYear = value('year');
+  const localMonth = value('month');
+  const localDay = value('day');
 
   for (let i = 0; i <= 24; i += 0.5) {
-    const sampleDate = new Date(start.getTime() + i * 3600000);
+    const wallDate = new Date(Date.UTC(localYear, localMonth - 1, localDay + (i === 24 ? 1 : 0)));
+    const wallHour = i === 24 ? 0 : Math.floor(i);
+    const wallMinute = i === 24 ? 0 : (i % 1 === 0.5 ? 30 : 0);
+    const sampleDate = zonedDateTimeToInstant(
+      wallDate.getUTCFullYear(),
+      wallDate.getUTCMonth() + 1,
+      wallDate.getUTCDate(),
+      wallHour,
+      wallMinute,
+      0,
+      timezone
+    );
     const sunPos = calculateSolarPosition(sampleDate, lat, lng);
     let timeLabel = '';
     try {

@@ -21,6 +21,7 @@ import { WeatherService } from '../../../core/services/weather.service';
 import { RadioService } from '../../../core/services/radio.service';
 import { RadioStation } from '../../../core/models/radio.model';
 import { GeoLocation } from '../../../core/models/location.model';
+import { GeocodingService } from '../../../core/services/geocoding.service';
 import {
   calculateSubsolarPoint,
   calculateSublunarPoint,
@@ -316,6 +317,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private timeControlService = inject(TimeControlService);
   private celestialService = inject(CelestialService);
   private weatherService = inject(WeatherService);
+  private geocodingService = inject(GeocodingService);
   readonly radioService = inject(RadioService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
@@ -370,15 +372,38 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   });
 
   // Filtered Cities for Search Autocomplete
+  readonly remoteSearchResults = signal<GeoLocation[]>([]);
+  readonly isRemoteSearching = signal(false);
+  private remoteSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
   readonly searchResults = computed<GeoLocation[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
     if (!q) return [];
-    return this.allPresets.filter(loc =>
+    const local = this.allPresets.filter(loc =>
       loc.name.toLowerCase().includes(q) ||
       loc.country.toLowerCase().includes(q) ||
       loc.timezone.toLowerCase().includes(q)
-    ).slice(0, 10);
+    );
+    const seen = new Set(local.map(loc => loc.id));
+    return [...local, ...this.remoteSearchResults().filter(loc => !seen.has(loc.id))].slice(0, 12);
   });
+
+  onSearchQueryChange(value: string): void {
+    this.searchQuery.set(value);
+    if (this.remoteSearchTimer) clearTimeout(this.remoteSearchTimer);
+    if (value.trim().length < 2) {
+      this.remoteSearchResults.set([]);
+      this.isRemoteSearching.set(false);
+      return;
+    }
+    this.remoteSearchTimer = setTimeout(() => {
+      this.isRemoteSearching.set(true);
+      this.geocodingService.search(value, 10).subscribe(results => {
+        this.remoteSearchResults.set(results);
+        this.isRemoteSearching.set(false);
+      });
+    }, 250);
+  }
 
   private markerRenderState = new Map<string, string>();
   private lastTerminatorDateMs = 0;

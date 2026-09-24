@@ -18,6 +18,15 @@ const resolveRootLocation: CanActivateFn = async () => {
   return router.createUrlTree(['/', location.id]);
 };
 
+const validLocationGuard: CanActivateFn = (route) => {
+  const locationService = inject(LocationService);
+  const router = inject(Router);
+  const slug = route.paramMap.get('location');
+  const validPreset = !!slug && locationService.allPresets.some(loc => loc.id === slug);
+  const validCurrent = slug === locationService.selectedLocation().id;
+  return validPreset || validCurrent ? true : router.createUrlTree(['/']);
+};
+
 export const routes: Routes = [
   // The root is the entry point only. Resolve a concrete location before rendering
   // the living experience so every normal page has a stable /:location URL.
@@ -80,13 +89,13 @@ export const routes: Routes = [
 
   // Location-first living experience. Keep these after all static and legacy
   // routes because Angular uses first-match routing.
-  { path: ':location/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
-  { path: ':location/time', component: SkyHomeComponent, data: { skyPage: 'time' } },
-  { path: ':location/tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
-  { path: ':location/sun', component: AstronomySuiteComponent, data: { tab: 'daylight' } },
-  { path: ':location/moon', component: AstronomySuiteComponent, data: { tab: 'moon' } },
-  { path: ':location/astronomy', component: AstronomySuiteComponent, data: { tab: 'overview' } },
-  { path: ':location', component: SkyHomeComponent, data: { skyPage: 'time' } },
+  { path: ':location/weather', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'weather' } },
+  { path: ':location/time', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
+  { path: ':location/tonight', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'tonight' } },
+  { path: ':location/sun', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'daylight' } },
+  { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
+  { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },
+  { path: ':location', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
   { path: '**', redirectTo: '' }
 ];

@@ -5,7 +5,8 @@ import {
   calculateLunarPosition,
   calculateSeasonalSolsticesCurves,
   calculateSubsolarPoint,
-  calculateSublunarPoint
+  calculateSublunarPoint,
+  zonedDateTimeToInstant
 } from '../astronomy/astronomy-engine';
 import { SolarPosition, SolarEvents, LunarPosition, MoonPhaseName } from '../models/celestial.model';
 import { GeoLocation } from '../models/location.model';
@@ -196,12 +197,30 @@ export class AstronomicalCalculatorService {
     // Calculate maximum Solar Noon Altitude: 90 - latitude + declination
     const solarNoonAltDeg = Math.min(90, Math.max(-90, 90 - Math.abs(location.latitude - solarPos.declinationDeg)));
 
-    // 24-hour hourly trajectory
-    const baseUtc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+    // 24-hour trajectory follows the selected location's civil clock.
+    // This keeps 00:00/06:00/12:00/18:00 aligned with local time rather than UTC.
+    const localParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: location.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
+    const localValue = (type: string) => Number(localParts.find(part => part.type === type)?.value ?? 0);
+    const localYear = localValue('year');
+    const localMonth = localValue('month');
+    const localDay = localValue('day');
     const hourlySolarTrajectory: { hour: number; altitude: number; azimuth: number }[] = [];
 
     for (let h = 0; h < 24; h++) {
-      const stepDate = new Date(baseUtc.getTime() + h * 3600000);
+      const stepDate = zonedDateTimeToInstant(
+        localYear,
+        localMonth,
+        localDay,
+        h,
+        0,
+        0,
+        location.timezone
+      );
       const pos = calculateSolarPosition(stepDate, location.latitude, location.longitude);
       hourlySolarTrajectory.push({
         hour: h,

@@ -153,6 +153,14 @@
               </button>
             </div>
 
+            <button
+              type="button"
+              class="flex items-center justify-between px-3 py-2 rounded-xl bg-amber-400/[0.08] border border-amber-400/15 hover:bg-amber-400/[0.12] transition-colors text-left"
+              (click)="router.navigate(['/place', selectedLocation().id]); closeMenus()">
+              <span class="text-xs font-semibold text-amber-200">Explore {{ selectedLocation().name }}</span>
+              <mat-icon class="text-sm text-amber-300">arrow_forward</mat-icon>
+            </button>
+
             <!-- Remote Search Results -->
             @if (isRemoteSearching()) {
               <div class="p-2 text-xs text-amber-400 font-mono flex items-center gap-2">

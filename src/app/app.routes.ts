@@ -73,8 +73,14 @@ export const routes: Routes = [
   { path: 'weather-forecast', redirectTo: 'weather', pathMatch: 'full' },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
-  // Location-first living experience. Keep static product routes above these
-  // parameterized routes because Angular uses first-match routing.
+  // Legacy focused SEO routes redirect into the location-first hierarchy.
+  { path: 'time/:slug', redirectTo: ({ params }) => `/${params['slug']}/time` },
+  { path: 'sun/:slug', redirectTo: ({ params }) => `/${params['slug']}/sun` },
+  { path: 'moon/:slug', redirectTo: ({ params }) => `/${params['slug']}/moon` },
+  { path: 'tonight/:slug', redirectTo: ({ params }) => `/${params['slug']}/tonight` },
+
+  // Location-first living experience. Keep these after all static and legacy
+  // routes because Angular uses first-match routing.
   { path: ':location/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: ':location/time', component: SkyHomeComponent, data: { skyPage: 'time' } },
   { path: ':location/tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
@@ -82,13 +88,6 @@ export const routes: Routes = [
   { path: ':location/moon', component: AstronomySuiteComponent, data: { tab: 'moon' } },
   { path: ':location/astronomy', component: AstronomySuiteComponent, data: { tab: 'solar' } },
   { path: ':location', component: SkyHomeComponent, data: { skyPage: 'time' } },
-
-  // Legacy focused SEO routes remain valid while the location-first hierarchy
-  // becomes canonical.
-  { path: 'time/:slug', component: SeoPlaceToolComponent, data: { tool: 'time' } },
-  { path: 'sun/:slug', component: SeoPlaceToolComponent, data: { tool: 'sun' } },
-  { path: 'moon/:slug', component: SeoPlaceToolComponent, data: { tool: 'moon' } },
-  { path: 'tonight/:slug', component: SeoPlaceToolComponent, data: { tool: 'tonight' } },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
   { path: '**', redirectTo: '' }
 ];

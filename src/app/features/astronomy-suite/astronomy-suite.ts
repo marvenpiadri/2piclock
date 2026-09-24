@@ -198,6 +198,14 @@ export class AstronomySuiteComponent implements OnInit {
     });
   }
 
+  horizonLeft(azimuthDeg: number): number {
+    return Math.max(4, Math.min(96, (azimuthDeg / 360) * 92 + 4));
+  }
+
+  horizonBottom(altitudeDeg: number): number {
+    return Math.max(6, Math.min(88, ((altitudeDeg + 5) / 95) * 82 + 6));
+  }
+
   trajectoryX(hour: number): number {
     return Math.max(3, Math.min(97, (hour / 23) * 94 + 3));
   }

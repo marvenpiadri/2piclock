@@ -385,6 +385,19 @@
   color: #64748b;
 }
 
+/* Visual solar path */
+.solar-arc-visual{padding:16px;background:rgba(10,10,12,.86);border:1px solid rgba(255,255,255,.08);border-radius:14px;display:flex;flex-direction:column;gap:10px}
+.arc-header{display:flex;justify-content:space-between;font:700 10px monospace;color:#94a3b8;letter-spacing:.05em}
+.solar-arc-stage{height:190px;position:relative;overflow:hidden}
+.arc-dome{position:absolute;left:8%;right:8%;top:10%;height:150%;border:1px solid rgba(245,158,11,.22);border-bottom:0;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 100%,rgba(245,158,11,.08),transparent 58%)}
+.arc-horizon{position:absolute;left:4%;right:4%;top:72%;height:1px;background:rgba(255,255,255,.25)}
+.arc-label{position:absolute;top:76%;font:700 8px monospace;color:#64748b;letter-spacing:.08em}
+.arc-east{left:4%}.arc-west{right:4%}
+.sun-path-dot{position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:rgba(245,158,11,.22);transition:transform .2s}
+.sun-path-dot.above{background:rgba(251,191,36,.6);box-shadow:0 0 8px rgba(245,158,11,.3)}
+.sun-current{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#ffd76a;box-shadow:0 0 18px rgba(255,215,106,.8),0 0 42px rgba(245,158,11,.35);transition:left .3s,top .3s}
+.arc-hours{display:flex;justify-content:space-between;padding:0 4%;font:700 8px monospace;color:#64748b}
+
 /* Daylight Hero */
 .daylight-hero-row {
   display: grid;

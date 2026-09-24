@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,7 +13,6 @@ import { ObservatoryViewService, ObservatoryView } from './core/services/observa
 import { GeoLocation } from './core/models/location.model';
 import { GeocodingService } from './core/services/geocoding.service';
 import { Subscription, filter } from 'rxjs';
-import { DOCUMENT } from '@angular/common';
 
 export interface NavCategory {
   title: string;

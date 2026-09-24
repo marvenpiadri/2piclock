@@ -14,11 +14,15 @@ import { PlaceViewComponent } from './features/place-view/place-view';
 import { SeoPlaceToolComponent } from './features/seo-place-tool/seo-place-tool';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'sky', pathMatch: 'full' },
-  { path: 'sky', component: SkyHomeComponent, data: { skyPage: 'time' } },
-  { path: 'sky/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
-  { path: 'sky/astronomy', component: SkyHomeComponent, data: { skyPage: 'astronomy' } },
-  { path: 'sky/world', component: SkyHomeComponent, data: { skyPage: 'world' } },
+  { path: '', redirectTo: 'now', pathMatch: 'full' },
+  { path: 'now', component: SkyHomeComponent, data: { skyPage: 'time' } },
+  { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
+  { path: 'astronomy', component: AstronomySuiteComponent },
+  { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
+  { path: 'sky', redirectTo: 'now', pathMatch: 'full' },
+  { path: 'sky/weather', redirectTo: 'weather', pathMatch: 'full' },
+  { path: 'sky/astronomy', redirectTo: 'astronomy', pathMatch: 'full' },
+  { path: 'sky/world', redirectTo: 'world', pathMatch: 'full' },
   
   // World Radio routes
   { path: 'radio', component: WorldRadioComponent },
@@ -37,8 +41,7 @@ export const routes: Routes = [
   { path: 'unix-timestamp', redirectTo: 'time?tab=unix', pathMatch: 'full' },
 
   // Astronomy Suite routes
-  { path: 'astronomy-tools', component: AstronomySuiteComponent },
-  { path: 'astronomy', redirectTo: 'astronomy-tools', pathMatch: 'full' },
+  { path: 'astronomy-tools', redirectTo: 'astronomy', pathMatch: 'full' },
   { path: 'solar-calculator', redirectTo: 'astronomy-tools?tab=solar', pathMatch: 'full' },
   { path: 'daylight-calculator', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
   { path: 'sunrise', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
@@ -59,8 +62,7 @@ export const routes: Routes = [
   { path: 'space', component: SpaceViewComponent },
   { path: 'deep-space-observatory', redirectTo: 'space', pathMatch: 'full' },
   { path: 'atmosphere', component: WeatherAtmosphereComponent },
-  { path: 'weather', component: WeatherComingSoonComponent },
-  { path: 'weather-forecast', redirectTo: 'sky/weather', pathMatch: 'full' },
+  { path: 'weather-forecast', redirectTo: 'weather', pathMatch: 'full' },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
   { path: 'time/:slug', component: SeoPlaceToolComponent, data: { tool: 'time' } },
@@ -69,5 +71,5 @@ export const routes: Routes = [
   { path: 'tonight/:slug', component: SeoPlaceToolComponent, data: { tool: 'tonight' } },
   { path: 'place/:slug', component: PlaceViewComponent },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
-  { path: '**', redirectTo: 'sky' }
+  { path: '**', redirectTo: 'now' }
 ];

@@ -19,6 +19,7 @@ import { TimeControlService } from '../../../core/services/time-control.service'
 import { CelestialService } from '../../../core/services/celestial.service';
 import { WeatherService } from '../../../core/services/weather.service';
 import { RadioService } from '../../../core/services/radio.service';
+import { MapBackboneService } from '../../../core/services/map-backbone.service';
 import { RadioStation } from '../../../core/models/radio.model';
 import { GeoLocation } from '../../../core/models/location.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
@@ -319,6 +320,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private weatherService = inject(WeatherService);
   private geocodingService = inject(GeocodingService);
   readonly radioService = inject(RadioService);
+  private readonly mapBackbone = inject(MapBackboneService);
 
   readonly selectedLocation = this.locationService.selectedLocation;
   readonly allPresets = this.locationService.allPresets;
@@ -590,22 +592,14 @@ export class WorldViewComponent implements OnInit, OnDestroy {
 
     const loc = this.selectedLocation();
     this.lastLocationId = loc.id;
-    const initialStyle = MAP_THEMES[this.currentMapTheme()];
-
-    const map = new MapLibreMap({
-      container: this.globeContainerRef.nativeElement,
-      style: initialStyle,
-      center: [loc.longitude, loc.latitude],
-      zoom: 1.8,
-      minZoom: 1,
-      maxZoom: 12,
-      attributionControl: false
-    });
+    const map = this.mapBackbone.createMap(
+      this.globeContainerRef.nativeElement,
+      [loc.longitude, loc.latitude],
+      1.8,
+      'world'
+    );
 
     this.map = map;
-
-    // Navigation Controls
-    map.addControl(new NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
 
     map.on('load', () => {
       if (!this.map) return;

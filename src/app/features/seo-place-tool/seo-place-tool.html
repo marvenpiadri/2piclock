@@ -1,0 +1,125 @@
+@if (location(); as loc) {
+  <main class="seo-page">
+    <header class="seo-hero">
+      <div>
+        <span class="eyebrow">2PICLOCK · {{ kind() | uppercase }}</span>
+        <h1>{{ pageCopy().heading }}</h1>
+        <p>{{ pageCopy().intro }}</p>
+      </div>
+      <div class="location-mark">
+        <span>{{ loc.flag }}</span>
+        <strong>{{ loc.name }}</strong>
+        <small>{{ loc.country }} · {{ utcOffset() }}</small>
+      </div>
+    </header>
+
+    @if (kind() === 'time') {
+      <section class="hero-time">
+        <div class="digital-time">{{ localTime() }}</div>
+        <div class="local-date">{{ localDate() }}</div>
+        <div class="time-links">
+          <a [routerLink]="['/sun', loc.id]">Sun</a>
+          <a [routerLink]="['/moon', loc.id]">Moon</a>
+          <a [routerLink]="['/tonight', loc.id]">Tonight</a>
+          <a [routerLink]="['/place', loc.id]">Full place</a>
+        </div>
+      </section>
+    }
+
+    @if (kind() === 'sun' || kind() === 'tonight') {
+      <section class="visual-card sky-scene">
+        <div class="scene-copy">
+          <span class="eyebrow">{{ kind() === 'sun' ? 'SUN POSITION' : 'SKY RIGHT NOW' }}</span>
+          <strong>{{ formatDegrees(sunPosition()?.altitudeDeg) }}</strong>
+          <span>{{ sunPosition()?.altitudeDeg !== undefined && sunPosition()!.altitudeDeg > 0 ? 'Sun above the horizon' : 'Sun below the horizon' }}</span>
+        </div>
+        <div class="horizon">
+          <div class="compass north">N</div><div class="compass east">E</div><div class="compass south">S</div><div class="compass west">W</div>
+          <div class="orbit-ring"></div>
+          <div class="sun-dot" [style.left.%]="50 + sunDirection().left" [style.top.%]="50 + sunDirection().top"></div>
+          <div class="horizon-line"></div>
+        </div>
+      </section>
+    }
+
+    @if (kind() === 'moon' || kind() === 'tonight') {
+      <section class="visual-card moon-scene">
+        <div class="moon-copy">
+          <span class="eyebrow">MOON</span>
+          <h2>{{ moon()?.lunarPos?.phaseName ?? 'Moon' }}</h2>
+          <strong>{{ moon()?.lunarPos?.illuminationFraction !== undefined ? ((moon()!.lunarPos.illuminationFraction * 100) | number:'1.0-0') + '%' : '—' }}</strong>
+          <span>{{ formatDegrees(moonPosition()?.altitudeDeg) }} altitude · {{ formatDegrees(moonPosition()?.azimuthDeg) }} azimuth</span>
+        </div>
+        <app-moon-phase-indicator
+          [customPhaseName]="moon()?.lunarPos?.phaseName ?? null"
+          [customIllumination]="moon()?.lunarPos?.illuminationFraction ?? null"
+          [customAgeDays]="moon()?.lunarPos?.ageDays ?? null"
+          [size]="180" [showLabels]="false" [showDetails]="false">
+        </app-moon-phase-indicator>
+      </section>
+    }
+
+    <section class="facts-grid">
+      <article><span>LOCAL TIME</span><strong>{{ localTime() }}</strong><small>{{ utcOffset() }}</small></article>
+      <article><span>SUNRISE</span><strong>{{ formatTime(solar()?.solarEvents?.sunrise) }}</strong><small>Solar noon {{ formatTime(solar()?.solarEvents?.solarNoon) }}</small></article>
+      <article><span>SUNSET</span><strong>{{ formatTime(solar()?.solarEvents?.sunset) }}</strong><small>{{ daylight()?.dayLengthFormatted }} daylight</small></article>
+      <article><span>MOON</span><strong>{{ moon()?.lunarPos?.phaseName ?? '—' }}</strong><small>{{ moon()?.lunarPos?.illuminationFraction !== undefined ? ((moon()!.lunarPos.illuminationFraction * 100) | number:'1.0-0') + '% illuminated' : '—' }}</small></article>
+    </section>
+
+    @if (weatherService.currentWeather(); as weather) {
+      <section class="weather-strip">
+        <div><span class="eyebrow">ATMOSPHERE</span><strong>{{ weather.temperatureC | number:'1.0-1' }}°C</strong><span>{{ weather.conditionLabel }}</span></div>
+        <div><span>WIND</span><strong>{{ weather.windSpeedKmh }} km/h</strong></div>
+        <div><span>VISUAL SKY</span><strong>{{ kind() === 'tonight' ? 'Live conditions' : 'Local weather' }}</strong></div>
+        <a [routerLink]="['/sky/weather']">Open weather →</a>
+      </section>
+    }
+
+    @if (kind() === 'sun') {
+      <section class="info-section">
+        <span class="eyebrow">THE DAY</span>
+        <h2>Sunrise, sunset and daylight in {{ loc.name }}</h2>
+        <p>The Sun's position changes continuously through the day. 2PiClock calculates the local solar geometry for this coordinate instead of reducing it to a static chart.</p>
+        <div class="event-rail">
+          <div><b>{{ formatTime(solar()?.solarEvents?.civilDawn) }}</b><span>Civil dawn</span></div>
+          <div class="sun-node"><b>{{ formatTime(solar()?.solarEvents?.sunrise) }}</b><span>Sunrise</span></div>
+          <div class="sun-node"><b>{{ formatTime(solar()?.solarEvents?.solarNoon) }}</b><span>Solar noon</span></div>
+          <div class="sun-node"><b>{{ formatTime(solar()?.solarEvents?.sunset) }}</b><span>Sunset</span></div>
+          <div><b>{{ formatTime(solar()?.solarEvents?.civilDusk) }}</b><span>Civil dusk</span></div>
+        </div>
+      </section>
+    }
+
+    @if (kind() === 'moon') {
+      <section class="info-section">
+        <span class="eyebrow">LUNAR GEOMETRY</span>
+        <h2>Where the Moon is in {{ loc.name }}</h2>
+        <p>The Moon is shown as a rendered phase, with its calculated altitude and azimuth at this location and instant.</p>
+        <div class="direction-readout"><span>Altitude <b>{{ formatDegrees(moonPosition()?.altitudeDeg) }}</b></span><span>Azimuth <b>{{ formatDegrees(moonPosition()?.azimuthDeg) }}</b></span><span>Distance <b>{{ moonPosition()?.distanceKm?.toLocaleString() }} km</b></span></div>
+      </section>
+    }
+
+    @if (kind() === 'tonight') {
+      <section class="info-section">
+        <span class="eyebrow">TONIGHT</span>
+        <h2>Read the sky as a sequence, not a spreadsheet.</h2>
+        <div class="night-sequence">
+          <div><i></i><strong>Sunset</strong><b>{{ formatTime(solar()?.solarEvents?.sunset) }}</b></div>
+          <div><i></i><strong>Civil dusk</strong><b>{{ formatTime(solar()?.solarEvents?.civilDusk) }}</b></div>
+          <div><i></i><strong>Astronomical dusk</strong><b>{{ formatTime(solar()?.solarEvents?.astronomicalDusk) }}</b></div>
+          <div><i></i><strong>Moon</strong><b>{{ moon()?.lunarPos?.phaseName }}</b></div>
+        </div>
+      </section>
+    }
+
+    <nav class="related">
+      <a [routerLink]="['/time', loc.id]">Time in {{ loc.name }}</a>
+      <a [routerLink]="['/sun', loc.id]">Sun in {{ loc.name }}</a>
+      <a [routerLink]="['/moon', loc.id]">Moon in {{ loc.name }}</a>
+      <a [routerLink]="['/tonight', loc.id]">Tonight in {{ loc.name }}</a>
+      <a [routerLink]="['/place', loc.id]">Explore {{ loc.name }}</a>
+    </nav>
+  </main>
+} @else {
+  <main class="seo-not-found"><h1>Place not found</h1><p>Choose a city from 2PiClock's location search.</p><a [routerLink]="['/sky']">Return to 2PiClock</a></main>
+}

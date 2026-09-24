@@ -150,7 +150,7 @@ export class AstronomySuiteComponent implements OnInit {
 
   setLocationById(id: string): void {
     const loc = this.allPresets.find(p => p.id === id);
-    if (loc) this.selectedLocation.set(loc);
+    if (loc) { this.selectedLocation.set(loc); this.locationService.selectLocation(loc); }
   }
 
   setWhenIsQuery(query: 'next-full-moon' | 'next-new-moon' | 'spring-equinox' | 'summer-solstice' | 'autumn-equinox' | 'winter-solstice' | 'solar-noon'): void {

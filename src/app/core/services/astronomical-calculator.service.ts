@@ -493,7 +493,7 @@ export class AstronomicalCalculatorService {
         };
       }
       case 'solar-noon': {
-        const events = calculateSolarEvents(now, location.latitude, location.longitude);
+        const events = calculateSolarEvents(now, location.latitude, location.longitude, location.timezone);
         const noon = events.solarNoon || now;
         return {
           title: `Today's Solar Noon in ${location.name}`,

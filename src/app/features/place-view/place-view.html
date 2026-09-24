@@ -28,6 +28,24 @@
     </section>
 
     <section class="place-section">
+      <div class="section-heading"><div><span class="section-kicker">LIVE SKY</span><h2>What the sky is doing now</h2></div><a [routerLink]="['/tonight', loc.id]">Open tonight →</a></div>
+      <div class="place-sky-visuals">
+        <div class="place-sun-visual">
+          <div class="visual-caption"><span>SUN</span><strong>{{ formatDegrees(solar()?.solarPos?.altitudeDeg) }}</strong><small>{{ solar()?.solarPos?.altitudeDeg !== undefined && solar()!.solarPos.altitudeDeg > 0 ? 'above horizon' : 'below horizon' }}</small></div>
+          <div class="mini-sky-orbit">
+            <span class="mini-compass mini-n">N</span><span class="mini-compass mini-e">E</span><span class="mini-compass mini-s">S</span><span class="mini-compass mini-w">W</span>
+            <i class="mini-horizon"></i>
+            <i class="mini-sun" [style.left.%]="sunVisualPosition().left" [style.top.%]="sunVisualPosition().top"></i>
+          </div>
+        </div>
+        <div class="place-moon-visual">
+          <app-moon-phase-indicator [customPhaseName]="moon()?.lunarPos?.phaseName ?? null" [customIllumination]="moon()?.lunarPos?.illuminationFraction ?? null" [customAgeDays]="moon()?.lunarPos?.ageDays ?? null" [size]="130" [showLabels]="false" [showDetails]="false"></app-moon-phase-indicator>
+          <div><span class="section-kicker">MOON</span><strong>{{ formatMoonPhase() }}</strong><small>{{ moon()?.lunarPos?.illuminationFraction !== undefined ? ((moon()!.lunarPos.illuminationFraction * 100) | number:'1.0-0') + '% illuminated' : '—' }}</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="place-section">
       <div class="section-heading"><div><span class="section-kicker">CALCULATIONS</span><h2>Tools for {{ loc.name }}</h2></div></div>
       <div class="tool-grid">
         <a class="tool-link" [routerLink]="['/time', loc.id]"><span>Time in {{ loc.name }}</span><small>Live local time, UTC offset & daylight</small></a>

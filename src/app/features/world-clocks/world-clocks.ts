@@ -39,7 +39,7 @@ export class WorldClocksComponent implements OnDestroy {
  });
  readonly displayedLocations=computed(()=> {
    const saved=this.pinnedLocations();
-   return saved.length?saved:this.defaultLocations();
+   return this.preferences.hasSavedPreferences()?saved:this.defaultLocations();
  });
  readonly displayedClocks=computed<WorldClock[]>(()=>{
    const instant=this.activeDate();

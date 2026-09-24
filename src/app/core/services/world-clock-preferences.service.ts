@@ -8,6 +8,7 @@ const KEY='pinned-locations';
 @Injectable({providedIn:'root'})
 export class WorldClockPreferencesService {
   readonly pinnedLocations=signal<GeoLocation[]>([]);
+  readonly hasSavedPreferences=signal(false);
   private dbPromise:Promise<IDBDatabase>|null=null;
 
   constructor(){ this.restore(); }
@@ -17,6 +18,7 @@ export class WorldClockPreferencesService {
     if(current.some(x=>x.id===location.id)) return;
     const next=[...current,location];
     this.pinnedLocations.set(next);
+    this.hasSavedPreferences.set(true);
     void this.persist(next);
   }
 
@@ -45,6 +47,7 @@ export class WorldClockPreferencesService {
         request.onerror=()=>reject(request.error);
       });
       this.pinnedLocations.set(locations);
+      this.hasSavedPreferences.set(true);
     }catch{
       // The app continues with defaults if IndexedDB is unavailable.
     }

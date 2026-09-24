@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { RadioStation, StationSearchParams, PlayingLocationContext } from '../models/radio.model';
 import { TimeControlService } from './time-control.service';
 import { calculateSolarPosition, calculateLunarPosition } from '../astronomy/astronomy-engine';
-import { PRESET_LOCATIONS } from '../models/location.model';
 
 export const CURATED_GLOBAL_STATIONS: RadioStation[] = [
   // --- ASIA PACIFIC ---

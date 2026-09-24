@@ -8,7 +8,8 @@ import { WeatherService } from '../../core/services/weather.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { CountryFlagComponent, AnalogClockComponent, WeatherParticlesComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent } from '../../shared/components';
+import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent } from '../../shared/components';
+import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -24,10 +25,10 @@ import { RouterLink } from '@angular/router';
     ShareExportModalComponent, 
     WeatherAlertsModalComponent,
     AstronomicalEventsPanelComponent,
+    SettingsModalComponent,
+    WeatherBarChartComponent,
     RouterLink,
     CountryFlagComponent,
-    AnalogClockComponent,
-    WeatherParticlesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sky-home.html',
@@ -37,7 +38,7 @@ export class SkyHomeComponent {
   private celestialService = inject(CelestialService);
   private timeControlService = inject(TimeControlService);
   private locationService = inject(LocationService);
-  private weatherService = inject(WeatherService);
+  readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
   private title = inject(Title);
   private meta = inject(Meta);
@@ -84,6 +85,115 @@ export class SkyHomeComponent {
   readonly showShareModal = signal<boolean>(false);
   
   readonly isInspectorVisible = signal<boolean>(false);
+  // Integrated right environmental deck: expanded by default, part of the page layout (not absolute or fixed modal)
+  readonly isRightPanelExpanded = signal<boolean>(true);
+  readonly activeDeckTab = signal<'weather' | 'astronomy' | 'observations' | 'locations'>('weather');
+  readonly deckSearchQuery = signal<string>('');
+
+  toggleRightPanel(): void {
+    this.isRightPanelExpanded.update(v => !v);
+  }
+
+  setDeckTab(tab: 'weather' | 'astronomy' | 'observations' | 'locations'): void {
+    this.activeDeckTab.set(tab);
+  }
+
+  readonly filteredDeckLocations = computed(() => {
+    const q = this.deckSearchQuery().toLowerCase().trim();
+    if (!q) return this.allPresets;
+    return this.allPresets.filter(
+      l => l.name.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)
+    );
+  });
+
+  readonly windCompass = computed(() => {
+    const deg = this.weather().windDirectionDeg;
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const index = Math.round(((deg % 360) / 22.5)) % 16;
+    return directions[index];
+  });
+
+  readonly dewPointC = computed(() => {
+    const t = this.weather().temperatureC;
+    const rh = Math.max(1, Math.min(100, this.weather().humidityPct));
+    const a = 17.27;
+    const b = 237.7;
+    const alpha = ((a * t) / (b + t)) + Math.log(rh / 100);
+    const dp = (b * alpha) / (a - alpha);
+    return Math.round(dp * 10) / 10;
+  });
+
+  readonly dewPointF = computed(() => {
+    return Math.round((this.dewPointC() * 9 / 5 + 32) * 10) / 10;
+  });
+
+  readonly uvRiskLevel = computed(() => {
+    const uv = this.weather().uvIndex;
+    if (uv <= 2) return { label: 'Low', color: '#38bdf8', advice: 'Minimal sun hazard' };
+    if (uv <= 5) return { label: 'Moderate', color: '#facc15', advice: 'Wear sunglasses & hat' };
+    if (uv <= 7) return { label: 'High', color: '#fb923c', advice: 'Protection required' };
+    if (uv <= 10) return { label: 'Very High', color: '#f43f5e', advice: 'Seek shade midday' };
+    return { label: 'Extreme', color: '#c084fc', advice: 'Avoid direct midday exposure' };
+  });
+
+  readonly solarProgress = computed(() => {
+    const events = this.celestial().solarEvents;
+    if (!events.sunrise || !events.sunset) return 50;
+    const now = this.activeDate().getTime();
+    const rise = events.sunrise.getTime();
+    const set = events.sunset.getTime();
+    if (now < rise) return 0;
+    if (now > set) return 100;
+    return Math.round(((now - rise) / (set - rise)) * 100);
+  });
+
+  readonly starlightScore = computed(() => {
+    const w = this.weather();
+    const c = this.celestial();
+    const sunAlt = c.sun.altitudeDeg;
+    const moonAlt = c.moon.altitudeDeg;
+    const moonIllum = c.moon.illuminationFraction;
+
+    if (sunAlt > 0) {
+      return { score: 5, rating: 'Daylight', advice: 'Sun above horizon, night observation unavailable.' };
+    }
+    if (sunAlt > -6) {
+      return { score: 18, rating: 'Civil Twilight', advice: 'Only bright planets (Venus, Jupiter) visible.' };
+    }
+    if (sunAlt > -12) {
+      return { score: 38, rating: 'Nautical Twilight', advice: 'Navigational stars and brighter constellations visible.' };
+    }
+
+    let score = 100;
+    score -= w.cloudCoverPct * 0.75;
+    if (moonAlt > 0) {
+      score -= moonIllum * 35;
+    }
+    score -= (100 - Math.min(100, w.visibilityKm * 5)) * 0.15;
+    score = Math.max(8, Math.min(99, Math.round(score)));
+
+    if (score >= 80) return { score, rating: 'Pristine Dark Sky', advice: 'Exceptional transparency. Milky Way and deep-sky nebulae visible.' };
+    if (score >= 60) return { score, rating: 'Good Stargazing', advice: 'Clear visibility. Major constellations and planets easily observed.' };
+    if (score >= 40) return { score, rating: 'Moderate Seeing', advice: 'Partly veiled by light cloud or lunar brightness.' };
+    return { score, rating: 'Poor / Obscured', advice: 'Overcast or heavy lunar glare obscuring celestial bodies.' };
+  });
+
+  readonly comfortIndex = computed(() => {
+    const temp = this.weather().temperatureC;
+    const wind = this.weather().windSpeedKmh;
+    const rain = this.weather().precipitationPct;
+
+    if (rain > 60 || wind > 45) {
+      return { score: 32, label: 'Unfavorable', color: '#f43f5e', activity: 'Stay sheltered' };
+    }
+    if (temp >= 16 && temp <= 24 && wind < 20 && rain < 20) {
+      return { score: 94, label: 'Ideal', color: '#34d399', activity: 'Perfect for all outdoor activities' };
+    }
+    if (temp >= 10 && temp <= 28 && wind < 30 && rain < 40) {
+      return { score: 78, label: 'Pleasant', color: '#facc15', activity: 'Good for walking, running, and cycling' };
+    }
+    return { score: 55, label: 'Brisk / Demanding', color: '#fb923c', activity: 'Dress appropriately for conditions' };
+  });
   // Route-driven Sky pages keep each subject focused and lightweight.
   readonly activeSection = signal<'time' | 'weather' | 'astronomy' | 'world' | 'footer'>('time');
   readonly skySections = [
@@ -138,7 +248,7 @@ export class SkyHomeComponent {
   onSkyScroll(event: Event): void {
     const container = event.currentTarget as HTMLElement;
     const center = container.scrollTop + container.clientHeight / 2;
-    let nearest = this.skySections[0].id;
+    let nearest: typeof this.skySections[number]['id'] = this.skySections[0].id;
     let nearestDistance = Infinity;
 
     for (const section of this.skySections) {

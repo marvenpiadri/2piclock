@@ -8,15 +8,9 @@
   color:#f5f5f5;
   font-family:-apple-system,BlinkMacSystemFont,"Plus Jakarta Sans","SF Pro Display",system-ui,sans-serif;
 }
-.app-layout { position:relative; width:100%; height:100%; display:flex; overflow:hidden; z-index:20; }
-.vertical-nav-sidebar {
-  height:100%;
-  overflow-y:auto;
-  background:rgba(8,8,8,.88)!important;
-  border-color:rgba(255,255,255,.09)!important;
-  box-shadow:12px 0 40px rgba(0,0,0,.18);
-}
-.main-content-viewport { height:100%; overflow-y:auto; }
+.app-layout { position:relative; width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; z-index:20; }
+.universal-top-header { shrink: 0; }
+.main-content-viewport { flex:1; width:100%; min-width:0; overflow-y:auto; overflow-x:hidden; position:relative; }
 .full-page-glass-substrate { position:fixed; inset:0; pointer-events:none; z-index:10; transition:backdrop-filter .4s ease,background-color .4s ease; }
 .nav-vertical-item,.nav-category-item { transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease; }
 .nav-vertical-item:hover { transform:translateX(2px); }

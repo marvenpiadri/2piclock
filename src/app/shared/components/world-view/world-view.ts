@@ -1677,8 +1677,7 @@ export class WorldViewComponent implements OnInit, OnDestroy {
     const baseDeg = currentW.windDirectionDeg || 210;
     const zoom = this.map.getZoom();
 
-    for (let i = 0; i < this.windParticles.length; i++) {
-      const p = this.windParticles[i];
+    for (const p of this.windParticles) {
       p.age++;
 
       if (p.age > p.maxAge || p.lng < west || p.lng > east || p.lat < south || p.lat > north) {

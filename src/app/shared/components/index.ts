@@ -18,3 +18,4 @@ export * from './weather-particles/weather-particles';
 export * from './weather-trend-chart/weather-trend-chart';
 export * from './weather-alerts-modal/weather-alerts-modal';
 export * from './astronomy-events-panel/astronomy-events-panel';
+export * from './weather-bar-chart/weather-bar-chart';

@@ -35,7 +35,8 @@ export class SeoService {
   }
 
   updateMetadata(data: SeoMetadata): void {
-    const url = this.normalizeUrl(data.url || `${this.siteUrl}${this.document.location.pathname}`);
+    const currentPath = (this.router.url || '/').split('?')[0];
+    const url = this.normalizeUrl(data.url || `${this.siteUrl}${currentPath}`);
     const description = data.description || this.defaultDescription;
     const image = data.image || this.defaultImage;
     const robots = data.robots || 'index, follow';
@@ -68,9 +69,33 @@ export class SeoService {
         title: '2PiClock — Astronomical World Clock & Living Sky',
         description: this.defaultDescription
       },
+      '/sky': {
+        title: '2PiClock — Astronomical World Clock & Living Sky',
+        description: this.defaultDescription
+      },
+      '/sky/weather': {
+        title: 'Sky & Weather Telemetry — 2PiClock',
+        description: 'Real-time atmospheric telemetry, humidity, cloud cover, and solar altitude atop your sky horizon.'
+      },
+      '/sky/astronomy': {
+        title: 'Sky & Astronomy Ephemeris — 2PiClock',
+        description: 'High precision solar, lunar, and twilight boundary ephemeris synchronized with your local horizon.'
+      },
+      '/sky/world': {
+        title: 'Sky & World Observatory — 2PiClock',
+        description: 'Real-time multi-timezone clocks and global celestial positions.'
+      },
+      '/world': {
+        title: '2PiClock Earth Observatory — NASA Scientific 2D Projection',
+        description: 'Continuous analytical 2D solar terminator, 4-stage twilight gradients, subsolar zenith, and timezone grid.'
+      },
       '/world-clocks': {
         title: 'World Clocks — 2PiClock',
         description: 'Compare local time, solar altitude, sunrise, sunset, twilight, and the global day-night boundary across cities.'
+      },
+      '/weather': {
+        title: 'Windy Meteorological Map & Live Streamlines — 2PiClock',
+        description: 'State-of-the-art interactive weather radar, high-density fluid wind streamlines, altitude pressure levels, and 72-hour meteogram.'
       },
       '/ephemeris': {
         title: 'Solar Ephemeris — 2PiClock',
@@ -80,9 +105,17 @@ export class SeoService {
         title: 'Atmosphere Studio — 2PiClock',
         description: 'See how live weather conditions interact with solar and lunar geometry to shape the 2PiClock atmosphere.'
       },
+      '/space': {
+        title: '3D Celestial Sphere & Keplerian Ephemeris Engine | 2piClock',
+        description: 'Explore the night sky from any global coordinate vector. Track local horizons, the ecliptic plane, and solar system trajectories using a reactive 3D mathematical space engine.'
+      },
       '/deep-space-observatory': {
         title: '3D Celestial Sphere & Keplerian Ephemeris Engine | 2piClock',
         description: 'Explore the night sky from any global coordinate vector. Track local horizons, the ecliptic plane, and solar system trajectories using a reactive 3D mathematical space engine.'
+      },
+      '/planner': {
+        title: 'Golden Hour & Multi-Timezone Meeting Planner — 2PiClock',
+        description: 'Synchronized multi-location overlap calculator, optimum daylight alignment, and working hour windows.'
       }
     };
 

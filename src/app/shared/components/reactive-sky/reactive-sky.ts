@@ -68,6 +68,7 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
+  private resizeHandler: (() => void) | null = null;
   private width = 0;
   private height = 0;
   private dpr = 1;
@@ -108,6 +109,11 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.animFrameId !== null) {
       cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    if (this.resizeHandler && this.isBrowser) {
+      window.removeEventListener('resize', this.resizeHandler);
+      this.resizeHandler = null;
     }
   }
 
@@ -128,7 +134,8 @@ export class ReactiveSkyComponent implements OnInit, OnDestroy {
     };
 
     resize();
-    window.addEventListener('resize', resize, { passive: true });
+    this.resizeHandler = resize;
+    window.addEventListener('resize', this.resizeHandler, { passive: true });
   }
 
   private initStars(): void {

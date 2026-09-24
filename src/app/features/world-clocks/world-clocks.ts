@@ -30,7 +30,9 @@ export class WorldClocksComponent {
    localTimeWithSeconds=new Intl.DateTimeFormat('en-US',{timeZone:loc.timezone,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(date);
    const parts=new Intl.DateTimeFormat('en-US',{timeZone:loc.timezone,timeZoneName:'shortOffset'}).formatToParts(date);
    utcOffset=parts.find(p=>p.type==='timeZoneName')?.value??'UTC';
-  } catch {}
+  } catch {
+   utcOffset = 'UTC';
+  }
   const altitude=sun.altitudeDeg;
   let astroState:WorldClockStatus['astroState']='night', statusLabel='Deep Night';
   if(altitude>6){astroState='day';statusLabel='Full Daylight';}

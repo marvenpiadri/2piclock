@@ -1,30 +1,35 @@
 <div class="sky-report">
+  <!-- Subtle Header on the Left (no two divs with two heavy glass backgrounds) -->
   <header class="sky-header">
     <div class="sky-header-left">
       @if (skyPage === 'time') {
         <span class="section-eyebrow">LOCAL TIME · {{ selectedLocation().country }}</span>
-        <h1>Time in {{ selectedLocation().name }}, {{ selectedLocation().country }}</h1>
-        <p>{{ localDate() }} · {{ timezoneDisplay() }}</p>
+        <h1>Living Sky Horizon · {{ selectedLocation().name }}</h1>
+        <p>{{ localDate() }} · {{ timezoneDisplay() }} · Solar & Lunar 2π Coordinate</p>
       } @else if (skyPage === 'weather') {
-        <span class="section-eyebrow">WEATHER · {{ selectedLocation().name }}</span>
-        <h1>Weather</h1>
-        <p>Current conditions, hourly forecast and the week ahead.</p>
+        <span class="section-eyebrow">METEOROLOGY · {{ selectedLocation().name }}</span>
+        <h1>Atmospheric Weather</h1>
+        <p>Live conditions, telemetry, and 24-hour predictive trend.</p>
       } @else if (skyPage === 'astronomy') {
-        <span class="section-eyebrow">ASTRONOMY · {{ selectedLocation().name }}</span>
-        <h1>The sky above you.</h1>
-        <p>Solar, lunar and astronomical conditions for your location.</p>
+        <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
+        <h1>Celestial Altitude & Azimuth</h1>
+        <p>Solar zenith, lunar phases, golden hour and twilight intervals.</p>
       } @else {
-        <span class="section-eyebrow">WORLD TIME</span>
-        <h1>World clocks</h1>
-        <p>Local time across the cities that matter.</p>
+        <span class="section-eyebrow">GLOBAL CLOCKS</span>
+        <h1>World Observatories</h1>
+        <p>Precise local time and solar offsets across planetary zones.</p>
       }
     </div>
 
     <div class="sky-header-right">
-      <button type="button" class="location-action" (click)="openDrawerTab('locations')" title="Change location">
-        <span>{{ selectedLocation().name }}</span>
+      <!-- Obvious Country Change Pill with Flag -->
+      <button type="button" class="location-action obvious-country-pill" (click)="openDrawerTab('locations')" title="Change Country or City">
+        <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'w-4 h-3 rounded-xs'"></app-country-flag>
+        <span class="location-name">{{ selectedLocation().name }}</span>
+        <span class="location-country">{{ selectedLocation().country }}</span>
         <mat-icon>expand_more</mat-icon>
       </button>
+
       @if (activeAlerts().length > 0) {
         <button type="button" class="icon-action" (click)="openAlertsModal()" title="Weather alerts">
           <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
@@ -36,16 +41,29 @@
     </div>
   </header>
 
-  <nav class="sky-navigation" aria-label="Sky">
-    <a routerLink="/sky" [class.active]="skyPage === 'time'">Time</a>
-    <a routerLink="/sky/weather" [class.active]="skyPage === 'weather'">Weather</a>
-    <a routerLink="/sky/astronomy" [class.active]="skyPage === 'astronomy'">Astronomy</a>
-    <a routerLink="/sky/world" [class.active]="skyPage === 'world'">World time</a>
+  <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
+  <nav class="sky-navigation" aria-label="Sky Sub-Views">
+    <a routerLink="/sky" [class.active]="skyPage === 'time'">
+      <mat-icon class="text-sm">schedule</mat-icon>
+      <span>1 Time Dial</span>
+    </a>
+    <a routerLink="/sky/weather" [class.active]="skyPage === 'weather'">
+      <mat-icon class="text-sm">cloud</mat-icon>
+      <span>2 Weather</span>
+    </a>
+    <a routerLink="/sky/astronomy" [class.active]="skyPage === 'astronomy'">
+      <mat-icon class="text-sm">wb_twilight</mat-icon>
+      <span>3 Astronomy</span>
+    </a>
+    <a routerLink="/sky/world" [class.active]="skyPage === 'world'">
+      <mat-icon class="text-sm">public</mat-icon>
+      <span>4 World Clocks</span>
+    </a>
   </nav>
 
   <main class="sky-page">
     @if (skyPage === 'time') {
-      <section class="sky-time-layout">
+      <section class="sky-time-layout" [class.panel-collapsed]="!isRightPanelExpanded()">
         <div class="time-column">
           <div class="time-stage">
             <div class="polar-clock-container">
@@ -115,42 +133,307 @@
           </div>
         </div>
 
-        <aside class="home-info-panel">
-          <div class="info-panel-top">
-            <div>
-              <span class="section-eyebrow">SELECTED LOCATION</span>
-              <h2>{{ selectedLocation().name }}</h2>
-              <p>{{ selectedLocation().country }}</p>
+        @if (isRightPanelExpanded()) {
+          <aside class="home-info-panel environmental-deck" aria-label="Environmental telemetry deck">
+            <div class="deck-header">
+              <div class="deck-header-info">
+                <div class="deck-title-row">
+                  <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'deck-flag'"></app-country-flag>
+                  <div>
+                    <h2>{{ selectedLocation().name }}</h2>
+                    <span class="deck-subtitle">{{ selectedLocation().country }} · {{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</span>
+                  </div>
+                </div>
+              </div>
+              <div class="deck-header-actions">
+                <button type="button" class="deck-unit-btn" (click)="weatherService.toggleFahrenheit()" [title]="'Switch to °' + (isFahrenheit() ? 'C' : 'F')">
+                  °{{ isFahrenheit() ? 'F' : 'C' }}
+                </button>
+                <button type="button" class="deck-collapse-btn" (click)="toggleRightPanel()" title="Collapse environmental panel">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
             </div>
-            <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'country-panel-flag'"></app-country-flag>
-          </div>
 
-          <div class="analog-clock-row">
-            <app-analog-clock [timezone]="selectedLocation().timezone" [activeDate]="activeDate()" [latitude]="selectedLocation().latitude" [longitude]="selectedLocation().longitude"></app-analog-clock>
-            <div class="location-facts">
-              <div><span>Local time</span><strong>{{ localTime() }}</strong></div>
-              <div><span>Time zone</span><strong>{{ timezoneDisplay() }}</strong></div>
-              <div><span>Coordinates</span><strong>{{ selectedLocation().latitude.toFixed(2) }}°, {{ selectedLocation().longitude.toFixed(2) }}°</strong></div>
-              <div><span>Elevation</span><strong>{{ selectedLocation().elevationMeters ? selectedLocation().elevationMeters + ' m' : '—' }}</strong></div>
+            <!-- Segmented Deck Navigation Tabs -->
+            <div class="deck-nav-tabs" role="tablist">
+              <button type="button" [class.active]="activeDeckTab() === 'weather'" (click)="setDeckTab('weather')" role="tab">
+                <mat-icon>cloud</mat-icon>
+                <span>Weather</span>
+              </button>
+              <button type="button" [class.active]="activeDeckTab() === 'astronomy'" (click)="setDeckTab('astronomy')" role="tab">
+                <mat-icon>auto_awesome</mat-icon>
+                <span>Astronomy</span>
+              </button>
+              <button type="button" [class.active]="activeDeckTab() === 'observations'" (click)="setDeckTab('observations')" role="tab">
+                <mat-icon>query_stats</mat-icon>
+                <span>Insights & D3</span>
+              </button>
+              <button type="button" [class.active]="activeDeckTab() === 'locations'" (click)="setDeckTab('locations')" role="tab">
+                <mat-icon>place</mat-icon>
+                <span>Locations</span>
+              </button>
             </div>
-          </div>
 
-          <div class="info-weather">
-            <div>
-              <span class="section-eyebrow">CURRENT WEATHER</span>
-              <strong>{{ weather().conditionLabel }}</strong>
-              <p>{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}° · feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}°</p>
+            <div class="deck-scroll-container">
+              <!-- TAB 1: WEATHER -->
+              @if (activeDeckTab() === 'weather') {
+                <div class="deck-tab-pane">
+                  <div class="deck-weather-hero">
+                    <div class="deck-weather-main">
+                      <div class="deck-temperature-readout">
+                        <span class="temp-val">{{ isFahrenheit() ? weather().temperatureF : weather().temperatureC }}°</span>
+                        <span class="temp-unit">{{ isFahrenheit() ? 'F' : 'C' }}</span>
+                      </div>
+                      <div class="deck-weather-desc">
+                        <h3>{{ weather().conditionLabel }}</h3>
+                        <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
+                      </div>
+                    </div>
+                    <mat-icon class="deck-hero-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                  </div>
+
+                  <!-- 6-Metric Atmospheric Telemetry Grid -->
+                  <div class="deck-metrics-grid">
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>water_drop</mat-icon> RAIN CHANCE</span>
+                      <strong>{{ weather().precipitationPct }}%</strong>
+                      <small>{{ weather().precipitationPct > 30 ? 'Rain probable' : 'Dry conditions' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>air</mat-icon> WIND ({{ windCompass() }})</span>
+                      <strong>{{ weather().windSpeedKmh }} km/h</strong>
+                      <small>Gusts {{ weather().windGustKmh ?? weather().windSpeedKmh }} km/h</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>opacity</mat-icon> HUMIDITY</span>
+                      <strong>{{ weather().humidityPct }}%</strong>
+                      <small>Dew pt {{ isFahrenheit() ? dewPointF() : dewPointC() }}°</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>speed</mat-icon> BAROMETER</span>
+                      <strong>{{ weather().pressureHpa }} hPa</strong>
+                      <small>{{ weather().pressureHpa > 1013 ? 'High pressure' : 'Low pressure' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>cloud_queue</mat-icon> CLOUD COVER</span>
+                      <strong>{{ weather().cloudCoverPct }}%</strong>
+                      <small>{{ weather().cloudCoverPct < 25 ? 'Clear sky' : weather().cloudCoverPct < 70 ? 'Partly cloudy' : 'Overcast' }}</small>
+                    </div>
+                    <div class="deck-metric-card">
+                      <span class="metric-label"><mat-icon>visibility</mat-icon> VISIBILITY</span>
+                      <strong>{{ weather().visibilityKm }} km</strong>
+                      <small>{{ weather().visibilityKm >= 10 ? 'Optimal range' : 'Hazy atmosphere' }}</small>
+                    </div>
+                  </div>
+
+                  <!-- UV Index Banner -->
+                  <div class="deck-banner-card">
+                    <div class="banner-left">
+                      <span class="metric-label"><mat-icon>wb_sunny</mat-icon> UV INDEX</span>
+                      <strong>Index {{ weather().uvIndex }} · {{ uvRiskLevel().label }}</strong>
+                    </div>
+                    <span class="banner-advice">{{ uvRiskLevel().advice }}</span>
+                  </div>
+
+                  <!-- 24-Hour Hourly Timeline Strip -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">24-HOUR HOURLY OUTLOOK</span>
+                      <span class="group-meta">Local Time</span>
+                    </div>
+                    <div class="deck-hourly-strip">
+                      @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
+                        <div class="deck-hour-item">
+                          <span class="hour-time">{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
+                          <mat-icon class="hour-icon">{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                          <strong class="hour-temp">{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
+                          <span class="hour-rain">{{ item.weather.precipitationPct }}%</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- 7-Day Forecast Cards -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">7-DAY FORECAST</span>
+                      <span class="group-meta">High / Low</span>
+                    </div>
+                    <div class="deck-week-list">
+                      @for (day of weeklyForecast(); track day.key) {
+                        <div class="deck-week-row">
+                          <span class="week-name">{{ day.label }}</span>
+                          <div class="week-condition">
+                            <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                            <span>{{ day.condition }}</span>
+                          </div>
+                          <span class="week-rain">{{ day.precipitationPct }}% rain</span>
+                          <div class="week-temps">
+                            <b>{{ isFahrenheit() ? day.highF : day.highC }}°</b>
+                            <small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 2: ASTRONOMY -->
+              @if (activeDeckTab() === 'astronomy') {
+                <div class="deck-tab-pane">
+                  <!-- Solar Coordinates Card -->
+                  <div class="deck-astro-card">
+                    <div class="astro-card-head">
+                      <span class="metric-label"><mat-icon>sunny</mat-icon> SOLAR EPHEMERIS</span>
+                      <span class="astro-badge">{{ getTwilightLabel(celestial().twilightState) }}</span>
+                    </div>
+                    <div class="astro-data-row">
+                      <div><span>Solar Altitude</span><strong>{{ celestial().sun.altitudeDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Azimuth</span><strong>{{ celestial().sun.azimuthDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Day Length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong></div>
+                      <div><span>Solar Noon</span><strong>{{ formatTime(celestial().solarEvents.solarNoon) }}</strong></div>
+                    </div>
+                    <!-- Daylight Progress Bar -->
+                    <div class="daylight-progress-wrap">
+                      <div class="progress-labels">
+                        <span>Sunrise {{ formatTime(celestial().solarEvents.sunrise) }}</span>
+                        <span>Daylight {{ solarProgress() }}%</span>
+                        <span>Sunset {{ formatTime(celestial().solarEvents.sunset) }}</span>
+                      </div>
+                      <div class="progress-bar-track">
+                        <div class="progress-bar-fill" [style.width.%]="solarProgress()"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Lunar Coordinates Card -->
+                  <div class="deck-astro-card">
+                    <div class="astro-card-head">
+                      <span class="metric-label"><mat-icon>nightlight_round</mat-icon> LUNAR EPHEMERIS</span>
+                      <span class="astro-badge">{{ celestial().moon.phaseName }}</span>
+                    </div>
+                    <div class="astro-data-row">
+                      <div><span>Illumination</span><strong>{{ (celestial().moon.illuminationFraction * 100).toFixed(0) }}%</strong></div>
+                      <div><span>Moon Altitude</span><strong>{{ celestial().moon.altitudeDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Azimuth</span><strong>{{ celestial().moon.azimuthDeg.toFixed(1) }}°</strong></div>
+                      <div><span>Earth Distance</span><strong>{{ formatMoonDistance(celestial().moon.distanceKm) }} km</strong></div>
+                    </div>
+                  </div>
+
+                  <!-- Twilight Phases Detailed Schedule -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">TWILIGHT & SOLAR WINDOWS</span>
+                      <span class="group-meta">Civil / Nautical / Astro</span>
+                    </div>
+                    <div class="twilight-schedule-table">
+                      <div class="twilight-row"><span>Civil Dawn</span><strong>{{ formatTime(celestial().solarEvents.civilDawn) }}</strong></div>
+                      <div class="twilight-row"><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
+                      <div class="twilight-row"><span>Golden Hour (Evening)</span><strong>{{ formatTime(celestial().solarEvents.goldenHourEvening.start) }}</strong></div>
+                      <div class="twilight-row"><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
+                      <div class="twilight-row"><span>Civil Dusk</span><strong>{{ formatTime(celestial().solarEvents.civilDusk) }}</strong></div>
+                      <div class="twilight-row"><span>Nautical Dusk</span><strong>{{ formatTime(celestial().solarEvents.nauticalDusk) }}</strong></div>
+                      <div class="twilight-row"><span>Astronomical Night</span><strong>{{ formatTime(celestial().solarEvents.astronomicalDusk) }}</strong></div>
+                    </div>
+                  </div>
+
+                  <div class="deck-actions-group">
+                    <button type="button" class="deck-primary-btn" (click)="openEventsPanel()">
+                      <mat-icon>event</mat-icon>
+                      <span>Explore Astronomical Events Calendar</span>
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 3: INSIGHTS & D3 TRENDS -->
+              @if (activeDeckTab() === 'observations') {
+                <div class="deck-tab-pane">
+                  <!-- Starlight Seeing & Observation Rating -->
+                  <div class="deck-insight-card">
+                    <div class="insight-head">
+                      <div>
+                        <span class="metric-label"><mat-icon>star</mat-icon> STARGAZING SCORE</span>
+                        <h4>{{ starlightScore().rating }}</h4>
+                      </div>
+                      <div class="score-circle">
+                        <span>{{ starlightScore().score }}</span>
+                        <small>/100</small>
+                      </div>
+                    </div>
+                    <p class="insight-advice">{{ starlightScore().advice }}</p>
+                  </div>
+
+                  <!-- Outdoor Comfort Index -->
+                  <div class="deck-insight-card">
+                    <div class="insight-head">
+                      <div>
+                        <span class="metric-label"><mat-icon>directions_run</mat-icon> OUTDOOR COMFORT INDEX</span>
+                        <h4>{{ comfortIndex().label }}</h4>
+                      </div>
+                      <div class="score-circle score-comfort" [style.borderColor]="comfortIndex().color">
+                        <span>{{ comfortIndex().score }}</span>
+                        <small>/100</small>
+                      </div>
+                    </div>
+                    <p class="insight-advice">{{ comfortIndex().activity }}</p>
+                  </div>
+
+                  <!-- Integrated D3 Bar Chart Visualizer -->
+                  <div class="deck-section-group">
+                    <div class="group-title-row">
+                      <span class="group-label">ATMOSPHERIC D3 TRENDS</span>
+                      <span class="group-meta">Real-time Telemetry</span>
+                    </div>
+                    <div class="deck-d3-wrapper">
+                      <app-weather-bar-chart></app-weather-bar-chart>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- TAB 4: LOCATIONS SEARCH -->
+              @if (activeDeckTab() === 'locations') {
+                <div class="deck-tab-pane">
+                  <div class="deck-search-box">
+                    <mat-icon>search</mat-icon>
+                    <input
+                      type="search"
+                      placeholder="Search city, country, or coordinate..."
+                      [value]="deckSearchQuery()"
+                      (input)="deckSearchQuery.set($any($event.target).value)" />
+                  </div>
+
+                  <div class="deck-locations-list">
+                    @for (loc of filteredDeckLocations(); track loc.id) {
+                      <button
+                        type="button"
+                        class="deck-location-row"
+                        [class.active]="selectedLocation().id === loc.id"
+                        (click)="selectLocation(loc)">
+                        <app-country-flag [countryCode]="loc.countryCode" [customClass]="'loc-flag'"></app-country-flag>
+                        <div class="loc-details">
+                          <strong>{{ loc.name }}</strong>
+                          <span>{{ loc.country }} · {{ loc.timezone }}</span>
+                        </div>
+                        <span class="loc-coords">{{ loc.latitude.toFixed(1) }}°, {{ loc.longitude.toFixed(1) }}°</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
             </div>
-            <mat-icon>{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+          </aside>
+        } @else {
+          <div class="collapsed-deck-dock">
+            <button type="button" class="expand-deck-btn" (click)="toggleRightPanel()" title="Expand Environmental Deck">
+              <mat-icon>chevron_left</mat-icon>
+              <span>ENVIRONMENTAL DECK</span>
+            </button>
           </div>
-
-          <div class="country-facts">
-            <div><span>Daylight</span><strong>{{ getTwilightLabel(celestial().twilightState) }}</strong></div>
-            <div><span>Sunrise</span><strong>{{ formatTime(celestial().solarEvents.sunrise) }}</strong></div>
-            <div><span>Sunset</span><strong>{{ formatTime(celestial().solarEvents.sunset) }}</strong></div>
-            <div><span>Day length</span><strong>{{ formatDayLength(celestial().solarEvents.dayLengthMinutes) }}</strong></div>
-          </div>
-        </aside>
+        }
       </section>
     }
 
@@ -174,6 +457,11 @@
           <div><span>Pressure</span><strong>{{ weather().pressureHpa }} hPa</strong></div>
           <div><span>UV index</span><strong>{{ weather().uvIndex }}</strong></div>
         </div>
+
+        <section class="weather-section-block">
+          <div class="section-heading-row"><div><span class="section-eyebrow">ATMOSPHERIC D3 VISUALIZER</span><h2>Humidity & Visibility Trends</h2></div><span>Real-time telemetry</span></div>
+          <app-weather-bar-chart></app-weather-bar-chart>
+        </section>
 
         <section class="weather-section-block">
           <div class="section-heading-row"><div><span class="section-eyebrow">NEXT 24 HOURS</span><h2>Hourly</h2></div><span>Local time</span></div>
@@ -255,7 +543,17 @@
         @if (activeDrawerTab() === 'locations') {
           <div class="location-list"><input type="search" placeholder="Search location..." [value]="drawerSearchQuery()" (input)="drawerSearchQuery.set($any($event.target).value)" />@for (loc of filteredDrawerLocations(); track loc.name + loc.country) {<button type="button" (click)="selectLocation(loc); closeDrawer()"><app-country-flag [countryCode]="loc.countryCode" [customClass]="'location-flag'"></app-country-flag><span>{{ loc.name }}</span><small>{{ loc.country }}</small></button>}</div>
         } @else {
-          <div class="drawer-report"><span class="section-eyebrow">CURRENT WEATHER</span><strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong><span>Feels like {{ weather().feelsLikeC }}°C</span><span>Humidity {{ weather().humidityPct }}%</span><span>Wind {{ weather().windSpeedKmh }} km/h</span><span>Cloud {{ weather().cloudCoverPct }}%</span></div>
+          <div class="drawer-report">
+            <span class="section-eyebrow">CURRENT WEATHER</span>
+            <strong>{{ weather().temperatureC }}°C · {{ weather().conditionLabel }}</strong>
+            <span>Feels like {{ weather().feelsLikeC }}°C</span>
+            <span>Humidity {{ weather().humidityPct }}%</span>
+            <span>Wind {{ weather().windSpeedKmh }} km/h</span>
+            <span>Cloud {{ weather().cloudCoverPct }}%</span>
+            <div class="drawer-visualizer-container mt-3">
+              <app-weather-bar-chart></app-weather-bar-chart>
+            </div>
+          </div>
         }
       </div>
     </aside>

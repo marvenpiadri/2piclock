@@ -267,3 +267,20 @@ a:focus-visible {
   color: var(--2pi-text-on-sky-muted) !important;
   text-shadow: 0 1px 3px rgba(0,0,0,.7);
 }
+
+
+/* Bright-sky contrast guard: glass stays atmospheric without becoming translucent text-on-sky. */
+.app-layout.sky-background-active .glass-panel {
+  background: rgba(9, 11, 15, 0.68);
+  border-color: rgba(255,255,255,.14);
+}
+.app-layout.sky-background-active .glass-card {
+  background: rgba(12, 14, 18, 0.72);
+  border-color: rgba(255,255,255,.12);
+}
+.app-layout.sky-background-active h1,
+.app-layout.sky-background-active h2,
+.app-layout.sky-background-active h3,
+.app-layout.sky-background-active h4 {
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}

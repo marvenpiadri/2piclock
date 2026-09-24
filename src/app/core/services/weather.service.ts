@@ -183,8 +183,8 @@ export class WeatherService {
     const params = new HttpParams()
       .set('latitude', loc.latitude)
       .set('longitude', loc.longitude)
-      .set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
-      .set('hourly', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,visibility,uv_index')
+      .set('current', 'temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,pressure_msl,visibility,uv_index,is_day')
+      .set('hourly', 'temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,pressure_msl,visibility,uv_index,is_day,freezing_level_height')
       .set('forecast_days', '7')
       .set('timezone', 'auto');
 
@@ -224,7 +224,13 @@ export class WeatherService {
               windGustKmh,
               visibilityKm: Number.isFinite(c.visibility) ? Math.max(0.1, Math.round((c.visibility / 1000) * 10) / 10) : (condition === 'fog' ? 1.5 : (condition === 'heavy_rain' ? 4 : 18)),
               uvIndex: Number.isFinite(c.uv_index) ? Math.round(c.uv_index * 10) / 10 : 0,
+              dewPointC: Number.isFinite(c.dew_point_2m) ? Math.round(c.dew_point_2m * 10) / 10 : tempC,
+              precipitationMm: Number(c.precipitation || 0), rainMm: Number(c.rain || 0), showersMm: Number(c.showers || 0),
+              snowfallCm: Number(c.snowfall || 0), snowDepthCm: Number(c.snow_depth || 0),
+              cloudCoverLowPct: Number(c.cloud_cover_low ?? c.cloud_cover ?? 0), cloudCoverMidPct: Number(c.cloud_cover_mid ?? c.cloud_cover ?? 0), cloudCoverHighPct: Number(c.cloud_cover_high ?? c.cloud_cover ?? 0),
+              freezingLevelM: 0, isDay: c.is_day !== undefined ? !!c.is_day : true,
               pressureHpa: Math.round(c.surface_pressure || 1013),
+              seaLevelPressureHpa: Number.isFinite(c.pressure_msl) ? Math.round(c.pressure_msl) : undefined,
               aggressivenessIndex: score,
               aggressivenessLabel: label,
               lightningFrequencyPerMin: condition === 'thunderstorm' ? 6 : 0,
@@ -277,7 +283,13 @@ export class WeatherService {
                       windGustKmh: Math.round(hWind * 1.3),
                       visibilityKm: 16,
                       uvIndex: 4,
+                      dewPointC: Number.isFinite(data.hourly.dew_point_2m?.[i]) ? Math.round(data.hourly.dew_point_2m[i] * 10) / 10 : hTC,
+                      precipitationMm: Number(data.hourly.precipitation?.[i] ?? 0), rainMm: Number(data.hourly.rain?.[i] ?? 0), showersMm: Number(data.hourly.showers?.[i] ?? 0),
+                      snowfallCm: Number(data.hourly.snowfall?.[i] ?? 0), snowDepthCm: Number(data.hourly.snow_depth?.[i] ?? 0),
+                      cloudCoverLowPct: Number(data.hourly.cloud_cover_low?.[i] ?? hClouds[i] ?? 0), cloudCoverMidPct: Number(data.hourly.cloud_cover_mid?.[i] ?? hClouds[i] ?? 0), cloudCoverHighPct: Number(data.hourly.cloud_cover_high?.[i] ?? hClouds[i] ?? 0),
+                      freezingLevelM: Number(data.hourly.freezing_level_height?.[i] ?? 0), isDay: data.hourly.is_day?.[i] !== undefined ? !!data.hourly.is_day[i] : true,
                       pressureHpa: Math.round(hPress[i] ?? 1013),
+                      seaLevelPressureHpa: Number.isFinite(data.hourly.pressure_msl?.[i]) ? Math.round(data.hourly.pressure_msl[i]) : undefined,
                       aggressivenessIndex: hScore,
                       aggressivenessLabel: hLabel,
                       lightningFrequencyPerMin: hCond === 'thunderstorm' ? 5 : 0,

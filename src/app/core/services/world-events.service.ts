@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { GeoLocation } from '../models/location.model';
+import { WorldEventEngineService } from './world-event-engine.service';
 
 export interface WorldEvent {
   id: string;
@@ -14,6 +15,8 @@ export interface WorldEvent {
 @Injectable({ providedIn: 'root' })
 export class WorldEventsService {
   private readonly http = inject(HttpClient);
+  private readonly engine = inject(WorldEventEngineService);
+  private activeTimezone = 'UTC';
 
   readonly isLoading = signal(false);
   readonly prayerTimes = signal<Record<string,string>>({});
@@ -64,27 +67,18 @@ export class WorldEventsService {
       error: () => this.shabbatEvents.set([])
     });
 
-    const solar = new HttpParams()
-      .set('lat', loc.latitude)
-      .set('lng', loc.longitude)
-      .set('date', dateKey)
-      .set('tz', loc.timezone);
-
-    this.http.get<any>('https://api.sunrise-sunset.org/v2', { params: solar }).subscribe({
-      next: data => {
-        const r = data ?? {};
-        this.solarWindows.set({
-          sunrise: r.sunrise ?? null,
-          sunset: r.sunset ?? null,
-          goldenMorning: r.golden_hour?.morning?.begin ?? null,
-          goldenEvening: r.golden_hour?.evening?.begin ?? null,
-          blueMorning: r.blue_hour?.morning?.begin ?? null,
-          blueEvening: r.blue_hour?.evening?.begin ?? null
-        });
-        this.isLoading.set(false);
-      },
-      error: () => this.isLoading.set(false)
+    const context = this.engine.buildContext(loc, date);
+    this.solarWindows.set({
+      sunrise: context.solar.sunrise ? context.solar.sunrise.toISOString() : null,
+      sunset: context.solar.sunset ? context.solar.sunset.toISOString() : null,
+      goldenMorning: context.solar.goldenMorning.start ? context.solar.goldenMorning.start.toISOString() : null,
+      goldenEvening: context.solar.goldenEvening.start ? context.solar.goldenEvening.start.toISOString() : null,
+      blueMorning: context.solar.blueMorning.start ? context.solar.blueMorning.start.toISOString() : null,
+      blueEvening: context.solar.blueEvening.start ? context.solar.blueEvening.start.toISOString() : null
     });
+    this.activeTimezone = loc.timezone;
+    this.isLoading.set(false);
+
   }
 
   formatTime(value: string | null, timezone?: string): string {
@@ -107,7 +101,8 @@ export class WorldEventsService {
     const entries = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha']
       .map(name => ({ name, time: this.prayerTimes()[name] }))
       .filter(x => !!x.time);
-    const minutesNow = now.getHours() * 60 + now.getMinutes();
+    const localParts = new Intl.DateTimeFormat('en-US', { timeZone: this.activeTimezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+    const minutesNow = Number(localParts.find(p => p.type === 'hour')?.value ?? 0) * 60 + Number(localParts.find(p => p.type === 'minute')?.value ?? 0);
     for (const p of entries) {
       const [h,m] = p.time.split(':').map(Number);
       if (h * 60 + m >= minutesNow) return { name:p.name, time:p.time };

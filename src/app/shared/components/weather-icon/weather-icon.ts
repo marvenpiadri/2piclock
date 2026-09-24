@@ -21,10 +21,11 @@ export class WeatherIconComponent {
   readonly icon = input<string | undefined>();
   readonly label = input<string>('Weather');
   readonly size = input<WeatherIconSize>('md');
+  readonly isDay = input<boolean>(true);
   readonly pixelSize: Record<WeatherIconSize, number> = { sm: 24, md: 40, lg: 72 };
 
   iconUrl(): string {
-    const slug = this.normalizeSlug(this.icon() || this.mapCondition(this.condition()));
+    const slug = this.normalizeSlug(this.icon() || this.mapCondition(this.condition(), this.isDay()));
     return `${CDN}/${slug}.svg`;
   }
 
@@ -40,7 +41,7 @@ export class WeatherIconComponent {
     return aliases[raw] || raw;
   }
 
-  private mapCondition(condition: string): string {
+  private mapCondition(condition: string, isDay: boolean): string {
     const c = (condition || '').toLowerCase();
     if (c.includes('severe') && c.includes('thunder')) return 'thunderstorms-day-extreme-rain';
     if (c.includes('thunder')) return 'thunderstorms-day-rain';
@@ -56,8 +57,8 @@ export class WeatherIconComponent {
     if (c.includes('haze')) return 'haze';
     if (c.includes('overcast')) return 'overcast';
     if (c.includes('cloud')) return 'cloudy';
-    if (c.includes('partly')) return 'partly-cloudy-day';
-    if (c.includes('clear') || c.includes('sunny')) return 'clear-day';
+    if (c.includes('partly')) return isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
+    if (c.includes('clear') || c.includes('sunny')) return isDay ? 'clear-day' : 'clear-night';
     return 'not-available';
   }
 }

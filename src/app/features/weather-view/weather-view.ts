@@ -14,10 +14,12 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
-import { Map as MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
 import { WeatherService } from '../../core/services/weather.service';
+import { GeocodingService } from '../../core/services/geocoding.service';
+import { MapBackboneService } from '../../core/services/map-backbone.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { WeatherBarChartComponent } from '../../shared/components';
 
@@ -109,6 +111,8 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly http = inject(HttpClient);
   private readonly locationService = inject(LocationService);
+  private readonly geocodingService = inject(GeocodingService);
+  private readonly mapBackbone = inject(MapBackboneService);
   private readonly timeControl = inject(TimeControlService);
   readonly weatherService = inject(WeatherService);
 
@@ -116,6 +120,10 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   readonly allPresets = this.locationService.allPresets;
   readonly activeDate = this.timeControl.currentActiveDate;
   readonly liveWeather = this.weatherService.currentWeather;
+  readonly locationSearchQuery = signal('');
+  readonly locationSearchResults = signal<GeoLocation[]>([]);
+  readonly isLocationSearching = signal(false);
+  private locationSearchTimer?: ReturnType<typeof setTimeout>;
 
   // Active state signals
   readonly activeLayer = signal<WeatherLayer>('wind');
@@ -260,25 +268,21 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
-
     const loc = this.selectedLocation();
     // Keep the compact current-weather telemetry in sync without making the
     // global application shell fetch weather for unrelated routes.
     this.weatherService.fetchWeatherForLocation(loc);
 
-    this.map = new MapLibreMap({
-      container: this.mapContainer.nativeElement,
-      style: 'https://tiles.openfreemap.org/styles/dark',
-      center: [loc.longitude, loc.latitude],
-      zoom: 6.2,
-      attributionControl: { compact: true }
-    });
-
-    this.map.addControl(new NavigationControl({ showCompass: true, showZoom: true }), 'top-right');
+    this.map = this.mapBackbone.createMap(
+      this.mapContainer.nativeElement,
+      [loc.longitude, loc.latitude],
+      6.2,
+      'weather'
+    );
 
     this.map.on('load', () => {
       this.installWeatherSource();
+      this.installCountryPins();
       this.loadParticles();
       this.resizeCanvas();
       if (this.isWindLayer()) this.startAnimation();
@@ -319,6 +323,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     if (this.playIntervalId) clearInterval(this.playIntervalId);
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
     this.resizeObserver?.disconnect();
+    if (this.locationSearchTimer) clearTimeout(this.locationSearchTimer);
     this.map?.remove();
   }
 
@@ -379,6 +384,30 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     this.forecastIndex.set(next);
     this.updateWeatherSource();
     this.refreshSpotAtCurrentIndex();
+  }
+
+  onLocationSearch(value: string): void {
+    this.locationSearchQuery.set(value);
+    if (this.locationSearchTimer) clearTimeout(this.locationSearchTimer);
+    if (value.trim().length < 2) {
+      this.locationSearchResults.set([]);
+      return;
+    }
+    this.isLocationSearching.set(true);
+    this.locationSearchTimer = setTimeout(() => {
+      this.geocodingService.search(value, 8).subscribe(results => {
+        this.locationSearchResults.set(results);
+        this.isLocationSearching.set(false);
+      });
+    }, 220);
+  }
+
+  selectSearchLocation(loc: GeoLocation): void {
+    this.locationSearchQuery.set(loc.name);
+    this.locationSearchResults.set([]);
+    this.locationService.selectLocation(loc);
+    this.map?.flyTo({ center: [loc.longitude, loc.latitude], zoom: 6.8, duration: 850 });
+    this.scheduleGridFetch(loc, true);
   }
 
   centerLocation(): void {
@@ -589,6 +618,45 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     return points;
   }
 
+  private installCountryPins(): void {
+    if (!this.map) return;
+    this.geocodingService.getCountries().subscribe(countries => {
+      if (!this.map) return;
+      const data = {
+        type: 'FeatureCollection',
+        features: countries.map(loc => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [loc.longitude, loc.latitude] },
+          properties: { id: loc.id, name: loc.country, flag: loc.flag }
+        }))
+      };
+      if (!this.map.getSource('weather-country-pins')) {
+        this.map.addSource('weather-country-pins', { type: 'geojson', data: data as any });
+        this.map.addLayer({
+          id: 'weather-country-pins',
+          type: 'circle',
+          source: 'weather-country-pins',
+          minzoom: 1,
+          maxzoom: 4,
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2, 3.5, 3],
+            'circle-color': '#fbbf24',
+            'circle-opacity': 0.72,
+            'circle-stroke-color': '#0a1628',
+            'circle-stroke-width': 1
+          }
+        });
+        this.map.on('click', 'weather-country-pins', event => {
+          const id = event.features?.[0]?.properties?.['id'];
+          const loc = countries.find(country => country.id === id);
+          if (loc) this.selectSearchLocation(loc);
+        });
+      } else {
+        (this.map.getSource('weather-country-pins') as GeoJSONSource).setData(data as any);
+      }
+    });
+  }
+
   private installWeatherSource(): void {
     if (!this.map || !this.map.isStyleLoaded()) return;
 
@@ -604,7 +672,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
         source: 'weather-field',
         paint: {
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 38, 7, 65, 10, 110],
-          'circle-opacity': 0.38,
+          'circle-opacity': 0.06,
           'circle-blur': 0.92,
           'circle-color': '#f59e0b'
         }
@@ -631,6 +699,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     });
 
     if (this.map.getLayer('weather-field-heat')) {
+      this.map.setPaintProperty('weather-field-heat', 'circle-opacity', this.isWindLayer() ? 0 : 0.08);
       this.map.setPaintProperty(
         'weather-field-heat',
         'circle-color',
@@ -743,9 +812,9 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     const ctx = this.particleContext;
     if (!ctx || !this.map) return;
 
-    // Semi-transparent trailing black fill gives Windy's fluid trail motion blur
-    ctx.fillStyle = 'rgba(5, 8, 13, 0.15)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // The canvas is a transparent velocity layer. Never paint a background over
+    // the map; the map remains the visual base and the particles sit above it.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!this.isWindLayer()) return;
 
@@ -755,7 +824,7 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     const altitudeMult = this.activeAltitude() === '300hpa' ? 2.8 : this.activeAltitude() === '500hpa' ? 2.0 : 1.0;
     const stepHours = (dtMs / 3600000) * this.particleSpeed() * 3.8 * altitudeMult;
 
-    ctx.lineWidth = 1.35;
+    ctx.lineWidth = 1.0;
     ctx.lineCap = 'round';
 
     for (const particle of this.particles) {
@@ -787,19 +856,20 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
       }
 
       // Windy-style velocity-based dynamic particle stroke color
+      ctx.globalAlpha = 0.72;
       ctx.strokeStyle = this.getVelocityColor(wind.windSpeed);
       ctx.beginPath();
       ctx.moveTo(before.x, before.y);
       ctx.lineTo(after.x, after.y);
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
   }
 
   private fadeCanvas(): void {
     const ctx = this.particleContext;
     if (ctx) {
-      ctx.fillStyle = 'rgba(5, 8, 13, 0.08)';
-      ctx.fillRect(0, 0, this.particleCanvas.nativeElement.width, this.particleCanvas.nativeElement.height);
+      ctx.clearRect(0, 0, this.particleCanvas.nativeElement.width, this.particleCanvas.nativeElement.height);
     }
   }
 

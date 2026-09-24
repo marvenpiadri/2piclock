@@ -97,7 +97,7 @@ export class WorldEventsService {
   timezoneOffsetMinutes(date: Date, timezone: string): number {
     const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'longOffset' }).formatToParts(date);
     const value = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT';
-    const m = value.match(/GMT([+-])(\\d{2}):(\\d{2})/);
+    const m = value.match(/GMT([+-])(\d{2}):(\d{2})/);
     if (!m) return 0;
     const minutes = Number(m[2]) * 60 + Number(m[3]);
     return m[1] === '-' ? -minutes : minutes;

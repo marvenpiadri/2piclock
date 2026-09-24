@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';

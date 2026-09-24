@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
+import { WorldEventsService } from '../../core/services/world-events.service';
 
 @Component({
   selector: 'app-sky-home',
@@ -40,6 +41,7 @@ export class SkyHomeComponent {
   private locationService = inject(LocationService);
   readonly weatherService = inject(WeatherService);
   private observatoryViewService = inject(ObservatoryViewService);
+  readonly worldEvents = inject(WorldEventsService);
   private title = inject(Title);
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
@@ -235,6 +237,11 @@ export class SkyHomeComponent {
     effect(() => {
       const location = this.selectedLocation();
       this.weatherService.fetchWeatherForLocation(location);
+    });
+
+    effect(() => {
+      const location = this.selectedLocation();
+      if (this.skyPage === 'world') this.worldEvents.loadForLocation(location, this.activeDate());
     });
 
     effect(() => {

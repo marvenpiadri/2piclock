@@ -776,3 +776,45 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Live observatory overview */
+.observatory-overview{display:flex;flex-direction:column;gap:16px}
+.observatory-hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:24px 26px;border:1px solid rgba(245,158,11,.24);border-radius:20px;background:radial-gradient(circle at 15% 10%,rgba(245,158,11,.13),transparent 42%),rgba(8,10,14,.82);backdrop-filter:blur(18px)}
+.observatory-kicker{font:700 9px monospace;letter-spacing:.16em;color:#fbbf24}
+.observatory-copy h2{margin:7px 0 5px;font:800 clamp(22px,3vw,34px)/1.1 system-ui,sans-serif;color:#f8fafc;letter-spacing:-.03em}
+.observatory-copy p{margin:0;font:11px/1.5 monospace;color:#94a3b8}
+.observatory-time{min-width:170px;text-align:right}
+.observatory-time span,.observatory-time small{display:block;font:700 8px monospace;color:#64748b;letter-spacing:.08em}
+.observatory-time strong{display:block;margin:4px 0;font:900 30px/1 monospace;color:#fbbf24}
+.observatory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.observatory-card{min-height:145px;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(10,10,12,.72);display:flex;flex-direction:column;gap:7px}
+.obs-card-head{display:flex;justify-content:space-between;align-items:center;font:700 9px monospace;color:#64748b;letter-spacing:.1em}
+.obs-card-head mat-icon{font-size:17px;width:17px;height:17px;color:#fbbf24}
+.observatory-card>strong{font:900 21px/1.15 monospace;color:#f8fafc}
+.observatory-card>small{min-height:30px;font:9px/1.45 monospace;color:#94a3b8}
+.obs-meter{height:5px;margin-top:auto;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.obs-meter i{display:block;height:100%;border-radius:inherit;background:#f59e0b}
+.moon-meter i{background:#38bdf8}
+.obs-times{display:flex;gap:14px;margin-top:auto}
+.obs-times span{font:700 8px monospace;color:#64748b}
+.obs-times b{display:block;margin-top:3px;color:#cbd5e1}
+.sky-horizon-panel{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(7,9,13,.82)}
+.sky-horizon-head{display:flex;justify-content:space-between;margin-bottom:8px;font:700 9px monospace;color:#94a3b8;letter-spacing:.1em}
+.sky-horizon-head small{font-weight:400;color:#64748b}
+.sky-horizon{height:270px;position:relative;overflow:hidden;border-radius:14px;background:radial-gradient(ellipse at 50% 105%,rgba(245,158,11,.14),transparent 52%),linear-gradient(180deg,rgba(30,41,59,.28),rgba(2,6,23,.75))}
+.sky-horizon:before{content:"";position:absolute;left:8%;right:8%;bottom:-72%;height:160%;border:1px solid rgba(255,255,255,.08);border-radius:50% 50% 0 0}
+.horizon-line{position:absolute;left:3%;right:3%;bottom:12%;height:1px;background:rgba(255,255,255,.2)}
+.horizon-label{position:absolute;font:700 8px monospace;color:#64748b}
+.horizon-n{left:50%;top:8%}.horizon-e{right:3%;bottom:10%}.horizon-s{left:50%;bottom:3%}.horizon-w{left:3%;bottom:10%}
+.celestial-marker{position:absolute;transform:translate(-50%,50%);display:flex;flex-direction:column;align-items:center;gap:5px;font:700 8px monospace}
+.celestial-marker i{display:block;width:13px;height:13px;border-radius:50%;box-shadow:0 0 20px currentColor}
+.sun-marker{color:#fbbf24}.sun-marker i{background:#ffd76a}
+.moon-marker{color:#7dd3fc}.moon-marker i{background:#e2e8f0}
+.horizon-scale{display:flex;justify-content:space-between;padding:7px 2px 0;font:8px monospace;color:#64748b}
+.observatory-actions{display:flex;flex-wrap:wrap;gap:8px}
+.observatory-actions button{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.04);color:#cbd5e1;font:700 9px monospace;cursor:pointer}
+.observatory-actions button:hover{border-color:rgba(245,158,11,.35);color:#fbbf24;background:rgba(245,158,11,.08)}
+.observatory-actions mat-icon{font-size:15px;width:15px;height:15px}
+@media (max-width:900px){.observatory-grid{grid-template-columns:1fr 1fr}.observatory-hero{grid-template-columns:1fr}.observatory-time{text-align:left}}
+@media (max-width:560px){.observatory-grid{grid-template-columns:1fr}.sky-horizon{height:220px}}

@@ -24,9 +24,9 @@
   --2pi-night: #05070c;
   --2pi-canvas: #07090e;
   --2pi-surface: rgba(13, 17, 24, 0.78);
-  --2pi-surface-solid: #0d1118;
-  --2pi-surface-elevated: rgba(20, 26, 38, 0.82);
-  --2pi-surface-input: rgba(8, 11, 17, 0.75);
+  --2pi-surface-solid: #0d0d0f;
+  --2pi-surface-elevated: rgba(18, 18, 20, 0.88);
+  --2pi-surface-input: rgba(10, 10, 11, 0.82);
   
   /* Borders & Dividers */
   --2pi-border: rgba(255, 255, 255, 0.08);

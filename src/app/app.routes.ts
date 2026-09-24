@@ -4,7 +4,6 @@ import { WorldClocksComponent } from './features/world-clocks/world-clocks';
 import { WorldViewComponent } from './shared/components/world-view/world-view';
 import { CelestialEphemerisComponent } from './features/celestial-ephemeris/celestial-ephemeris';
 import { WeatherAtmosphereComponent } from './features/weather-atmosphere/weather-atmosphere';
-import { WeatherComingSoonComponent } from './features/weather-coming-soon/weather-coming-soon';
 import { MeetingPlannerComponent } from './features/meeting-planner/meeting-planner';
 import { SpaceViewComponent } from './shared/components/space-view/space-view';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
@@ -42,18 +41,18 @@ export const routes: Routes = [
 
   // Astronomy Suite routes
   { path: 'astronomy-tools', redirectTo: 'astronomy', pathMatch: 'full' },
-  { path: 'solar-calculator', redirectTo: 'astronomy-tools?tab=solar', pathMatch: 'full' },
-  { path: 'daylight-calculator', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
-  { path: 'sunrise', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
-  { path: 'sunset', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
-  { path: 'golden-hour', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
-  { path: 'twilight', redirectTo: 'astronomy-tools?tab=daylight', pathMatch: 'full' },
-  { path: 'moon-calculator', redirectTo: 'astronomy-tools?tab=moon', pathMatch: 'full' },
-  { path: 'moon-phase', redirectTo: 'astronomy-tools?tab=moon', pathMatch: 'full' },
-  { path: 'moonrise', redirectTo: 'astronomy-tools?tab=moon', pathMatch: 'full' },
-  { path: 'moonset', redirectTo: 'astronomy-tools?tab=moon', pathMatch: 'full' },
-  { path: 'astronomical-events', redirectTo: 'astronomy-tools?tab=events', pathMatch: 'full' },
-  { path: 'when-is', redirectTo: 'astronomy-tools?tab=events', pathMatch: 'full' },
+  { path: 'solar-calculator', redirectTo: 'astronomy?tab=solar', pathMatch: 'full' },
+  { path: 'daylight-calculator', redirectTo: 'astronomy?tab=daylight', pathMatch: 'full' },
+  { path: 'sunrise', redirectTo: 'astronomy?tab=daylight', pathMatch: 'full' },
+  { path: 'sunset', redirectTo: 'astronomy?tab=daylight', pathMatch: 'full' },
+  { path: 'golden-hour', redirectTo: 'astronomy?tab=daylight', pathMatch: 'full' },
+  { path: 'twilight', redirectTo: 'astronomy?tab=daylight', pathMatch: 'full' },
+  { path: 'moon-calculator', redirectTo: 'astronomy?tab=moon', pathMatch: 'full' },
+  { path: 'moon-phase', redirectTo: 'astronomy?tab=moon', pathMatch: 'full' },
+  { path: 'moonrise', redirectTo: 'astronomy?tab=moon', pathMatch: 'full' },
+  { path: 'moonset', redirectTo: 'astronomy?tab=moon', pathMatch: 'full' },
+  { path: 'astronomical-events', redirectTo: 'astronomy?tab=events', pathMatch: 'full' },
+  { path: 'when-is', redirectTo: 'astronomy?tab=events', pathMatch: 'full' },
 
   // World & Space routes
   { path: 'world', component: WorldViewComponent },

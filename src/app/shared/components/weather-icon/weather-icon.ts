@@ -8,7 +8,6 @@ export type WeatherIconSize = 'sm' | 'md' | 'lg';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <i
-      class="wi"
       [class]="iconClass()"
       [attr.aria-label]="label()"
       [style.font-size]="sizeMap[size()]"
@@ -30,7 +29,7 @@ export class WeatherIconComponent {
   readonly sizeMap: Record<WeatherIconSize, string> = { sm: '1rem', md: '1.45rem', lg: '2.6rem' };
 
   iconClass(): string {
-    return this.icon() || this.mapCondition(this.condition());
+    return 'wi ' + (this.icon() || this.mapCondition(this.condition()));
   }
 
   private mapCondition(condition: string): string {

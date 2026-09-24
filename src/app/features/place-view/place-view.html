@@ -30,6 +30,10 @@
     <section class="place-section">
       <div class="section-heading"><div><span class="section-kicker">CALCULATIONS</span><h2>Tools for {{ loc.name }}</h2></div></div>
       <div class="tool-grid">
+        <a class="tool-link" [routerLink]="['/time', loc.id]"><span>Time in {{ loc.name }}</span><small>Live local time, UTC offset & daylight</small></a>
+        <a class="tool-link" [routerLink]="['/sun', loc.id]"><span>Sun in {{ loc.name }}</span><small>Sunrise, sunset & the visual solar path</small></a>
+        <a class="tool-link" [routerLink]="['/moon', loc.id]"><span>Moon in {{ loc.name }}</span><small>Moon phase, illumination & position</small></a>
+        <a class="tool-link" [routerLink]="['/tonight', loc.id]"><span>Tonight in {{ loc.name }}</span><small>Twilight, Moon & atmospheric conditions</small></a>
         <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'solar',loc:loc.id}"><span>Solar Calculator</span><small>Sun position, solar noon & trajectory</small></a>
         <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'daylight',loc:loc.id}"><span>Daylight Calculator</span><small>Day length, twilight & golden hour</small></a>
         <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'moon',loc:loc.id}"><span>Moon Calculator</span><small>Phase, illumination & lunar position</small></a>

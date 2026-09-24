@@ -571,6 +571,17 @@
           </article>
 
           <article class="world-event-card">
+            <span class="world-event-kicker">CROSS-BORDER TIME</span>
+            <strong>{{ worldEvents.timezoneOffsetMinutes(activeDate(), selectedLocation().timezone) / 60 }}h</strong>
+            <span>UTC offset · {{ selectedLocation().timezone }}</span>
+            <div class="world-event-mini">
+              <span>Compare with UTC</span>
+              <span>Political clock</span>
+            </div>
+            <small>Computed from the IANA timezone database</small>
+          </article>
+
+          <article class="world-event-card">
             <span class="world-event-kicker">GOLDEN / BLUE HOUR</span>
             <strong>{{ worldEvents.formatTime(worldEvents.solarWindows().goldenEvening, selectedLocation().timezone) }}</strong>
             <span>Evening golden hour</span>

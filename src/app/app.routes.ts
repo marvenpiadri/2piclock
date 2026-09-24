@@ -11,6 +11,7 @@ import { TimeSuiteComponent } from './features/time-suite/time-suite';
 import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
 import { WorldRadioComponent } from './features/world-radio/world-radio';
 import { PlaceViewComponent } from './features/place-view/place-view';
+import { SeoPlaceToolComponent } from './features/seo-place-tool/seo-place-tool';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'sky', pathMatch: 'full' },
@@ -52,6 +53,10 @@ export const routes: Routes = [
   { path: 'weather', component: WeatherComingSoonComponent },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
+  { path: 'time/:slug', component: SeoPlaceToolComponent, data: { tool: 'time' } },
+  { path: 'sun/:slug', component: SeoPlaceToolComponent, data: { tool: 'sun' } },
+  { path: 'moon/:slug', component: SeoPlaceToolComponent, data: { tool: 'moon' } },
+  { path: 'tonight/:slug', component: SeoPlaceToolComponent, data: { tool: 'tonight' } },
   { path: 'place/:slug', component: PlaceViewComponent },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
   { path: '**', redirectTo: 'sky' }

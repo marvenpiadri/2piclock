@@ -200,3 +200,66 @@
 .sky-report .weather-stats > div {
   border-color: rgba(255,255,255,.14);
 }
+
+
+/* Environmental deck refinement: calm hierarchy, less dashboard density. */
+.environmental-deck {
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(8,11,17,.82), rgba(10,12,16,.68));
+  box-shadow: 0 20px 55px rgba(0,0,0,.22);
+}
+.deck-header { padding: 14px 16px 11px; }
+.deck-title-row h2 { font-size: 17px; letter-spacing: -.02em; }
+.deck-subtitle { color: #c4ccd8; }
+.deck-nav-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  padding: 5px 8px;
+  background: rgba(7,10,15,.92);
+  backdrop-filter: blur(14px);
+}
+.deck-nav-tabs button {
+  min-height: 34px;
+  flex-direction: row;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 5px;
+  font-size: 9px;
+}
+.deck-nav-tabs button.active {
+  background: rgba(245,158,11,.14);
+  color: #fbbf24;
+  box-shadow: inset 0 -1px 0 #f59e0b;
+}
+.deck-scroll-container { padding: 14px 16px 42px; }
+.deck-weather-hero {
+  min-height: 112px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(56,189,248,.12), transparent 32%),
+    rgba(18,21,28,.48);
+}
+.deck-weather-main { align-items: center; gap: 13px; }
+.deck-temperature-readout .temp-val { font-size: 42px; }
+.deck-weather-desc h3 { font-size: 16px; }
+.deck-hero-icon { flex: 0 0 52px; width: 52px; height: 52px; }
+.deck-metrics-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+.deck-metric-card {
+  min-height: 66px;
+  padding: 9px 10px;
+  background: rgba(15,18,24,.48);
+}
+.deck-metric-card strong { font-size: 14px; }
+.metric-label { font-size: 8px; color: #c5cfdb; }
+.deck-banner-card { margin-top: 2px; }
+.deck-hourly-strip { gap: 5px; }
+.deck-hour-item { min-width: 58px; }
+@media(max-width:1100px) {
+  .deck-metrics-grid { grid-template-columns: repeat(3,1fr); }
+}
+@media(max-width:650px) {
+  .deck-nav-tabs button span { display: none; }
+  .deck-metrics-grid { grid-template-columns: repeat(2,1fr); }
+}

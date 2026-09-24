@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { RadioService, CURATED_GLOBAL_STATIONS } from '../../core/services/radio.service';
+import { RadioService } from '../../core/services/radio.service';
 import { RadioStation } from '../../core/models/radio.model';
 import { LocationService } from '../../core/services/location.service';
 import { TimeControlService } from '../../core/services/time-control.service';
@@ -112,7 +112,7 @@ export class WorldRadioComponent implements OnInit {
 
   // Map representation coordinates
   readonly mapStations = computed(() => {
-    return this.allCuratedStations.map(s => {
+    return this.allCuratedStations().map(s => {
       // Equirectangular projection coordinates
       const xPercent = ((s.longitude + 180) / 360) * 100;
       const yPercent = ((90 - s.latitude) / 180) * 100;
@@ -140,7 +140,7 @@ export class WorldRadioComponent implements OnInit {
         this.onSearchChange();
       }
       if (params['play']) {
-        const target = this.allCuratedStations.find(s => s.id === params['play'] || s.city.toLowerCase() === params['play'].toLowerCase());
+        const target = this.allCuratedStations().find(s => s.id === params['play'] || s.city.toLowerCase() === params['play'].toLowerCase());
         if (target) {
           this.radioService.playStation(target);
         }

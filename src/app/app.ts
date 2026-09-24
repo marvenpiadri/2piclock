@@ -46,7 +46,6 @@ export interface NavCategory {
 })
 export class App {
   private readonly document = inject(DOCUMENT);
-  private readonly document = inject(DOCUMENT);
   private locationService = inject(LocationService);
   private celestialService = inject(CelestialService);
   private geocodingService = inject(GeocodingService);

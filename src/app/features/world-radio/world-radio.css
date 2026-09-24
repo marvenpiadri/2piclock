@@ -747,3 +747,16 @@
   color: #ffffff;
   margin: 0 0 4px;
 }
+
+
+.radio-map-canvas {
+  position: relative;
+  width: 100%;
+  height: min(68vh, 720px);
+  min-height: 520px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  background: #0a1628;
+}
+.radio-map-canvas .maplibregl-canvas { outline: none; }

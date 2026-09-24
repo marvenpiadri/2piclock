@@ -65,7 +65,7 @@ export class App {
   readonly currentRoute = signal<string>('/');
   readonly showReactiveSky = computed(() => {
     const url = this.currentRoute();
-    return url === '/' || url === '/now' || url === '/weather' || url === '/tonight' || url.startsWith('/sky');
+    return url === '/' || url === '/now' || url === '/weather' || url === '/tonight' || /^\/[a-z0-9-]+(?:\/weather|\/time|\/tonight)?(?:\?.*)?$/.test(url) || url.startsWith('/sky');
   });
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute();
@@ -150,7 +150,7 @@ export class App {
       items: [
         {
           label: 'Sky Window & 2Pi Dial',
-          path: '/now',
+          path: '/',
           view: 'sky',
           desc: 'Living horizon simulation, diurnal radian vector, and optical twilight gradient.',
           icon: 'radio_button_checked',
@@ -165,7 +165,7 @@ export class App {
         },
         {
           label: 'Lunar Phase & "When Is?"',
-          path: '/astronomy-tools',
+          path: '/astronomy',
           desc: 'Geometric Moon phase terminator, next lunar milestones, and astronomical events.',
           icon: 'nightlight_round'
         }

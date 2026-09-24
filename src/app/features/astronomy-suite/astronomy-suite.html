@@ -144,13 +144,13 @@
             <div class="horizon-label horizon-s">S</div>
             <div class="horizon-label horizon-w">W</div>
             <div class="celestial-marker sun-marker"
-              [style.left.%]="Math.max(4, Math.min(96, solarResult().solarPos.azimuthDeg / 360 * 100))"
-              [style.bottom.%]="Math.max(5, Math.min(90, (solarResult().solarPos.altitudeDeg + 5) / 95 * 100))">
+              [style.left.%]="horizonLeft(solarResult().solarPos.azimuthDeg)"
+              [style.bottom.%]="horizonBottom(solarResult().solarPos.altitudeDeg)">
               <i></i><span>Sun</span>
             </div>
             <div class="celestial-marker moon-marker"
-              [style.left.%]="Math.max(4, Math.min(96, moonResult().lunarPos.azimuthDeg / 360 * 100))"
-              [style.bottom.%]="Math.max(5, Math.min(90, (moonResult().lunarPos.altitudeDeg + 5) / 95 * 100))">
+              [style.left.%]="horizonLeft(moonResult().lunarPos.azimuthDeg)"
+              [style.bottom.%]="horizonBottom(moonResult().lunarPos.altitudeDeg)>
               <i></i><span>Moon</span>
             </div>
           </div>

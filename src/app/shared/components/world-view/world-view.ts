@@ -586,12 +586,6 @@ export class WorldViewComponent implements OnInit, OnDestroy {
   private initMapLibreMap(): void {
     if (!this.globeContainerRef?.nativeElement) return;
 
-    try {
-      setWorkerUrl('/maplibre-gl-worker.mjs');
-    } catch {
-      // Ignore if already set or browser restrictions
-    }
-
     const loc = this.selectedLocation();
     this.lastLocationId = loc.id;
     const map = this.mapBackbone.createMap(

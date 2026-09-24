@@ -30,9 +30,13 @@ const angularApp = new AngularNodeAppEngine();
 // indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
   '/', '/weather', '/astronomy', '/tonight',
-  '/world', '/world-clocks', '/time',
-  '/radio', '/atmosphere', '/ephemeris',
-  '/planner', '/space'
+  '/world', '/world-clocks',
+  '/maps/clocks', '/maps/weather', '/maps/radio',
+  '/time/converter', '/time/difference', '/time/duration',
+  '/time/date-difference', '/time/add-subtract', '/time/countdown',
+  '/time/unix-timestamp', '/time/world-matrix',
+  '/radio/stations', '/radio/map', '/radio/favorites', '/radio/recent',
+  '/atmosphere', '/ephemeris', '/planner', '/space'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {

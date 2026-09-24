@@ -1,11 +1,9 @@
-<!-- Living Reactive Sky / Deep Space Substrate -->
-@switch (activeView()) {
-  @case ('space') {
-    <app-deep-space-backdrop></app-deep-space-backdrop>
-  }
-  @default {
-    <app-reactive-sky></app-reactive-sky>
-  }
+<!-- Living substrates are route-scoped so heavy canvas animation never runs
+     behind calculators, maps or other non-visual product pages. -->
+@if (showReactiveSky()) {
+  <app-reactive-sky></app-reactive-sky>
+} @else if (showDeepSpace()) {
+  <app-deep-space-backdrop></app-deep-space-backdrop>
 }
 
 <!-- Whole Page Glass Substrate Layer: Sits directly on top of living background graphics -->

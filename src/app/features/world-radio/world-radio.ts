@@ -142,6 +142,11 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
       const loc = this.locationService.selectedLocation();
       this.radioService.getStationsForLocation(loc.name, loc.country);
     });
+
+    effect(() => {
+      this.allStations();
+      if (this.activeTab() === 'map') setTimeout(() => this.updateRadioMapSource(), 0);
+    });
   }
 
   ngOnInit(): void {

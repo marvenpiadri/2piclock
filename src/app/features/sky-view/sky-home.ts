@@ -46,7 +46,12 @@ export class SkyHomeComponent {
   private meta = inject(Meta);
   private route = inject(ActivatedRoute);
 
-  readonly skyPage = (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
+  private readonly skyPageState = signal<'time' | 'weather' | 'astronomy' | 'tonight' | 'world'>(
+    (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
+  );
+  get skyPage(): 'time' | 'weather' | 'astronomy' | 'tonight' | 'world' {
+    return this.skyPageState();
+  }
 
   readonly activeView = this.observatoryViewService.activeView;
   readonly celestial = this.celestialService.celestialState;
@@ -223,6 +228,22 @@ export class SkyHomeComponent {
   ];
 
   constructor() {
+    // A single SkyHome component powers the location-first routes. The URL
+    // supplies both the location slug and the focused experience.
+    this.route.paramMap.subscribe(params => {
+      const slug = params.get('location');
+      const experience = params.get('experience') as string | null;
+      if (slug) {
+        const found = this.allPresets.find(loc => loc.id === slug);
+        if (found) this.locationService.selectLocation(found);
+      }
+
+      const routeExperience = experience && ['time', 'weather', 'astronomy', 'tonight', 'world'].includes(experience)
+        ? experience as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world'
+        : (this.route.snapshot.data['skyPage'] ?? 'time') as 'time' | 'weather' | 'astronomy' | 'tonight' | 'world';
+      this.skyPageState.set(routeExperience);
+    });
+
     // Sky is a weather-aware experience, so request weather only while this
     // route is mounted. Other product routes stay network-free.
     effect(() => {

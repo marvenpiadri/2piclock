@@ -775,14 +775,6 @@ export class RadioService {
   }
 
   getStationsForLocation(cityName: string, countryName?: string): RadioStation[] {
-    const normCity = cityName.toLowerCase();
-    const normCountry = (countryName || '').toLowerCase();
-    return CURATED_GLOBAL_STATIONS.filter(s => 
-      s.city.toLowerCase().includes(normCity) || 
-      (normCountry && s.country.toLowerCase().includes(normCountry))
-    );
-  }
-}  getStationsForLocation(cityName: string, countryName?: string): RadioStation[] {
     const city = cityName.trim();
     const country = (countryName || '').trim();
 

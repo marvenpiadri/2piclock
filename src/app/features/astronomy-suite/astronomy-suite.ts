@@ -39,7 +39,11 @@ export class AstronomySuiteComponent implements OnInit {
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<AstronomyTab>('solar');
   readonly selectedLocation = signal<GeoLocation>(this.allPresets[0]);
-  readonly selectedDate = signal<string>(new Date().toISOString().slice(0, 10));
+  readonly selectedDate = signal<string>(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: this.allPresets[0]?.timezone ?? 'UTC'
+    }).format(new Date())
+  );
   readonly selectedTime = signal<string>('12:00');
   readonly selectedYear = signal<number>(new Date().getFullYear());
   readonly copyNotification = signal<string | null>(null);

@@ -241,26 +241,6 @@
         <mat-icon class="text-base w-4 h-4 flex items-center justify-center">{{ isLocating() ? 'hourglass_empty' : 'my_location' }}</mat-icon>
       </button>
 
-      <!-- Atmospheric Soundscape Player -->
-      <app-asmr-player />
-
-      <!-- Whole Page Glass Substrate Toggle -->
-      <button 
-        type="button" 
-        (click)="glassThemeService.toggleGlassMode()"
-        class="p-2 rounded-xl border transition-all cursor-pointer shrink-0 hidden sm:flex items-center justify-center"
-        [class.bg-amber-500/20]="glassThemeService.isGlassEnabled()"
-        [class.text-amber-300]="glassThemeService.isGlassEnabled()"
-        [class.border-amber-400/40]="glassThemeService.isGlassEnabled()"
-        [class.bg-white/[0.06]]="!glassThemeService.isGlassEnabled()"
-        [class.text-slate-400]="!glassThemeService.isGlassEnabled()"
-        [class.border-white/10]="!glassThemeService.isGlassEnabled()"
-        [title]="glassThemeService.isGlassEnabled() ? 'Glass Theme: Frosted ON' : 'Glass Theme: Transparent OFF'">
-        <mat-icon class="text-base w-4 h-4 flex items-center justify-center">
-          {{ glassThemeService.isGlassEnabled() ? 'blur_on' : 'blur_off' }}
-        </mat-icon>
-      </button>
-
     </div>
   </header>
 

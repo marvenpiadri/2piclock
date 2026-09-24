@@ -26,7 +26,7 @@ import { RouterLink } from '@angular/router';
     WeatherAlertsModalComponent,
     AstronomicalEventsPanelComponent,
     SettingsModalComponent,
-    WeatherBarChartComponent,
+    WeatherBarChartComponent, WeatherIconComponent,
     RouterLink,
     CountryFlagComponent,
   ],

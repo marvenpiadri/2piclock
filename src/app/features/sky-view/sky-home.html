@@ -191,7 +191,7 @@
                         <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
                       </div>
                     </div>
-                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg"></app-weather-icon>
+                    <app-weather-icon class="deck-hero-icon" [condition]="weather().condition" [label]="weather().conditionLabel" [isDay]="weather().isDay" size="lg"></app-weather-icon>
                   </div>
 
                   <!-- 6-Metric Atmospheric Telemetry Grid -->
@@ -247,7 +247,7 @@
                       @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
                         <div class="deck-hour-item">
                           <span class="hour-time">{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                          <app-weather-icon class="hour-icon" [condition]="item.weather.condition" [label]="item.weather.conditionLabel" size="sm"></app-weather-icon>
+                          <app-weather-icon class="hour-icon" [condition]="item.weather.condition" [label]="item.weather.conditionLabel" [isDay]="item.weather.isDay" size="sm"></app-weather-icon>
                           <strong class="hour-temp">{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
                           <span class="hour-rain">{{ item.weather.precipitationPct }}%</span>
                         </div>
@@ -447,7 +447,7 @@
             <h2>{{ weather().conditionLabel }}</h2>
             <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
           </div>
-          <app-weather-icon class="weather-current-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg"></app-weather-icon>
+          <app-weather-icon class="weather-current-icon" [condition]="weather().condition" [label]="weather().conditionLabel" [isDay]="weather().isDay" size="lg"></app-weather-icon>
         </div>
 
         <div class="weather-stats">
@@ -479,7 +479,7 @@
             @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
               <div class="hour-item">
                 <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                <app-weather-icon [condition]="item.weather.condition" [label]="item.weather.conditionLabel" size="sm"></app-weather-icon>
+                <app-weather-icon [condition]="item.weather.condition" [label]="item.weather.conditionLabel" [isDay]="item.weather.isDay" size="sm"></app-weather-icon>
                 <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
                 <small>{{ item.weather.precipitationPct }}%</small>
               </div>

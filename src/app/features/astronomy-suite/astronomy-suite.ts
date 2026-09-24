@@ -47,7 +47,10 @@ export class AstronomySuiteComponent implements OnInit {
   readonly selectedTime = signal<string>('12:00');
   readonly selectedYear = signal<number>(new Date().getFullYear());
   readonly copyNotification = signal<string | null>(null);
-  readonly selectedHour = computed(() => parseInt(this.selectedTime().slice(0, 2), 10) || 12);
+  readonly selectedHour = computed(() => {
+    const hour = parseInt(this.selectedTime().slice(0, 2), 10);
+    return Number.isFinite(hour) ? Math.max(0, Math.min(23, hour)) : 12;
+  });
 
   // "When Is?" query selector
   readonly whenIsQuery = signal<'next-full-moon' | 'next-new-moon' | 'spring-equinox' | 'summer-solstice' | 'autumn-equinox' | 'winter-solstice' | 'solar-noon'>('next-full-moon');

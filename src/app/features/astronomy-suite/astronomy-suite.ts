@@ -38,10 +38,10 @@ export class AstronomySuiteComponent implements OnInit {
 
   readonly allPresets = this.locationService.allPresets;
   readonly activeTab = signal<AstronomyTab>('solar');
-  readonly selectedLocation = signal<GeoLocation>(this.allPresets[0]);
+  readonly selectedLocation = signal<GeoLocation>(this.locationService.selectedLocation());
   readonly selectedDate = signal<string>(
     new Intl.DateTimeFormat('en-CA', {
-      timeZone: this.allPresets[0]?.timezone ?? 'UTC'
+      timeZone: this.locationService.selectedLocation().timezone
     }).format(new Date())
   );
   readonly selectedTime = signal<string>('12:00');
@@ -95,6 +95,25 @@ export class AstronomySuiteComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.route.paramMap.subscribe(params => {
+      const slug = params.get('location');
+      if (slug) {
+        const found = this.allPresets.find(p => p.id === slug);
+        if (found) {
+          this.selectedLocation.set(found);
+          this.locationService.selectLocation(found);
+          this.selectedDate.set(new Intl.DateTimeFormat('en-CA', {
+            timeZone: found.timezone
+          }).format(new Date()));
+        }
+      }
+    });
+
+    this.route.data.subscribe(data => {
+      const tab = data['tab'];
+      if (tab && this.isValidTab(tab)) this.activeTab.set(tab as AstronomyTab);
+    });
+
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && this.isValidTab(params['tab'])) {
         this.activeTab.set(params['tab'] as AstronomyTab);

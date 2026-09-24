@@ -530,9 +530,20 @@ export function getCelestialState(
   // Atmospheric scattering intensity: 1.0 at high noon down to 0.0 in deep night
   const atmosphericScatteringIntensity = Math.min(1, Math.max(0, (alt + 12) / 30));
 
-  // Determine daylight progress (0 to 1 across 24 hours)
-  const hours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  const daylightProgress = (hours / 24) % 1;
+  // Determine progress through the selected location's local civil day.
+  const localParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hourCycle: 'h23'
+  }).formatToParts(date);
+  const localValue = (type: string) => Number(localParts.find(part => part.type === type)?.value ?? 0);
+  const hours = localValue('hour') + localValue('minute') / 60 + localValue('second') / 3600;
+  const daylightProgress = hours / 24;
 
   // Formatted local & UTC strings
   let localTimeString = '';
@@ -551,12 +562,15 @@ export function getCelestialState(
 
   utcTimeString = date.toISOString().slice(11, 19) + ' UTC';
 
-  // Day of year and season calculation
-  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const diff = date.getTime() - startOfYear.getTime();
-  const dayOfYear = Math.floor(diff / 86400000) + 1;
+  // Day of year and season follow the selected location's civil date.
+  const localYear = localValue('year');
+  const localMonth = localValue('month');
+  const localDay = localValue('day');
+  const startOfYear = new Date(Date.UTC(localYear, 0, 1));
+  const localDateCarrier = new Date(Date.UTC(localYear, localMonth - 1, localDay));
+  const dayOfYear = Math.floor((localDateCarrier.getTime() - startOfYear.getTime()) / 86400000) + 1;
 
-  const month = date.getUTCMonth(); // 0 to 11
+  const month = localMonth - 1; // 0 to 11
   let season: 'spring' | 'summer' | 'autumn' | 'winter' = 'spring';
   const isNorthern = lat >= 0;
 

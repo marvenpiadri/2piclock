@@ -4,6 +4,8 @@ export type WeatherCondition =
   | 'cloudy'
   | 'overcast'
   | 'drizzle'
+  | 'freezing_rain'
+  | 'hail'
   | 'rain'
   | 'heavy_rain'
   | 'thunderstorm'

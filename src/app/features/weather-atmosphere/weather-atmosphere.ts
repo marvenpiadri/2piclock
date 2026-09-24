@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { WeatherService } from '../../core/services/weather.service';
 import { CelestialService } from '../../core/services/celestial.service';
 import { WeatherCondition } from '../../core/models/weather.model';
-import { WeatherAggressivenessVisualizerComponent, CountryFlagComponent } from '../../shared/components';
+import { WeatherAggressivenessVisualizerComponent, CountryFlagComponent, WeatherIconComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-weather-atmosphere',
@@ -13,7 +13,8 @@ import { WeatherAggressivenessVisualizerComponent, CountryFlagComponent } from '
     CommonModule, 
     MatIconModule, 
     WeatherAggressivenessVisualizerComponent,
-    CountryFlagComponent
+    CountryFlagComponent,
+    WeatherIconComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './weather-atmosphere.html',

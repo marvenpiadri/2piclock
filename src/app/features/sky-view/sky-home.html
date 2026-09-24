@@ -47,19 +47,19 @@
 
   <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
   <nav class="sky-navigation" aria-label="Sky Sub-Views">
-    <a routerLink="/now" [class.active]="skyPage === 'time'">
+    <a [routerLink]="['/', selectedLocation().id]" [class.active]="skyPage === 'time'">
       <mat-icon class="text-sm">schedule</mat-icon>
       <span>Now</span>
     </a>
-    <a routerLink="/weather" [class.active]="skyPage === 'weather'">
+    <a [routerLink]="['/', selectedLocation().id, 'weather']" [class.active]="skyPage === 'weather'">
       <mat-icon class="text-sm">cloud</mat-icon>
       <span>Weather</span>
     </a>
-    <a routerLink="/astronomy" [class.active]="skyPage === 'astronomy'">
+    <a [routerLink]="['/', selectedLocation().id, 'astronomy']" [class.active]="skyPage === 'astronomy'">
       <mat-icon class="text-sm">auto_awesome</mat-icon>
       <span>Astronomy</span>
     </a>
-    <a routerLink="/tonight" [class.active]="skyPage === 'tonight'">
+    <a [routerLink]="['/', selectedLocation().id, 'tonight']" [class.active]="skyPage === 'tonight'">
       <mat-icon class="text-sm">dark_mode</mat-icon>
       <span>Tonight</span>
     </a>
@@ -534,7 +534,7 @@
 
         <div class="astronomy-actions">
           <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
-          <a routerLink="/now" class="secondary-report-button">Back to Now <mat-icon>arrow_forward</mat-icon></a>
+          <a [routerLink]="['/', selectedLocation().id]" class="secondary-report-button">Back to Now <mat-icon>arrow_forward</mat-icon></a>
         </div>
       </section>
     }

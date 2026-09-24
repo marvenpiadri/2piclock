@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { Routes, CanActivateFn, Router, inject } from '@angular/router';
+import { LocationService } from './core/services/location.service';
 import { SkyHomeComponent } from './features/sky-view/sky-home';
 import { WorldClocksComponent } from './features/world-clocks/world-clocks';
 import { WorldViewComponent } from './shared/components/world-view/world-view';
@@ -9,12 +10,20 @@ import { SpaceViewComponent } from './shared/components/space-view/space-view';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
 import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
 import { WorldRadioComponent } from './features/world-radio/world-radio';
-import { PlaceViewComponent } from './features/place-view/place-view';
 import { SeoPlaceToolComponent } from './features/seo-place-tool/seo-place-tool';
 
+const resolveRootLocation: CanActivateFn = async () => {
+  const locationService = inject(LocationService);
+  const router = inject(Router);
+  const location = await locationService.ensureInitialLocation();
+  return router.createUrlTree(['/', location.id]);
+};
+
 export const routes: Routes = [
-  { path: '', redirectTo: 'now', pathMatch: 'full' },
-  { path: 'now', component: SkyHomeComponent, data: { skyPage: 'time' } },
+  // The root is the entry point only. Resolve a concrete location before rendering
+  // the living experience so every normal page has a stable /:location URL.
+  { path: '', pathMatch: 'full', canActivate: [resolveRootLocation], component: SkyHomeComponent, data: { skyPage: 'time' } },
+  { path: 'now', redirectTo: '', pathMatch: 'full' },
   { path: 'weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
   { path: 'astronomy', component: AstronomySuiteComponent },
   { path: 'tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
@@ -64,11 +73,22 @@ export const routes: Routes = [
   { path: 'weather-forecast', redirectTo: 'weather', pathMatch: 'full' },
   { path: 'ephemeris', component: CelestialEphemerisComponent },
   { path: 'planner', component: MeetingPlannerComponent },
+  // Location-first living experience. Keep static product routes above these
+  // parameterized routes because Angular uses first-match routing.
+  { path: ':location/weather', component: SkyHomeComponent, data: { skyPage: 'weather' } },
+  { path: ':location/time', component: SkyHomeComponent, data: { skyPage: 'time' } },
+  { path: ':location/tonight', component: SkyHomeComponent, data: { skyPage: 'tonight' } },
+  { path: ':location/sun', component: AstronomySuiteComponent, data: { tab: 'daylight' } },
+  { path: ':location/moon', component: AstronomySuiteComponent, data: { tab: 'moon' } },
+  { path: ':location/astronomy', component: AstronomySuiteComponent, data: { tab: 'solar' } },
+  { path: ':location', component: SkyHomeComponent, data: { skyPage: 'time' } },
+
+  // Legacy focused SEO routes remain valid while the location-first hierarchy
+  // becomes canonical.
   { path: 'time/:slug', component: SeoPlaceToolComponent, data: { tool: 'time' } },
   { path: 'sun/:slug', component: SeoPlaceToolComponent, data: { tool: 'sun' } },
   { path: 'moon/:slug', component: SeoPlaceToolComponent, data: { tool: 'moon' } },
   { path: 'tonight/:slug', component: SeoPlaceToolComponent, data: { tool: 'tonight' } },
-  { path: 'place/:slug', component: PlaceViewComponent },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
-  { path: '**', redirectTo: 'now' }
+  { path: '**', redirectTo: '' }
 ];

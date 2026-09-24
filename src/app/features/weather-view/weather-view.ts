@@ -260,6 +260,10 @@ export class WeatherViewComponent implements AfterViewInit, OnDestroy {
     setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
     const loc = this.selectedLocation();
+    // Keep the compact current-weather telemetry in sync without making the
+    // global application shell fetch weather for unrelated routes.
+    this.weatherService.fetchWeatherForLocation(loc);
+
     this.map = new MapLibreMap({
       container: this.mapContainer.nativeElement,
       style: 'https://tiles.openfreemap.org/styles/dark',

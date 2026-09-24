@@ -266,7 +266,7 @@
                         <div class="deck-week-row">
                           <span class="week-name">{{ day.label }}</span>
                           <div class="week-condition">
-                            <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                            <app-weather-icon [condition]="day.condition" [label]="day.condition" size="sm"></app-weather-icon>
                             <span>{{ day.condition }}</span>
                           </div>
                           <span class="week-rain">{{ day.precipitationPct }}% rain</span>
@@ -447,7 +447,7 @@
             <h2>{{ weather().conditionLabel }}</h2>
             <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
           </div>
-          <mat-icon class="weather-current-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+          <app-weather-icon class="weather-current-icon" [condition]="weather().condition" [label]="weather().conditionLabel" size="lg"></app-weather-icon>
         </div>
 
         <div class="weather-stats">
@@ -484,7 +484,7 @@
             @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
               <div class="hour-item">
                 <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                <mat-icon>{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                <app-weather-icon [condition]="item.weather.condition" [label]="item.weather.conditionLabel" size="sm"></app-weather-icon>
                 <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
                 <small>{{ item.weather.precipitationPct }}%</small>
               </div>

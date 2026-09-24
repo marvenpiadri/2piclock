@@ -27,16 +27,16 @@
         <app-country-flag [countryCode]="selectedLocation().countryCode" [customClass]="'w-4 h-3 rounded-xs'"></app-country-flag>
         <span class="location-name">{{ selectedLocation().name }}</span>
         <span class="location-country">{{ selectedLocation().country }}</span>
-        <mat-icon>expand_more</mat-icon>
+        <mat-icon>expand_more--></mat-icon>
       </button>
 
       @if (activeAlerts().length > 0) {
         <button type="button" class="icon-action" (click)="openAlertsModal()" title="Weather alerts">
-          <mat-icon>warning</mat-icon><span>{{ activeAlerts().length }}</span>
+          <mat-icon>warning--></mat-icon><span>{{ activeAlerts().length }}</span>
         </button>
       }
       <button type="button" class="settings-action" (click)="openSettingsModal()" title="Open settings">
-        <mat-icon>settings</mat-icon><span>Settings</span>
+        <mat-icon>settings--></mat-icon><span>Settings</span>
       </button>
     </div>
   </header>
@@ -44,19 +44,19 @@
   <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
   <nav class="sky-navigation" aria-label="Sky Sub-Views">
     <a routerLink="/sky" [class.active]="skyPage === 'time'">
-      <mat-icon class="text-sm">schedule</mat-icon>
+      <mat-icon class="text-sm">schedule--></mat-icon>
       <span>1 Time Dial</span>
     </a>
     <a routerLink="/sky/weather" [class.active]="skyPage === 'weather'">
-      <mat-icon class="text-sm">cloud</mat-icon>
+      <mat-icon class="text-sm">cloud--></mat-icon>
       <span>2 Weather</span>
     </a>
     <a routerLink="/sky/astronomy" [class.active]="skyPage === 'astronomy'">
-      <mat-icon class="text-sm">wb_twilight</mat-icon>
+      <mat-icon class="text-sm">wb_twilight--></mat-icon>
       <span>3 Astronomy</span>
     </a>
     <a routerLink="/sky/world" [class.active]="skyPage === 'world'">
-      <mat-icon class="text-sm">public</mat-icon>
+      <mat-icon class="text-sm">public--></mat-icon>
       <span>4 World Clocks</span>
     </a>
   </nav>
@@ -151,7 +151,7 @@
                   °{{ isFahrenheit() ? 'F' : 'C' }}
                 </button>
                 <button type="button" class="deck-collapse-btn" (click)="toggleRightPanel()" title="Collapse environmental panel">
-                  <mat-icon>chevron_right</mat-icon>
+                  <mat-icon>chevron_right--></mat-icon>
                 </button>
               </div>
             </div>
@@ -159,19 +159,19 @@
             <!-- Segmented Deck Navigation Tabs -->
             <div class="deck-nav-tabs" role="tablist">
               <button type="button" [class.active]="activeDeckTab() === 'weather'" (click)="setDeckTab('weather')" role="tab">
-                <mat-icon>cloud</mat-icon>
+                <mat-icon>cloud--></mat-icon>
                 <span>Weather</span>
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'astronomy'" (click)="setDeckTab('astronomy')" role="tab">
-                <mat-icon>auto_awesome</mat-icon>
+                <mat-icon>auto_awesome--></mat-icon>
                 <span>Astronomy</span>
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'observations'" (click)="setDeckTab('observations')" role="tab">
-                <mat-icon>query_stats</mat-icon>
+                <mat-icon>query_stats--></mat-icon>
                 <span>Insights & D3</span>
               </button>
               <button type="button" [class.active]="activeDeckTab() === 'locations'" (click)="setDeckTab('locations')" role="tab">
-                <mat-icon>place</mat-icon>
+                <mat-icon>place--></mat-icon>
                 <span>Locations</span>
               </button>
             </div>
@@ -197,32 +197,32 @@
                   <!-- 6-Metric Atmospheric Telemetry Grid -->
                   <div class="deck-metrics-grid">
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>water_drop</mat-icon> RAIN CHANCE</span>
+                      <span class="metric-label"><mat-icon>water_drop--></mat-icon> RAIN CHANCE</span>
                       <strong>{{ weather().precipitationPct }}%</strong>
                       <small>{{ weather().precipitationPct > 30 ? 'Rain probable' : 'Dry conditions' }}</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>air</mat-icon> WIND ({{ windCompass() }})</span>
+                      <span class="metric-label"><mat-icon>air--></mat-icon> WIND ({{ windCompass() }})</span>
                       <strong>{{ weather().windSpeedKmh }} km/h</strong>
                       <small>Gusts {{ weather().windGustKmh ?? weather().windSpeedKmh }} km/h</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>opacity</mat-icon> HUMIDITY</span>
+                      <span class="metric-label"><mat-icon>opacity--></mat-icon> HUMIDITY</span>
                       <strong>{{ weather().humidityPct }}%</strong>
                       <small>Dew pt {{ isFahrenheit() ? dewPointF() : dewPointC() }}°</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>speed</mat-icon> BAROMETER</span>
+                      <span class="metric-label"><mat-icon>speed--></mat-icon> BAROMETER</span>
                       <strong>{{ weather().pressureHpa }} hPa</strong>
                       <small>{{ weather().pressureHpa > 1013 ? 'High pressure' : 'Low pressure' }}</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>cloud_queue</mat-icon> CLOUD COVER</span>
+                      <span class="metric-label"><mat-icon>cloud_queue--></mat-icon> CLOUD COVER</span>
                       <strong>{{ weather().cloudCoverPct }}%</strong>
                       <small>{{ weather().cloudCoverPct < 25 ? 'Clear sky' : weather().cloudCoverPct < 70 ? 'Partly cloudy' : 'Overcast' }}</small>
                     </div>
                     <div class="deck-metric-card">
-                      <span class="metric-label"><mat-icon>visibility</mat-icon> VISIBILITY</span>
+                      <span class="metric-label"><mat-icon>visibility--></mat-icon> VISIBILITY</span>
                       <strong>{{ weather().visibilityKm }} km</strong>
                       <small>{{ weather().visibilityKm >= 10 ? 'Optimal range' : 'Hazy atmosphere' }}</small>
                     </div>
@@ -231,7 +231,7 @@
                   <!-- UV Index Banner -->
                   <div class="deck-banner-card">
                     <div class="banner-left">
-                      <span class="metric-label"><mat-icon>wb_sunny</mat-icon> UV INDEX</span>
+                      <span class="metric-label"><mat-icon>wb_sunny--></mat-icon> UV INDEX</span>
                       <strong>Index {{ weather().uvIndex }} · {{ uvRiskLevel().label }}</strong>
                     </div>
                     <span class="banner-advice">{{ uvRiskLevel().advice }}</span>
@@ -247,7 +247,7 @@
                       @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
                         <div class="deck-hour-item">
                           <span class="hour-time">{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                          <mat-icon class="hour-icon">{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                          <app-weather-icon class="hour-icon" [condition]="item.weather.condition" [label]="item.weather.conditionLabel" size="sm"></app-weather-icon>
                           <strong class="hour-temp">{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
                           <span class="hour-rain">{{ item.weather.precipitationPct }}%</span>
                         </div>
@@ -266,7 +266,7 @@
                         <div class="deck-week-row">
                           <span class="week-name">{{ day.label }}</span>
                           <div class="week-condition">
-                            <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                            <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}--></mat-icon>
                             <span>{{ day.condition }}</span>
                           </div>
                           <span class="week-rain">{{ day.precipitationPct }}% rain</span>
@@ -287,7 +287,7 @@
                   <!-- Solar Coordinates Card -->
                   <div class="deck-astro-card">
                     <div class="astro-card-head">
-                      <span class="metric-label"><mat-icon>sunny</mat-icon> SOLAR EPHEMERIS</span>
+                      <span class="metric-label"><mat-icon>sunny--></mat-icon> SOLAR EPHEMERIS</span>
                       <span class="astro-badge">{{ getTwilightLabel(celestial().twilightState) }}</span>
                     </div>
                     <div class="astro-data-row">
@@ -312,7 +312,7 @@
                   <!-- Lunar Coordinates Card -->
                   <div class="deck-astro-card">
                     <div class="astro-card-head">
-                      <span class="metric-label"><mat-icon>nightlight_round</mat-icon> LUNAR EPHEMERIS</span>
+                      <span class="metric-label"><mat-icon>nightlight_round--></mat-icon> LUNAR EPHEMERIS</span>
                       <span class="astro-badge">{{ celestial().moon.phaseName }}</span>
                     </div>
                     <div class="astro-data-row">
@@ -342,7 +342,7 @@
 
                   <div class="deck-actions-group">
                     <button type="button" class="deck-primary-btn" (click)="openEventsPanel()">
-                      <mat-icon>event</mat-icon>
+                      <mat-icon>event--></mat-icon>
                       <span>Explore Astronomical Events Calendar</span>
                     </button>
                   </div>
@@ -356,7 +356,7 @@
                   <div class="deck-insight-card">
                     <div class="insight-head">
                       <div>
-                        <span class="metric-label"><mat-icon>star</mat-icon> STARGAZING SCORE</span>
+                        <span class="metric-label"><mat-icon>star--></mat-icon> STARGAZING SCORE</span>
                         <h4>{{ starlightScore().rating }}</h4>
                       </div>
                       <div class="score-circle">
@@ -371,7 +371,7 @@
                   <div class="deck-insight-card">
                     <div class="insight-head">
                       <div>
-                        <span class="metric-label"><mat-icon>directions_run</mat-icon> OUTDOOR COMFORT INDEX</span>
+                        <span class="metric-label"><mat-icon>directions_run--></mat-icon> OUTDOOR COMFORT INDEX</span>
                         <h4>{{ comfortIndex().label }}</h4>
                       </div>
                       <div class="score-circle score-comfort" [style.borderColor]="comfortIndex().color">
@@ -399,7 +399,7 @@
               @if (activeDeckTab() === 'locations') {
                 <div class="deck-tab-pane">
                   <div class="deck-search-box">
-                    <mat-icon>search</mat-icon>
+                    <mat-icon>search--></mat-icon>
                     <input
                       type="search"
                       placeholder="Search city, country, or coordinate..."
@@ -430,7 +430,7 @@
         } @else {
           <div class="collapsed-deck-dock">
             <button type="button" class="expand-deck-btn" (click)="toggleRightPanel()" title="Expand Environmental Deck">
-              <mat-icon>chevron_left</mat-icon>
+              <mat-icon>chevron_left--></mat-icon>
               <span>ENVIRONMENTAL DECK</span>
             </button>
           </div>
@@ -447,7 +447,7 @@
             <h2>{{ weather().conditionLabel }}</h2>
             <p>Feels like {{ isFahrenheit() ? weather().feelsLikeF : weather().feelsLikeC }}° · {{ weather().humidityPct }}% humidity</p>
           </div>
-          <mat-icon class="weather-current-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+          <mat-icon class="weather-current-icon">{{ weather().conditionLabel.toLowerCase().includes('rain') ? 'rainy' : weather().conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}--></mat-icon>
         </div>
 
         <div class="weather-stats">
@@ -484,7 +484,7 @@
             @for (item of hourlyForecasts().slice(0, 24); track item.timeMs) {
               <div class="hour-item">
                 <span>{{ item.timeMs | date:'HH:mm':selectedLocation().timezone }}</span>
-                <mat-icon>{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}</mat-icon>
+                <mat-icon>{{ item.weather.conditionLabel.toLowerCase().includes('rain') ? 'rainy' : item.weather.conditionLabel.toLowerCase().includes('cloud') ? 'cloud' : 'wb_sunny' }}--></mat-icon>
                 <strong>{{ isFahrenheit() ? item.weather.temperatureF : item.weather.temperatureC }}°</strong>
                 <small>{{ item.weather.precipitationPct }}%</small>
               </div>
@@ -498,7 +498,7 @@
             @for (day of weeklyForecast(); track day.key) {
               <div class="week-day">
                 <strong>{{ day.label }}</strong>
-                <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : day.condition.toLowerCase().includes('snow') ? 'ac_unit' : 'wb_sunny' }}</mat-icon>
+                <mat-icon>{{ day.condition.toLowerCase().includes('rain') ? 'rainy' : day.condition.toLowerCase().includes('cloud') ? 'cloud' : day.condition.toLowerCase().includes('snow') ? 'ac_unit' : 'wb_sunny' }}--></mat-icon>
                 <span>{{ day.condition }}</span>
                 <div><b>{{ isFahrenheit() ? day.highF : day.highC }}°</b><small>{{ isFahrenheit() ? day.lowF : day.lowC }}°</small></div>
                 <em>{{ day.precipitationPct }}% rain</em>
@@ -530,8 +530,8 @@
         </div>
 
         <div class="astronomy-actions">
-          <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
-          <a routerLink="/sky" class="secondary-report-button">Back to time <mat-icon>arrow_forward</mat-icon></a>
+          <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward--></mat-icon></button>
+          <a routerLink="/sky" class="secondary-report-button">Back to time <mat-icon>arrow_forward--></mat-icon></a>
         </div>
       </section>
     }
@@ -588,7 +588,7 @@
             <div class="world-clock"><div><span class="world-city">{{ city.name }}</span><small>{{ formatWorldDay(city.zone) }}</small></div><strong>{{ formatWorldTime(city.zone) }}</strong><span>{{ city.zone.split('/').pop()?.replace('_', ' ') }}</span></div>
           }
         </div>
-        <a routerLink="/world" class="secondary-report-button">Open full world clock <mat-icon>arrow_forward</mat-icon></a>
+        <a routerLink="/world" class="secondary-report-button">Open full world clock <mat-icon>arrow_forward--></mat-icon></a>
       </section>
     }
   </main>
@@ -596,7 +596,7 @@
   @if (isDrawerOpen()) {
     <div class="drawer-backdrop" (click)="closeDrawer()"></div>
     <aside class="sky-drawer">
-      <div class="drawer-header"><div><span>2piClock</span><strong>{{ selectedLocation().name }}</strong></div><button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close</mat-icon></button></div>
+      <div class="drawer-header"><div><span>2piClock</span><strong>{{ selectedLocation().name }}</strong></div><button type="button" (click)="closeDrawer()" title="Close"><mat-icon>close--></mat-icon></button></div>
       <div class="drawer-content">
         <div class="drawer-tabs"><button [class.active]="activeDrawerTab() === 'locations'" (click)="activeDrawerTab.set('locations')">Location</button><button [class.active]="activeDrawerTab() === 'weather'" (click)="activeDrawerTab.set('weather')">Weather</button></div>
         @if (activeDrawerTab() === 'locations') {

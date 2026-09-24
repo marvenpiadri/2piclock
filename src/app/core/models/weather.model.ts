@@ -47,7 +47,19 @@ export interface WeatherData {
   windGustKmh?: number;
   visibilityKm: number;
   uvIndex: number;
+  dewPointC: number;
+  precipitationMm: number;
+  rainMm: number;
+  showersMm: number;
+  snowfallCm: number;
+  snowDepthCm: number;
+  cloudCoverLowPct: number;
+  cloudCoverMidPct: number;
+  cloudCoverHighPct: number;
+  freezingLevelM: number;
+  isDay: boolean;
   pressureHpa: number;
+  seaLevelPressureHpa?: number;
   aggressivenessIndex: number; // 0 to 100 severity rating
   aggressivenessLabel: WeatherAggressivenessLevel;
   lightningFrequencyPerMin?: number;

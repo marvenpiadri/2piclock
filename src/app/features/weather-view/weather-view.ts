@@ -100,7 +100,7 @@ export interface MeteogramStep {
 @Component({
   selector: 'app-weather-view',
   standalone: true,
-  imports: [CommonModule, MatIconModule, WeatherBarChartComponent],
+  imports: [CommonModule, MatIconModule, WeatherBarChartComponent, WeatherIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './weather-view.html',
   styleUrl: './weather-view.css'

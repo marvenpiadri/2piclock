@@ -457,9 +457,14 @@ export class RadioService {
     if (this.connectionTimeoutTimer) clearTimeout(this.connectionTimeoutTimer);
     this.connectionTimeoutTimer = setTimeout(() => {
       if (this.isLoading()) {
-        this.isLoading.set(false);
-        this.isPlaying.set(false);
-        this.error.set('Stream connection timed out. Trying alternative fallback...');
+        const current = this.currentStation();
+        if (current && !this.fallbackAttempted.has(current.id)) {
+          this.tryAlternativeStream(current);
+        } else {
+          this.isLoading.set(false);
+          this.isPlaying.set(false);
+          this.error.set('This station stream is unavailable. Try another station.');
+        }
       }
     }, 8000);
 
@@ -470,9 +475,14 @@ export class RadioService {
       const playPromise = this.audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          this.isLoading.set(false);
-          this.isPlaying.set(false);
-          this.error.set('Playback was blocked or stream could not be decoded.');
+          const current = this.currentStation();
+          if (current && !this.fallbackAttempted.has(current.id)) {
+            this.tryAlternativeStream(current);
+          } else {
+            this.isLoading.set(false);
+            this.isPlaying.set(false);
+            this.error.set('Playback was blocked or the stream could not be decoded.');
+          }
         });
       }
     } catch (err: any) {

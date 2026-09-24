@@ -29,7 +29,18 @@ export class WeatherIconComponent {
   readonly sizeMap: Record<WeatherIconSize, string> = { sm: '1rem', md: '1.45rem', lg: '2.6rem' };
 
   iconClass(): string {
-    return 'wi ' + (this.icon() || this.mapCondition(this.condition()));
+    return 'wi ' + this.mapIcon(this.icon() || this.mapCondition(this.condition()));
+  }
+
+  private mapIcon(icon: string): string {
+    if (icon.startsWith('wi-')) return icon;
+    const map: Record<string,string> = {
+      wb_sunny: 'wi-day-sunny', dark_mode: 'wi-night-clear', partly_cloudy_day: 'wi-day-cloudy',
+      partly_cloudy_night: 'wi-night-partly-cloudy', cloud: 'wi-cloudy', cloudy: 'wi-cloudy',
+      rainy: 'wi-rain', grain: 'wi-sprinkle', thunderstorm: 'wi-thunderstorm', foggy: 'wi-fog',
+      weather_snowy: 'wi-snow', air: 'wi-strong-wind'
+    };
+    return map[icon] || this.mapCondition(icon);
   }
 
   private mapCondition(condition: string): string {

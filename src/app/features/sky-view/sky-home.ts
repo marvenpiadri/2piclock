@@ -8,7 +8,7 @@ import { WeatherService } from '../../core/services/weather.service';
 import { ObservatoryViewService, ObservatoryView } from '../../core/services/observatory-view.service';
 import { GeoLocation } from '../../core/models/location.model';
 import { ShareExportModalComponent } from '../../shared/components/share-export-modal/share-export-modal';
-import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent } from '../../shared/components';
+import { CountryFlagComponent, WeatherAlertsModalComponent, AstronomicalEventsPanelComponent, WeatherBarChartComponent, WeatherIconComponent } from '../../shared/components';
 import { SettingsModalComponent } from '../../shared/components/settings-modal/settings-modal';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';

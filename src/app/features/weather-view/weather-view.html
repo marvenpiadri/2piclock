@@ -118,7 +118,7 @@
           (click)="setLayer(layer.id)"
           role="tab"
           [title]="layer.label + ' layer (' + layer.unit + ')'">
-          <mat-icon>{{ layer.icon }}</mat-icon>
+          <mat-icon [class]="'weather-layer-icon weather-layer-' + layer.id">{{ layer.icon }}</mat-icon>
           <span>{{ layer.label }}</span>
         </button>
       }

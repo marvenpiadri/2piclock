@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
@@ -29,8 +30,10 @@ export class SeoPlaceToolComponent {
   private readonly astronomy = inject(AstronomicalCalculatorService);
   private readonly timeControl = inject(TimeControlService);
 
-  readonly kind = computed<ToolKind>(() => (this.route.snapshot.data['tool'] ?? 'time') as ToolKind);
-  readonly slug = computed(() => this.route.snapshot.paramMap.get('slug')?.toLowerCase() ?? '');
+  private readonly routeData = toSignal(this.route.data, { initialValue: this.route.snapshot.data });
+  private readonly routeParams = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  readonly kind = computed<ToolKind>(() => (this.routeData()['tool'] ?? 'time') as ToolKind);
+  readonly slug = computed(() => this.routeParams().get('slug')?.toLowerCase() ?? '');
   readonly location = computed<GeoLocation | null>(() => this.locationService.allPresets.find(p => p.id === this.slug()) ?? null);
   readonly activeDate = this.timeControl.currentActiveDate;
   readonly solar = computed(() => {

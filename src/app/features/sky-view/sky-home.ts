@@ -220,6 +220,13 @@ export class SkyHomeComponent {
   ];
 
   constructor() {
+    // Sky is a weather-aware experience, so request weather only while this
+    // route is mounted. Other product routes stay network-free.
+    effect(() => {
+      const location = this.selectedLocation();
+      this.weatherService.fetchWeatherForLocation(location);
+    });
+
     effect(() => {
       const location = this.selectedLocation();
       const labels = {

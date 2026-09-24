@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveSkyComponent } from './shared/components/reactive-sky/reactive-sky';
@@ -12,7 +12,7 @@ import { CelestialService } from './core/services/celestial.service';
 import { ObservatoryViewService, ObservatoryView } from './core/services/observatory-view.service';
 import { GeoLocation } from './core/models/location.model';
 import { GeocodingService } from './core/services/geocoding.service';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 
 export interface NavCategory {
   title: string;
@@ -59,9 +59,31 @@ export class App {
   readonly isLocating = this.locationService.isLocating;
   readonly locationError = this.locationService.locationError;
 
+  // Animated substrates are mounted only on experiences that actually use them.
+  // This prevents the 60fps sky renderer from consuming CPU on calculators,
+  // maps and other product routes.
+  readonly currentRoute = signal<string>('/');
+  readonly showReactiveSky = computed(() => {
+    const url = this.currentRoute();
+    return url === '/' || url.startsWith('/sky');
+  });
+  readonly showDeepSpace = computed(() => {
+    const url = this.currentRoute();
+    return url === '/space' || url.startsWith('/deep-space');
+  });
+
   readonly localTime = this.celestialService.formattedLocalTime;
   readonly localDate = this.celestialService.formattedLocalDate;
   readonly celestial = this.celestialService.celestialState;
+
+  constructor() {
+    this.currentRoute.set(this.router.url || '/');
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(event => {
+        this.currentRoute.set((event as NavigationEnd).urlAfterRedirects || '/');
+      });
+  }
 
   // Dropdown & sidebar collapse states
   showLocationDropdown = signal<boolean>(false);

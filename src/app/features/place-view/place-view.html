@@ -1,7 +1,7 @@
 @if (location(); as loc) {
   <div class="place-page">
     <header class="place-hero">
-      <div class="place-kicker">2PICLOCK · PLACE</div>
+      <div class="place-kicker">2PICLOCK · PLACE HUB</div>
       <div class="place-heading">
         <div><h1>{{ loc.name }}</h1><p>{{ loc.country }} · {{ loc.timezone }} · {{ utcOffset() }}</p></div>
         <div class="place-clock"><strong>{{ localTime() }}</strong><span>{{ localDate() }}</span></div>
@@ -18,7 +18,7 @@
     </section>
 
     <section class="place-section">
-      <div class="section-heading"><div><span class="section-kicker">TODAY IN {{ loc.name | uppercase }}</span><h2>The sky, calculated for this place.</h2></div><a [routerLink]="['/sky']">Open Living Sky →</a></div>
+      <div class="section-heading"><div><span class="section-kicker">TODAY IN {{ loc.name | uppercase }}</span><h2>The sky, calculated for this place.</h2></div><a [routerLink]="['/now']">Open Living Sky →</a></div>
       <div class="calculation-grid">
         <article class="calc-card"><span class="label">SUNRISE</span><strong>{{ formatTime(solar()?.solarEvents?.sunrise ?? null) }}</strong><span>Solar noon {{ formatTime(solar()?.solarEvents?.solarNoon ?? null) }}</span></article>
         <article class="calc-card"><span class="label">SUNSET</span><strong>{{ formatTime(solar()?.solarEvents?.sunset ?? null) }}</strong><span>{{ daylight()?.dayLengthFormatted }} of daylight</span></article>
@@ -52,9 +52,9 @@
         <a class="tool-link" [routerLink]="['/sun', loc.id]"><span>Sun in {{ loc.name }}</span><small>Sunrise, sunset & the visual solar path</small></a>
         <a class="tool-link" [routerLink]="['/moon', loc.id]"><span>Moon in {{ loc.name }}</span><small>Moon phase, illumination & position</small></a>
         <a class="tool-link" [routerLink]="['/tonight', loc.id]"><span>Tonight in {{ loc.name }}</span><small>Twilight, Moon & atmospheric conditions</small></a>
-        <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'solar',loc:loc.id}"><span>Solar Calculator</span><small>Sun position, solar noon & trajectory</small></a>
-        <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'daylight',loc:loc.id}"><span>Daylight Calculator</span><small>Day length, twilight & golden hour</small></a>
-        <a class="tool-link" [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'moon',loc:loc.id}"><span>Moon Calculator</span><small>Phase, illumination & lunar position</small></a>
+        <a class="tool-link" [routerLink]="['/astronomy']" [queryParams]="{tab:'solar',loc:loc.id}"><span>Solar Calculator</span><small>Sun position, solar noon & trajectory</small></a>
+        <a class="tool-link" [routerLink]="['/astronomy']" [queryParams]="{tab:'daylight',loc:loc.id}"><span>Daylight Calculator</span><small>Day length, twilight & golden hour</small></a>
+        <a class="tool-link" [routerLink]="['/astronomy']" [queryParams]="{tab:'moon',loc:loc.id}"><span>Moon Calculator</span><small>Phase, illumination & lunar position</small></a>
         <a class="tool-link" [routerLink]="['/time']" [queryParams]="{tab:'converter',from:loc.id}"><span>Time Zone Converter</span><small>Compare {{ loc.name }} with any city</small></a>
         <a class="tool-link" [routerLink]="['/weather']"><span>Weather Map</span><small>Explore the atmosphere around {{ loc.name }}</small></a>
         <a class="tool-link" [routerLink]="['/radio']"><span>World Radio</span><small>Listen to live radio from around the world</small></a>
@@ -62,7 +62,7 @@
     </section>
 
     <section class="place-section">
-      <div class="section-heading"><div><span class="section-kicker">UPCOMING</span><h2>What happens next</h2></div><a [routerLink]="['/astronomy-tools']" [queryParams]="{tab:'events',loc:loc.id}">All astronomical events →</a></div>
+      <div class="section-heading"><div><span class="section-kicker">UPCOMING</span><h2>What happens next</h2></div><a [routerLink]="['/astronomy']" [queryParams]="{tab:'events',loc:loc.id}">All astronomical events →</a></div>
       <div class="event-list">
         @for (event of nextEvents(); track event.id) { <div class="event-row"><div><strong>{{ event.title }}</strong><span>{{ event.description }}</span></div><time>{{ event.formattedDate }} · {{ event.formattedTime }}</time></div> }
       </div>
@@ -70,10 +70,10 @@
 
     <section class="place-section"><div class="section-heading"><div><span class="section-kicker">EXPLORE {{ loc.name | uppercase }}</span><h2>Keep going.</h2></div></div>
       <div class="discovery-links">
-        <a [routerLink]="['/sky']">Living Sky</a><a [routerLink]="['/world']">World Map</a><a [routerLink]="['/world-clocks']">World Clocks</a><a [routerLink]="['/planner']">Meeting Planner</a><a [routerLink]="['/space']">Deep Space</a><a [routerLink]="['/ephemeris']">Ephemeris</a>
+        <a [routerLink]="['/now']">Living Sky</a><a [routerLink]="['/world']">World Map</a><a [routerLink]="['/world-clocks']">World Clocks</a><a [routerLink]="['/planner']">Meeting Planner</a><a [routerLink]="['/space']">Deep Space</a><a [routerLink]="['/ephemeris']">Ephemeris</a>
       </div>
     </section>
   </div>
 } @else {
-  <div class="place-not-found"><h1>Place not found</h1><p>Try another city from the location selector.</p><a [routerLink]="['/sky']">Return to 2PiClock</a></div>
+  <div class="place-not-found"><h1>Place not found</h1><p>Try another city from the location selector.</p><a [routerLink]="['/now']">Return to 2PiClock</a></div>
 }

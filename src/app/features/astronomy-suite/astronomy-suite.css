@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(10, 10, 12, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -125,7 +125,7 @@
 }
 
 .param-item select, .param-item input {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f8fafc;
   padding: 8px 10px;
@@ -193,7 +193,7 @@
 }
 
 .tool-card {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(10, 10, 12, 0.70);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -230,7 +230,7 @@
 }
 
 .stat-cell {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px;
   border-radius: 12px;
@@ -293,7 +293,7 @@
 }
 
 .event-pill {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 10px;
   border-radius: 10px;
@@ -327,7 +327,7 @@
 
 .trajectory-chart-wrap {
   padding: 16px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   display: flex;
@@ -393,7 +393,7 @@
 }
 
 .daylight-hero-card {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 16px;
   border-radius: 14px;
@@ -423,7 +423,7 @@
 /* Visual Timeline */
 .visual-timeline-box {
   padding: 16px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   display: flex;
@@ -512,7 +512,7 @@
   align-items: center;
   gap: 24px;
   padding: 16px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
 }
@@ -556,7 +556,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(10, 10, 12, 0.70);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
 }
@@ -591,7 +591,7 @@
 
 /* "When Is?" Engine */
 .when-is-card {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border-color: rgba(245, 158, 11, 0.35);
 }
 
@@ -661,7 +661,7 @@
 
 .year-picker input {
   width: 80px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 10, 12, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f8fafc;
   padding: 6px 10px;
@@ -676,7 +676,7 @@
 }
 
 .event-card-item {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(10, 10, 12, 0.70);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 16px;

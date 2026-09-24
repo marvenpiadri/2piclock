@@ -10,7 +10,6 @@ import { SpaceViewComponent } from './shared/components/space-view/space-view';
 import { TimeSuiteComponent } from './features/time-suite/time-suite';
 import { AstronomySuiteComponent } from './features/astronomy-suite/astronomy-suite';
 import { WorldRadioComponent } from './features/world-radio/world-radio';
-import { SeoPlaceToolComponent } from './features/seo-place-tool/seo-place-tool';
 
 const resolveRootLocation: CanActivateFn = async () => {
   const locationService = inject(LocationService);

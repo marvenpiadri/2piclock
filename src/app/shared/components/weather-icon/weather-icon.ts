@@ -33,7 +33,7 @@ export class WeatherIconComponent {
     const aliases: Record<string,string> = {
       'wb-sunny':'clear-day','dark-mode':'clear-night','partly-cloudy-day':'partly-cloudy-day','partly-cloudy-night':'partly-cloudy-night','cloud':'cloudy','cloudy':'cloudy','cloud-queue':'overcast',
       'rainy':'rain','grain':'drizzle','drizzle':'drizzle','thunderstorm':'thunderstorms-day-rain','thunderstorms-day-rain':'thunderstorms-day-rain','foggy':'fog',
-      'weather-snowy':'snow','ac-unit':'snow','air':'wind','strong-wind':'wind','bolt':'thunderstorms-day',
+      'weather-snowy':'snow','ac-unit':'snow','hail':'hail','air':'wind','strong-wind':'wind','bolt':'thunderstorms-day',
       'blur-on':'fog','visibility':'visibility','speed':'barometer','water-drop':'humidity',
       'opacity':'humidity','wb-twilight':'sunrise','sunny':'clear-day'
     };
@@ -51,6 +51,7 @@ export class WeatherIconComponent {
     if (c.includes('drizzle')) return 'drizzle';
     if (c.includes('rain')) return 'rain';
     if (c.includes('freezing')) return 'sleet';
+    if (c.includes('hail')) return 'hail';
     if (c.includes('fog') || c.includes('mist')) return 'fog';
     if (c.includes('haze')) return 'haze';
     if (c.includes('overcast')) return 'overcast';

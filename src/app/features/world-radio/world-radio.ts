@@ -152,7 +152,7 @@ export class WorldRadioComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     // Populate the initial directory from Radio Browser's non-broken stations.
     // The local list remains only as a fallback if the directory is unavailable.
-    this.radioService.loadGlobalStations(48);
+    this.radioService.loadGlobalStations(100);
 
     this.route.queryParams.subscribe(params => {
       if (params['tab'] && ['explore', 'map', 'favorites', 'recents'].includes(params['tab'])) {

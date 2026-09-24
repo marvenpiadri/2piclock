@@ -1,1 +1,19 @@
-<app-world-view></app-world-view>
+<div class="world-clocks-page">
+  <header class="world-clocks-header">
+    <div><span class="eyebrow">GLOBAL TIME</span><h1>World Clocks</h1><p>Live local time across major cities and time zones.</p></div>
+    <div class="clock-count">{{ displayedClocks().length }} cities</div>
+  </header>
+  <section class="clock-grid" aria-label="World clocks">
+    @for (status of displayedClocks(); track status.location.id) {
+      <button type="button" class="world-clock-card" [class.active]="selectedLocation().id === status.location.id" (click)="selectLocation(status.location)">
+        <div class="clock-card-top">
+          <div class="city"><app-country-flag [countryCode]="status.location.countryCode" [customClass]="'flag'"></app-country-flag><div><strong>{{ status.location.name }}</strong><span>{{ status.location.country }}</span></div></div>
+          <span class="status-dot" [class.day]="status.astroState === 'day'" [class.civil]="status.astroState === 'civil-twilight'" [class.nautical]="status.astroState === 'nautical-twilight'" [class.night]="status.astroState === 'night'"></span>
+        </div>
+        <div class="clock-time">{{ status.localTime }}</div>
+        <div class="clock-meta"><span>{{ status.utcOffset }}</span><span>{{ status.statusLabel }}</span></div>
+        <div class="clock-events"><span>Sunrise <b>{{ status.sunriseTime }}</b></span><span>Sunset <b>{{ status.sunsetTime }}</b></span></div>
+      </button>
+    }
+  </section>
+</div>

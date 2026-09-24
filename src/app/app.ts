@@ -65,7 +65,7 @@ export class App {
   readonly currentRoute = signal<string>('/');
   readonly showReactiveSky = computed(() => {
     const url = this.currentRoute();
-    return url === '/' || url === '/now' || url === '/weather' || url === '/tonight' || /^\/[a-z0-9-]+(?:\/weather|\/time|\/tonight)?(?:\?.*)?$/.test(url) || url.startsWith('/sky');
+    return url === '/' || url === '/now' || url === '/weather' || url === '/tonight' || /^\/[a-z0-9-]+(?:\/(?:weather|time|tonight|sun|moon|astronomy))?(?:\?.*)?$/.test(url) || url.startsWith('/sky');
   });
   readonly showDeepSpace = computed(() => {
     const url = this.currentRoute();

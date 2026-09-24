@@ -25,10 +25,14 @@ const angularApp = new AngularNodeAppEngine();
  * ```
  */
 
+// Only canonical 200-status pages belong in the sitemap.
+// Redirect-only intent aliases remain useful for navigation/search entry, but
+// indexing the redirect URLs creates duplicate crawl targets.
 const staticSitemapUrls = [
-  '/', '/sky', '/weather', '/world', '/world-clocks', '/time', '/time-zone-converter',
-  '/astronomy-tools', '/solar-calculator', '/daylight-calculator', '/sunrise', '/sunset', '/golden-hour', '/twilight', '/moon-calculator', '/moon-phase', '/moonrise', '/moonset',
-  '/astronomical-events', '/radio', '/atmosphere', '/ephemeris', '/planner', '/space', '/time-in', '/time-difference', '/weather-forecast'
+  '/sky', '/sky/weather', '/sky/astronomy', '/sky/world',
+  '/weather', '/world', '/world-clocks', '/time',
+  '/astronomy-tools', '/radio', '/atmosphere', '/ephemeris',
+  '/planner', '/space'
 ];
 const escapeXml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const buildSitemap = () => {

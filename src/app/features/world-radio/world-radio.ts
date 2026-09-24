@@ -68,7 +68,7 @@ export class WorldRadioComponent implements OnInit {
   readonly favorites = this.radioService.favorites;
   readonly recents = this.radioService.recentStations;
 
-  readonly allCuratedStations = this.radioService.searchResults;
+  readonly allStations = this.radioService.searchResults;
 
   readonly filteredStations = computed<RadioStation[]>(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -112,7 +112,7 @@ export class WorldRadioComponent implements OnInit {
 
   // Map representation coordinates
   readonly mapStations = computed(() => {
-    return this.allCuratedStations().map(s => {
+    return this.allStations().map(s => {
       // Equirectangular projection coordinates
       const xPercent = ((s.longitude + 180) / 360) * 100;
       const yPercent = ((90 - s.latitude) / 180) * 100;
@@ -140,7 +140,7 @@ export class WorldRadioComponent implements OnInit {
         this.onSearchChange();
       }
       if (params['play']) {
-        const target = this.allCuratedStations().find(s => s.id === params['play'] || s.city.toLowerCase() === params['play'].toLowerCase());
+        const target = this.allStations().find(s => s.id === params['play'] || s.city.toLowerCase() === params['play'].toLowerCase());
         if (target) {
           this.radioService.playStation(target);
         }

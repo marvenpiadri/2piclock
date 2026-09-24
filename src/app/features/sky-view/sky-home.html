@@ -14,6 +14,10 @@
         <span class="section-eyebrow">ASTRONOMICAL EPHEMERIS · {{ selectedLocation().name }}</span>
         <h1>Celestial Altitude & Azimuth</h1>
         <p>Solar zenith, lunar phases, golden hour and twilight intervals.</p>
+      } @else if (skyPage === 'tonight') {
+        <span class="section-eyebrow">TONIGHT · {{ selectedLocation().name }}</span>
+        <h1>Tonight's Sky</h1>
+        <p>Moonlight, twilight and conditions for observing the night sky.</p>
       } @else {
         <span class="section-eyebrow">GLOBAL CLOCKS</span>
         <h1>World Observatories</h1>
@@ -43,21 +47,25 @@
 
   <!-- Subtle Sub-Navigation on the Left (Border-bottom, no heavy floating glass div) -->
   <nav class="sky-navigation" aria-label="Sky Sub-Views">
-    <a routerLink="/sky" [class.active]="skyPage === 'time'">
+    <a routerLink="/now" [class.active]="skyPage === 'time'">
       <mat-icon class="text-sm">schedule</mat-icon>
-      <span>1 Time Dial</span>
+      <span>Now</span>
     </a>
-    <a routerLink="/sky/weather" [class.active]="skyPage === 'weather'">
+    <a routerLink="/weather" [class.active]="skyPage === 'weather'">
       <mat-icon class="text-sm">cloud</mat-icon>
-      <span>2 Weather</span>
+      <span>Weather</span>
     </a>
-    <a routerLink="/sky/astronomy" [class.active]="skyPage === 'astronomy'">
-      <mat-icon class="text-sm">wb_twilight</mat-icon>
-      <span>3 Astronomy</span>
+    <a routerLink="/astronomy" [class.active]="skyPage === 'astronomy'">
+      <mat-icon class="text-sm">auto_awesome</mat-icon>
+      <span>Astronomy</span>
     </a>
-    <a routerLink="/sky/world" [class.active]="skyPage === 'world'">
+    <a routerLink="/tonight" [class.active]="skyPage === 'tonight'">
+      <mat-icon class="text-sm">dark_mode</mat-icon>
+      <span>Tonight</span>
+    </a>
+    <a routerLink="/world" [class.active]="skyPage === 'world'">
       <mat-icon class="text-sm">public</mat-icon>
-      <span>4 World Clocks</span>
+      <span>World</span>
     </a>
   </nav>
 
@@ -504,7 +512,7 @@
       </section>
     }
 
-    @if (skyPage === 'astronomy') {
+    @if (skyPage === 'astronomy' || skyPage === 'tonight') {
       <section class="report-page astronomy-page">
         <div class="astronomy-hero">
           <div class="astronomy-orbit">
@@ -512,7 +520,7 @@
             <span class="astronomy-moon">MOON</span>
             <div class="astronomy-moon-core"></div>
           </div>
-          <div class="astronomy-now"><span>{{ getTwilightLabel(celestial().twilightState) }}</span><strong>{{ localTime() }}</strong></div>
+          <div class="astronomy-now"><span>{{ skyPage === 'tonight' ? 'TONIGHT' : getTwilightLabel(celestial().twilightState) }}</span><strong>{{ localTime() }}</strong></div>
         </div>
 
         <div class="astro-grid">
@@ -526,7 +534,7 @@
 
         <div class="astronomy-actions">
           <button type="button" class="primary-report-button" (click)="openEventsPanel()">Explore astronomical events <mat-icon>arrow_forward</mat-icon></button>
-          <a routerLink="/sky" class="secondary-report-button">Back to time <mat-icon>arrow_forward</mat-icon></a>
+          <a routerLink="/now" class="secondary-report-button">Back to Now <mat-icon>arrow_forward</mat-icon></a>
         </div>
       </section>
     }

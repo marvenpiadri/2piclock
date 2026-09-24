@@ -31,7 +31,7 @@ import { WeatherIconComponent } from '../weather-icon/weather-icon';
       <div class="flex items-center justify-between p-3 rounded-2xl bg-white/[0.04] border border-white/10">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-300">
-            <app-weather-icon [condition]="weather().condition" [label]="weather().conditionLabel" size="lg" [color]="weatherIconColor(weather().condition)"></app-weather-icon>
+            <app-weather-icon [condition]="weather().condition" [label]="weather().conditionLabel" size="lg"></app-weather-icon>
           </div>
 
           <div class="flex flex-col">

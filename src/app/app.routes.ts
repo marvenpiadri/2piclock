@@ -95,7 +95,7 @@ export const routes: Routes = [
   { path: ':location/sun', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'daylight' } },
   { path: ':location/moon', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'moon' } },
   { path: ':location/astronomy', component: AstronomySuiteComponent, canActivate: [validLocationGuard], data: { tab: 'overview' } },
-  { path: ':location', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
   { path: 'meeting-planner', redirectTo: 'planner', pathMatch: 'full' },
+  { path: ':location', component: SkyHomeComponent, canActivate: [validLocationGuard], data: { skyPage: 'time' } },
   { path: '**', redirectTo: '' }
 ];

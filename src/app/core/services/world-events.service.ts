@@ -71,10 +71,10 @@ export class WorldEventsService {
     this.solarWindows.set({
       sunrise: context.solar.sunrise ? context.solar.sunrise.toISOString() : null,
       sunset: context.solar.sunset ? context.solar.sunset.toISOString() : null,
-      goldenMorning: context.solar.goldenMorning.start ? context.solar.goldenMorning.start.toISOString() : null,
-      goldenEvening: context.solar.goldenEvening.start ? context.solar.goldenEvening.start.toISOString() : null,
-      blueMorning: context.solar.blueMorning.start ? context.solar.blueMorning.start.toISOString() : null,
-      blueEvening: context.solar.blueEvening.start ? context.solar.blueEvening.start.toISOString() : null
+      goldenMorning: context.solar.goldenHourMorning.start ? context.solar.goldenHourMorning.start.toISOString() : null,
+      goldenEvening: context.solar.goldenHourEvening.start ? context.solar.goldenHourEvening.start.toISOString() : null,
+      blueMorning: context.solar.blueHourMorning.start ? context.solar.blueHourMorning.start.toISOString() : null,
+      blueEvening: context.solar.blueHourEvening.start ? context.solar.blueHourEvening.start.toISOString() : null
     });
     this.activeTimezone = loc.timezone;
     this.isLoading.set(false);

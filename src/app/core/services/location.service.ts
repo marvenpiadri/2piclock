@@ -136,7 +136,6 @@ export class LocationService {
     this.selectedLocation.set(fallback);
     return fallback;
   }
-  }
 
   addToWatchlist(loc: GeoLocation): void {
     if (!this.watchlist().some(l => l.id === loc.id)) {
